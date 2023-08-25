@@ -3,7 +3,6 @@ import { Nav, NavDropdown, ToggleButton, ToggleButtonGroup  } from 'react-bootst
 import Login from './Login';
 
 interface MenuProps{
-  style: React.CSSProperties;
   setShowTraffic: React.Dispatch<React.SetStateAction<boolean>>;
   setShowTransit: React.Dispatch<React.SetStateAction<boolean>>;
   setShowBicycle: React.Dispatch<React.SetStateAction<boolean>>;
@@ -11,7 +10,7 @@ interface MenuProps{
 
 const Menu = (props: MenuProps) => {
   return (
-    <NavDropdown title="Menu" id="basic-nav-dropdown" style={props.style}>
+    <NavDropdown title="Menu" id="basic-nav-dropdown" className='DropDown'>
       <NavDropdown.Item>
         <Login/>
       </NavDropdown.Item>
