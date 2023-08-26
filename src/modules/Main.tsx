@@ -8,6 +8,8 @@ const Main = () => {
   const [showTraffic, setShowTraffic] = useState<boolean>(false);
   const [showTransit, setShowTransit] = useState<boolean>(false);
   const [showBicycle, setShowBicycle] = useState<boolean>(false);
+  const [selectedLatitude, setSelectedLatitude] = useState<number | null>(null);
+  const [selectedLongitude, setSelectedLongitude] = useState<number | null>(null);
 
   return(
     <div>
@@ -17,13 +19,18 @@ const Main = () => {
           setShowTransit={setShowTransit}
           setShowBicycle={setShowBicycle}
         />
-        <LocationSearcher/>
+        <LocationSearcher
+          setSelectedLatitude={setSelectedLatitude}
+          setSelectedLongitude={setSelectedLongitude}
+        />
       </div>
     
       <MapComponent
         showTraffic={showTraffic}
         showTransit={showTransit}
         showBicycle={showBicycle}
+        selectedLatitude={selectedLatitude}
+        selectedLongitude={selectedLongitude}
       />
     </div>
   )

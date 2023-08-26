@@ -1,14 +1,39 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import ErrorBoundary from './ErrorBoundary';
+import { geocodeByPlaceId } from 'react-google-places-autocomplete';
+
+interface LocationSearcherProps{
+  setSelectedLatitude: React.Dispatch<React.SetStateAction<number | null>>;
+  setSelectedLongitude: React.Dispatch<React.SetStateAction<number | null>>;
+}
 
 const Autocomplete = lazy(() => import('react-google-places-autocomplete'));
 
-const LocationSearcher = () => {
-  const [value, setValue] = useState<any>(null);
+const LocationSearcher = (props: LocationSearcherProps) => {
+  const [locResult, setLocResult] = useState<any>(null);
 
   useEffect(() => {
-    console.log(value);
-  }, [value]);
+    if(locResult){
+      getGeocode(locResult.value.place_id);
+    }
+  }, [locResult]);
+
+  const getGeocode = (id: string) => {
+    geocodeByPlaceId(id)
+    .then(results => {
+      if(results instanceof Array && results.length > 0){
+        let res = results[0];
+        props.setSelectedLatitude(res.geometry.location.lat);
+        props.setSelectedLongitude(res.geometry.location.lng);
+      }
+    })
+    .catch(error => {
+      props.setSelectedLatitude(null);
+      props.setSelectedLongitude(null);
+      console.error(error);
+    });
+  }
 
   return (
     <div className='w-100'>
@@ -17,8 +42,8 @@ const LocationSearcher = () => {
           <Autocomplete
             apiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
             selectProps={{
-              value,
-              onChange: setValue,
+              value: locResult,
+              onChange: setLocResult,
             }}
           />
         </Suspense>

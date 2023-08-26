@@ -1,20 +1,17 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GoogleMap, LoadScript, TrafficLayer, TransitLayer, BicyclingLayer } from '@react-google-maps/api';
 
-const containerStyle = {
-  width: '100%',
-  height: '100vh',
-};
-
-const center = {
-  lat: 37.7749, // 지도의 초기 중앙 좌표 설정
-  lng: -122.4194,
-};
-
-export interface MapProps{
+interface MapProps{
   showTraffic: boolean;
   showTransit: boolean;
   showBicycle: boolean;
+  selectedLatitude: number | null;
+  selectedLongitude: number | null;
+}
+
+type Coordinate = {
+  lat: number;
+  lng: number;
 }
 
 const MapComponent = (props: MapProps) => {
@@ -22,6 +19,21 @@ const MapComponent = (props: MapProps) => {
   const mapOption = {
     disableDefaultUI : true
   } as google.maps.MapOptions;
+  const containerStyle = {
+    width: '100%',
+    height: '100vh',
+  };
+
+  const [center, setCenter] = useState<Coordinate>();
+
+  useEffect(() => {
+    if(props.selectedLatitude && props.selectedLongitude){
+      setCenter({
+        lat: props.selectedLatitude,
+        lng: props.selectedLongitude
+      })
+    }
+  }, [props.selectedLatitude, props.selectedLongitude])
 
   return (
     <LoadScript googleMapsApiKey={key ? key : ''}>
