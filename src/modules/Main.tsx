@@ -8,7 +8,6 @@ import LocationSearcher from './LocationSearcher';
 const Main = () => {
   const [showTraffic, setShowTraffic] = useState<boolean>(false);
   const [showTransit, setShowTransit] = useState<boolean>(false);
-  const [showBicycle, setShowBicycle] = useState<boolean>(false);
   const [selectedLatitude, setSelectedLatitude] = useState<number | null>(null);
   const [selectedLongitude, setSelectedLongitude] = useState<number | null>(null);
 
@@ -16,9 +15,10 @@ const Main = () => {
     <div>
       <div className='Header d-flex gap-2 justify-content-between align-items-center'>
         <Menu
+          showTraffic={showTraffic}
+          showTransit={showTransit}
           setShowTraffic={setShowTraffic}
           setShowTransit={setShowTransit}
-          setShowBicycle={setShowBicycle}
         />
         <LocationSearcher
           setSelectedLatitude={setSelectedLatitude}
@@ -30,7 +30,6 @@ const Main = () => {
       <MapComponent
         showTraffic={showTraffic}
         showTransit={showTransit}
-        showBicycle={showBicycle}
         selectedLatitude={selectedLatitude}
         selectedLongitude={selectedLongitude}
       />

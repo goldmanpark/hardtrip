@@ -1,7 +1,7 @@
 .MenuButton {
     padding: 5px 15px;
-    background-color: hsl(0, 0%, 100%);
-
+    background-color: white;
+    color: black;
     
     cursor: pointer;
     
@@ -26,4 +26,58 @@
     height: 32px;
     width: 32px;
     border-radius: 50%;
+}
+
+/* 기본 스타일 */
+.toggle-switch {
+    display: inline-block;
+    position: relative;
+}
+
+.toggle-input {
+    appearance: none;
+}
+
+/* 스위치 배경 */
+.toggle-label {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50px;
+    height: 24px;
+    background-color: #ccc;
+    border-radius: 12px;
+    cursor: pointer; /* 커서를 포인터로 변경하여 클릭 가능한 효과를 줍니다. */
+}
+
+/* 스위치 ON 상태 */
+.toggle-input:checked + .toggle-label {
+    background-color: #2196F3; /* 활성 상태 배경색 */
+}
+
+/* 스위치 핸들 (탭 부분) */
+.toggle-label::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 2px;
+    left: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.4s; /* 부드러운 애니메이션 효과 */
+}
+
+/* 스위치 ON 상태에서 핸들 위치 */
+.toggle-input:checked + .toggle-label::before {
+    transform: translateX(26px); /* ON 상태에서 오른쪽으로 이동 */
+}
+
+/* 텍스트 스타일링 */
+.toggle-text {
+    position: absolute;
+    top: 3px;
+    left: 60px;
+    font-size: 14px;
 }

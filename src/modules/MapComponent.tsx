@@ -4,7 +4,6 @@ import { GoogleMap, LoadScript, TrafficLayer, TransitLayer, BicyclingLayer } fro
 interface MapProps{
   showTraffic: boolean;
   showTransit: boolean;
-  showBicycle: boolean;
   selectedLatitude: number | null;
   selectedLongitude: number | null;
 }
@@ -42,7 +41,7 @@ const MapComponent = (props: MapProps) => {
         lng: props.selectedLongitude
       })
     }
-  }, [props.selectedLatitude, props.selectedLongitude])
+  }, [props.selectedLatitude, props.selectedLongitude]);
 
   return (
     <LoadScript googleMapsApiKey={key ? key : ''}>
@@ -53,7 +52,6 @@ const MapComponent = (props: MapProps) => {
                  options={mapOption}>
         {props.showTraffic && <TrafficLayer/> }
         {props.showTransit && <TransitLayer/> }
-        {props.showBicycle && <BicyclingLayer/> }
       </GoogleMap>
     </LoadScript>
   );
