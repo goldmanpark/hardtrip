@@ -1,4 +1,4 @@
-.DropDown {
+.MenuButton {
     padding: 5px 15px;
     background-color: hsl(0, 0%, 100%);
 
@@ -19,4 +19,11 @@
     padding: 10px;
     z-index: 9999;
     width: 100%;
+}
+
+.LoginImg {
+    display: block;
+    height: 32px;
+    width: 32px;
+    border-radius: 50%;
 }

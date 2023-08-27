@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import './custom.css'
+import Login from './Login';
 import MapComponent from './MapComponent';
 import Menu from './Menu';
 import LocationSearcher from './LocationSearcher';
@@ -13,7 +14,7 @@ const Main = () => {
 
   return(
     <div>
-      <div className='Header d-flex gap-2 justify-content-between '>
+      <div className='Header d-flex gap-2 justify-content-between align-items-center'>
         <Menu
           setShowTraffic={setShowTraffic}
           setShowTransit={setShowTransit}
@@ -23,6 +24,7 @@ const Main = () => {
           setSelectedLatitude={setSelectedLatitude}
           setSelectedLongitude={setSelectedLongitude}
         />
+        <Login/>
       </div>
     
       <MapComponent

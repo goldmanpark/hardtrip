@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+import { useAuth } from '../AuthContext';
 import { Nav, NavDropdown, ToggleButton, ToggleButtonGroup  } from 'react-bootstrap';
-import Login from './Login';
 
 interface MenuProps{
   setShowTraffic: React.Dispatch<React.SetStateAction<boolean>>;
@@ -9,11 +9,10 @@ interface MenuProps{
 }
 
 const Menu = (props: MenuProps) => {
+  const { userData } = useAuth();
+
   return (
-    <NavDropdown title="Menu" id="basic-nav-dropdown" className='DropDown'>
-      <NavDropdown.Item>
-        <Login/>
-      </NavDropdown.Item>
+    <NavDropdown title="Menu" id="basic-nav-dropdown" className='MenuButton'>
       <NavDropdown.Item onClick={() => {props.setShowTraffic(prev => !prev)}}>
         Traffic
       </NavDropdown.Item>
@@ -22,8 +21,18 @@ const Menu = (props: MenuProps) => {
       </NavDropdown.Item>
       <NavDropdown.Item onClick={() => {props.setShowBicycle(prev => !prev)}}>
         Bicycle
-      </NavDropdown.Item>      
-      <NavDropdown.Divider/>
+      </NavDropdown.Item>
+      {
+        userData 
+          ? <React.Fragment>
+              <NavDropdown.Divider/>
+              <NavDropdown.Item>
+                Add Travel
+              </NavDropdown.Item>
+          </React.Fragment>
+          : <></>
+      }   
+      
     </NavDropdown>
   );
 };

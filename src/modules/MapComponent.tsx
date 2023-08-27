@@ -27,6 +27,15 @@ const MapComponent = (props: MapProps) => {
   const [center, setCenter] = useState<Coordinate>();
 
   useEffect(() => {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      setCenter({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
+      });
+    });
+  }, []);
+
+  useEffect(() => {
     if(props.selectedLatitude && props.selectedLongitude){
       setCenter({
         lat: props.selectedLatitude,
