@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
-import { Dropdown, Form, Button, Card } from 'react-bootstrap';
+import { Dropdown, Form, Button } from 'react-bootstrap';
 
 import { db } from '../config/firebase';
 import { collection, getDocs, addDoc, QuerySnapshot } from 'firebase/firestore'
@@ -53,8 +53,8 @@ const Menu = (props: MenuProps) => {
   }
 
   const addTravel = async () => {
-    console.log("success")
     if(!userData) return;
+    
     try {
       await addDoc(travelCollectionRef, {
         uid: userData.uid,

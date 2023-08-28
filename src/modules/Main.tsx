@@ -10,7 +10,7 @@ const Main = () => {
   const [showTransit, setShowTransit] = useState<boolean>(false);
   
   return(
-    <div>
+    <div>      
       <div className='Header d-flex gap-2 justify-content-between align-items-center'>
         <Menu
           showTraffic={showTraffic}
@@ -21,11 +21,11 @@ const Main = () => {
         <LocationSearcher/>
         <Login/>
       </div>
-    
+      
       <MapComponent
         showTraffic={showTraffic}
         showTransit={showTransit}
-      />
+      />      
     </div>
   )
 }
