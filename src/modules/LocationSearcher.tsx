@@ -3,14 +3,19 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import ErrorBoundary from './ErrorBoundary';
 import { geocodeByPlaceId } from 'react-google-places-autocomplete';
 
+import { useAppDispatch } from '../redux/store';
+import { setSelectedCoordinate } from '../redux/selectedCoordinateSlice';
+
+import Coordinate from '../DataType/Coordinate';
+
 interface LocationSearcherProps{
-  setSelectedLatitude: React.Dispatch<React.SetStateAction<number | null>>;
-  setSelectedLongitude: React.Dispatch<React.SetStateAction<number | null>>;
+  
 }
 
 const Autocomplete = lazy(() => import('react-google-places-autocomplete'));
 
 const LocationSearcher = (props: LocationSearcherProps) => {
+  const dispatch = useAppDispatch();
   const [locResult, setLocResult] = useState<any>(null);
 
   useEffect(() => {
@@ -24,13 +29,14 @@ const LocationSearcher = (props: LocationSearcherProps) => {
     .then(results => {
       if(results instanceof Array && results.length > 0){
         let res = results[0];
-        props.setSelectedLatitude(res.geometry.location.lat);
-        props.setSelectedLongitude(res.geometry.location.lng);
+        let coord = {
+          lat: res.geometry.location.lat(),
+          lng: res.geometry.location.lng()
+        } as Coordinate;        
+        dispatch(setSelectedCoordinate(coord));
       }
     })
     .catch(error => {
-      props.setSelectedLatitude(null);
-      props.setSelectedLongitude(null);
       console.error(error);
     });
   }

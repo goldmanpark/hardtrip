@@ -1,55 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleMap, LoadScript, TrafficLayer, TransitLayer, BicyclingLayer } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, TrafficLayer, TransitLayer } from '@react-google-maps/api';
+import { geocodeByPlaceId } from 'react-google-places-autocomplete';
+
+import { useAppSelector, useAppDispatch } from '../redux/store';
+import { setSelectedCoordinate, setCurrentCoordinate } from '../redux/selectedCoordinateSlice';
+
+import Coordinate from '../DataType/Coordinate';
 
 interface MapProps{
   showTraffic: boolean;
   showTransit: boolean;
-  selectedLatitude: number | null;
-  selectedLongitude: number | null;
-}
-
-type Coordinate = {
-  lat: number;
-  lng: number;
 }
 
 const MapComponent = (props: MapProps) => {
-  const key = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
-  const mapOption = {
-    disableDefaultUI : true
-  } as google.maps.MapOptions;
-  const containerStyle = {
-    width: '100%',
-    height: '100vh',
-  };
-
-  const [center, setCenter] = useState<Coordinate>();
+  const dispatch = useAppDispatch();
+  const selectedCoordinate: Coordinate = useAppSelector((state) => state.selectedCoordinate);
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      setCenter({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
-      });
-    });
+    dispatch(setCurrentCoordinate());
   }, []);
-
-  useEffect(() => {
-    if(props.selectedLatitude && props.selectedLongitude){
-      setCenter({
-        lat: props.selectedLatitude,
-        lng: props.selectedLongitude
-      })
+  
+  const onClickMap = (e: google.maps.MapMouseEvent) => {
+    e.stop();
+    let gia = e as any;
+    if(gia.placeId){
+      console.log(gia.placeId);
     }
-  }, [props.selectedLatitude, props.selectedLongitude]);
+  }
 
   return (
-    <LoadScript googleMapsApiKey={key ? key : ''}>
-      <GoogleMap mapContainerStyle={containerStyle}
-                 center={center}
-                 zoom={14}
+    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY ?? ''}>
+      <GoogleMap mapContainerStyle={{ width: '100%', height: '100vh' }}
+                 center={selectedCoordinate}
+                 zoom={5}
                  clickableIcons={true}
-                 options={mapOption}>
+                 options={{ disableDefaultUI : true }}
+                 onClick={onClickMap}>
         {props.showTraffic && <TrafficLayer/> }
         {props.showTransit && <TransitLayer/> }
       </GoogleMap>
