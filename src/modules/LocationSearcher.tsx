@@ -1,59 +1,35 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-import ErrorBoundary from './ErrorBoundary';
-import { geocodeByPlaceId } from 'react-google-places-autocomplete';
-
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppDispatch } from '../redux/store';
 import { setSelectedCoordinate } from '../redux/selectedCoordinateSlice';
+import { Autocomplete } from '@react-google-maps/api';
 
 import Coordinate from '../DataType/Coordinate';
 
-interface LocationSearcherProps{
-  
-}
-
-const Autocomplete = lazy(() => import('react-google-places-autocomplete'));
-
-const LocationSearcher = (props: LocationSearcherProps) => {
+const LocationSearcher = () => {
   const dispatch = useAppDispatch();
-  const [locResult, setLocResult] = useState<any>(null);
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete>();
 
-  useEffect(() => {
-    if(locResult){
-      getGeocode(locResult.value.place_id);
-    }
-  }, [locResult]);
+  const onPlaceChanged = () => {
+    if(!autocomplete) return;
 
-  const getGeocode = (id: string) => {
-    geocodeByPlaceId(id)
-    .then(results => {
-      if(results instanceof Array && results.length > 0){
-        let res = results[0];
-        let coord = {
-          lat: res.geometry.location.lat(),
-          lng: res.geometry.location.lng()
-        } as Coordinate;        
-        dispatch(setSelectedCoordinate(coord));
-      }
-    })
-    .catch(error => {
-      console.error(error);
-    });
+    const place: google.maps.places.PlaceResult = autocomplete.getPlace();
+    let coord = {
+      lat: place.geometry.location.lat(),
+      lng: place.geometry.location.lng()
+    } as Coordinate;
+    dispatch(setSelectedCoordinate(coord));
   }
 
   return (
     <div className='w-100'>
-      <ErrorBoundary>
-        <Suspense fallback={<div>Loading...</div>}>
-          <Autocomplete
-            apiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
-            selectProps={{
-              value: locResult,
-              onChange: setLocResult,
-            }}
-          />
-        </Suspense>
-      </ErrorBoundary>
+      <Autocomplete
+        onLoad={setAutocomplete}
+        onPlaceChanged={onPlaceChanged}>
+        <input className='MenuButton w-100'
+               type='text'
+               placeholder='Find Place...'/>
+      </Autocomplete>
     </div>
   );
 };

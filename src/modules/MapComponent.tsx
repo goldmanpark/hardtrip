@@ -1,8 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useMemo } from 'react';
-import { GoogleMap, LoadScript, Libraries, TrafficLayer, TransitLayer } from '@react-google-maps/api';
-import { geocodeByPlaceId } from 'react-google-places-autocomplete';
-
+import { GoogleMap, Libraries, TrafficLayer, TransitLayer } from '@react-google-maps/api';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { setSelectedCoordinate, setCurrentCoordinate } from '../redux/selectedCoordinateSlice';
 
@@ -15,7 +13,6 @@ interface MapProps{
 
 const MapComponent = (props: MapProps) => {
   const dispatch = useAppDispatch();
-  const libraries: Libraries = ['places'];
   const selectedCoordinate: Coordinate = useAppSelector((state) => state.selectedCoordinate);
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -23,10 +20,6 @@ const MapComponent = (props: MapProps) => {
     if(map) return new google.maps.places.PlacesService(map)
     else return null;
   }, [map]);
-
-  useEffect(() => {
-    dispatch(setCurrentCoordinate());
-  }, []);
 
   const onClickMap = (e: google.maps.MapMouseEvent) => {
     e.stop();
@@ -50,22 +43,18 @@ const MapComponent = (props: MapProps) => {
   }
 
   return (
-    <LoadScript
-        googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY ?? ''}
-        libraries={libraries}>
-      <GoogleMap mapContainerStyle={{ width: '100%', height: '100vh' }}
-                  center={selectedCoordinate}
-                  zoom={12}
-                  clickableIcons={true}
-                  options={{ disableDefaultUI : true }}
-                  onClick={onClickMap}
-                  onLoad={setMap}
-                  onUnmount={() => {setMap(null)}}>
-        {props.showTraffic && <TrafficLayer/> }
-        {props.showTransit && <TransitLayer/> }
+    <GoogleMap mapContainerStyle={{ width: '100%', height: '100vh' }}
+               center={selectedCoordinate}
+               zoom={12}
+               clickableIcons={true}
+               options={{ disableDefaultUI : true }}
+               onClick={onClickMap}
+               onLoad={setMap}
+               onUnmount={() => {setMap(null)}}>
+      {props.showTraffic && <TrafficLayer/> }
+      {props.showTransit && <TransitLayer/> }
 
-      </GoogleMap>
-    </LoadScript>
+    </GoogleMap>
   );
 };
 
