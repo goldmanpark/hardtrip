@@ -27,16 +27,25 @@ const MapComponent = (props: MapProps) => {
     if(map instanceof google.maps.Map && _id && placesService){
       let request = {
         placeId: _id,
-        fields: ['name', 'formatted_address', 'rating', 'reviews']
+        fields: [
+          'adr_address',
+          'vicinity',
+          'icon',
+          'icon_background_color',
+          'name',
+          'opening_hours',
+          'photo',
+          'rating',
+          'user_ratings_total',
+          'reviews',
+          'types',
+          'website'
+        ]
       } as google.maps.places.PlaceDetailsRequest;
 
       placesService.getDetails(request, (place: any, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK) {
-            // 장소 정보를 사용자에게 표시
-            console.log('장소 이름: ' + place.name);
-            console.log('주소: ' + place.formatted_address);
-            console.log('평점: ' + place.rating);
-            // 리뷰 등 다른 정보도 여기에서 사용할 수 있음
+          console.log(place);            
         }
       });
     }
