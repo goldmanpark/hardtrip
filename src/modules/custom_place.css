@@ -1,0 +1,63 @@
+/* 모바일 환경 */
+@media (max-width: 768px) {
+  .custom-card-enter {
+    transform: translateY(100%);
+  }
+  .custom-card-enter-active {
+    transform: translateY(0);
+    transition: transform 300ms ease-in-out;
+  }
+  .custom-card-exit {
+    transform: translateY(0);
+  }
+  .custom-card-exit-active {
+    transform: translateY(100%);
+    transition: transform 300ms ease-in-out;
+  }
+
+  .custom-card {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: white;
+    z-index: 999;
+    height: 20%; /* 모바일에서 카드의 높이는 화면 높이의 20% */
+  }
+}
+
+/* 데스크톱 환경 */
+@media (min-width: 769px) {
+  .custom-card-enter {
+    transform: translateX(-100%);
+  }
+  .custom-card-enter-active {
+    transform: translateX(0);
+    transition: transform 300ms ease-in-out;
+  }
+  .custom-card-exit {
+    transform: translateX(0);
+  }
+  .custom-card-exit-active {
+    transform: translateX(-100%);
+    transition: transform 300ms ease-in-out;
+  }
+
+  .custom-card {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: white;
+    z-index: 999;
+    width: 20%; /* 데스크톱에서 카드의 너비는 화면 너비의 15% */
+  }
+
+  /* PlaceInfoPanel을 표시할 때, Header 컨테이너의 너비를 축소시킴 */
+  .Header.active {
+    width: 80%;
+    
+  }
+}

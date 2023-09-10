@@ -2,13 +2,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { GoogleMap, Libraries, TrafficLayer, TransitLayer } from '@react-google-maps/api';
 import { useAppSelector, useAppDispatch } from '../redux/store';
-import { setSelectedCoordinate, setCurrentCoordinate } from '../redux/selectedCoordinateSlice';
+import { setSelectedCoordinate } from '../redux/selectedCoordinateSlice';
 
 import Coordinate from '../DataType/Coordinate';
 
 interface MapProps{
   showTraffic: boolean;
   showTransit: boolean;
+  setPlaceInfo: React.Dispatch<React.SetStateAction<google.maps.places.PlaceResult | null>>;
 }
 
 const MapComponent = (props: MapProps) => {
@@ -45,7 +46,8 @@ const MapComponent = (props: MapProps) => {
 
       placesService.getDetails(request, (place: any, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK) {
-          console.log(place);            
+          console.log(place);
+          props.setPlaceInfo(place);
         }
       });
     }

@@ -15,10 +15,11 @@
 .Header {
     position: absolute;
     top: 0px;
-    left: 0px;
+    right: 0px;
     padding: 10px;
     z-index: 9999;
     width: 100%;
+    transition: flex 0.3s ease-in-out;
 }
 
 .LoginImg {
@@ -81,3 +82,5 @@
     left: 60px;
     font-size: 14px;
 }
+
+/* Card용(placeinfo)*/
