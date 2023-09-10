@@ -23,7 +23,7 @@
     bottom: 0;
     background-color: white;
     z-index: 999;
-    height: 20%; /* 모바일에서 카드의 높이는 화면 높이의 20% */
+    height: 40%; /* 모바일에서 카드의 높이는 화면 높이의 20% */
   }
 }
 

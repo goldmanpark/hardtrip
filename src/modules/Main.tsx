@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import './custom.css'
 import './custom_place.css'
 import { LoadScript, Libraries } from '@react-google-maps/api';
-import { CSSTransition } from 'react-transition-group';
 import { useAppDispatch } from '../redux/store';
 import { setCurrentCoordinate } from '../redux/selectedCoordinateSlice';
 
@@ -45,13 +44,12 @@ const Main = () => {
           showTransit={showTransit}
           setPlaceInfo={setPlaceInfo}
         />
-        <CSSTransition
-          in={placeInfo !== null}
-          timeout={300}
-          unmountOnExit>
+        {
+          placeInfo !== null &&
           <PlaceInfoPanel
-            placeInfo={placeInfo}/>
-        </CSSTransition>
+            placeInfo={placeInfo}
+            exit={() => {setPlaceInfo(null)}}/>
+        }
       </LoadScript>
     </div>
   )
