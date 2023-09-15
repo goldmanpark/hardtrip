@@ -1,16 +1,17 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
-import './custom.css'
-import './custom_place.css'
+import './css/custom_button.css'
+import './css/custom_place.css'
 import { LoadScript, Libraries } from '@react-google-maps/api';
 import { useAppDispatch } from '../redux/store';
-import { setCurrentCoordinate } from '../redux/selectedCoordinateSlice';
+import { setCurrentLatLng } from '../redux/selectedLatLngSlice';
 
 import Login from './Login';
 import MapComponent from './MapComponent';
 import Menu from './Menu';
 import LocationSearcher from './LocationSearcher';
 import PlaceInfoPanel from './PlaceInfoPanel';
+import Compass from './Compass';
 
 const Main = () => {
   const dispatch = useAppDispatch();
@@ -20,7 +21,7 @@ const Main = () => {
   const [placeInfo, setPlaceInfo] = useState<google.maps.places.PlaceResult | null>(null);
 
   useEffect(() => {
-    dispatch(setCurrentCoordinate());
+    dispatch(setCurrentLatLng());
   }, []);
 
   return(
@@ -37,13 +38,17 @@ const Main = () => {
           />
           <LocationSearcher/>
           <Login/>
-        </div>
+        </div> 
 
         <MapComponent
           showTraffic={showTraffic}
           showTransit={showTransit}
           setPlaceInfo={setPlaceInfo}
         />
+
+        <div className='Footer d-flex flex-column'>
+          <Compass/>
+        </div>
         {
           placeInfo !== null &&
           <PlaceInfoPanel

@@ -1,10 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppDispatch } from '../redux/store';
-import { setSelectedCoordinate } from '../redux/selectedCoordinateSlice';
+import { setSelectedLatLng } from '../redux/selectedLatLngSlice';
 import { Autocomplete } from '@react-google-maps/api';
-
-import Coordinate from '../DataType/Coordinate';
 
 const LocationSearcher = () => {
   const dispatch = useAppDispatch();
@@ -14,11 +12,10 @@ const LocationSearcher = () => {
     if(!autocomplete) return;
 
     const place: google.maps.places.PlaceResult = autocomplete.getPlace();
-    let coord = {
-      lat: place.geometry.location.lat(),
-      lng: place.geometry.location.lng()
-    } as Coordinate;
-    dispatch(setSelectedCoordinate(coord));
+    let lat = place.geometry.location.lat();
+    let lng = place.geometry.location.lng();
+    let latLng = new google.maps.LatLng(lat, lng);
+    dispatch(setSelectedLatLng(latLng));
   }
 
   return (

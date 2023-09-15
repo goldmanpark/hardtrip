@@ -1,10 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useMemo } from 'react';
-import { GoogleMap, Libraries, TrafficLayer, TransitLayer } from '@react-google-maps/api';
+import { GoogleMap, TrafficLayer, TransitLayer, MarkerF } from '@react-google-maps/api';
 import { useAppSelector, useAppDispatch } from '../redux/store';
-import { setSelectedCoordinate } from '../redux/selectedCoordinateSlice';
-
-import Coordinate from '../DataType/Coordinate';
 
 interface MapProps{
   showTraffic: boolean;
@@ -14,9 +11,10 @@ interface MapProps{
 
 const MapComponent = (props: MapProps) => {
   const dispatch = useAppDispatch();
-  const selectedCoordinate: Coordinate = useAppSelector((state) => state.selectedCoordinate);
+  const selectedLatLng = useAppSelector((state) => state.selectedLatLng);
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  
   const placesService = useMemo(() => {
     if(map) return new google.maps.places.PlacesService(map)
     else return null;
@@ -55,16 +53,16 @@ const MapComponent = (props: MapProps) => {
 
   return (
     <GoogleMap mapContainerStyle={{ width: '100%', height: '100vh' }}
-               center={selectedCoordinate}
+               center={selectedLatLng}
                zoom={12}
                clickableIcons={true}
                options={{ disableDefaultUI : true }}
                onClick={onClickMap}
                onLoad={setMap}
                onUnmount={() => {setMap(null)}}>
-      {props.showTraffic && <TrafficLayer/> }
-      {props.showTransit && <TransitLayer/> }
-
+      { props.showTraffic && <TrafficLayer/> }
+      { props.showTransit && <TransitLayer/> }
+      <MarkerF position={selectedLatLng}/>
     </GoogleMap>
   );
 };
