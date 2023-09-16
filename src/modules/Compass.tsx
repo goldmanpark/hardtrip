@@ -1,5 +1,4 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCompass } from '@fortawesome/free-solid-svg-icons';
+import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined';
 import { useAppDispatch } from '../redux/store';
 import { setCurrentLatLng } from '../redux/selectedLatLngSlice';
 
@@ -12,7 +11,7 @@ const Compass = () => {
 
   return (    
     <button className='CompassButton' onClick={getCurrentPos}>
-      <FontAwesomeIcon icon={faCompass} size={window.innerWidth <= 768 ? 'lg' : '2xl'} style={{color: '#2196F3'}}/>
+      <ExploreOutlinedIcon style={{ fontSize: '64px' }}/>
     </button>
   )
 }

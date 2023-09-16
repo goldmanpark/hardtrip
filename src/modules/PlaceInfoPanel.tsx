@@ -1,9 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faStar as solidStar, faXmark, faPlus } from '@fortawesome/free-solid-svg-icons';
-import { faStar as regularStar } from '@fortawesome/free-regular-svg-icons';
-import { Card, Carousel, Navbar, Nav, Container } from 'react-bootstrap';
+
+
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import AccessAlarmRoundedIcon from '@mui/icons-material/AccessAlarmRounded';
+import StarRoundedIcon from '@mui/icons-material/StarRounded';
+import StarHalfRoundedIcon from '@mui/icons-material/StarHalfRounded';
+import TurnedInNotRoundedIcon from '@mui/icons-material/TurnedInNotRounded';
+import TurnedInRoundedIcon from '@mui/icons-material/TurnedInRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import { Card, Carousel, Navbar, Nav, Container, Row, Col } from 'react-bootstrap';
 
 interface PlaceInfoPanelProps{
   placeInfo: google.maps.places.PlaceResult
@@ -40,13 +46,30 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
             {
               props.placeInfo.photos.map(p => (
               <Carousel.Item>
-                <div className='d-flex justify-content-center align-items-center'>
-                  <img src={p.getUrl()} alt='' className='mw-100 h-auto' style={{'maxHeight' : '400px'}}/>
+                <div className='d-flex justify-content-center align-items-center' style={{'maxHeight' : '400px'}}>
+                  <img src={p.getUrl()} alt='' className='img-fluid'/>
                 </div>
               </Carousel.Item>
             ))}
           </Carousel>
         }
+
+        <Container>
+          <Row>
+            <Col>
+              <LocationOnOutlinedIcon/>
+            </Col>
+            <Col xs={10} sm={10} className='d-flex justify-content-start'>
+              { props.placeInfo.vicinity }
+            </Col>
+            <Col>
+              <AccessAlarmRoundedIcon/>
+            </Col>
+            <Col xs={10} sm={10} className='d-flex justify-content-start'>
+              
+            </Col>
+          </Row>
+        </Container>
       </div>
     )
   }
@@ -58,10 +81,10 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
     const stars: JSX.Element[] = [];
   
     for(let i = 0 ; i < integerPart ; i++){
-      stars.push(<FontAwesomeIcon icon={solidStar} style={{color: "#c4db14",}} />)
+      stars.push(<StarRoundedIcon/>)
     }
     if(decimalPart >= 0.5){
-      stars.push(<FontAwesomeIcon icon={regularStar} style={{color: "#c4db14",}} />)
+      stars.push(<StarHalfRoundedIcon/>)
     }
     
     return stars;
@@ -85,8 +108,8 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
                 <Nav.Link eventKey="info" onSelect={() => setSelectedTab('info')}>Info</Nav.Link>
               </Nav.Item>
             </Nav>
-            <FontAwesomeIcon icon={faPlus} />
-            <FontAwesomeIcon icon={faXmark} onClick={props.exit}/>
+            <TurnedInNotRoundedIcon/>
+            <CloseRoundedIcon onClick={props.exit}/>
           </Container>
         </Navbar>        
       </Card.Header>
