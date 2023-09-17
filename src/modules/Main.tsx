@@ -20,15 +20,12 @@ const Main = () => {
   const [showTransit, setShowTransit] = useState<boolean>(false);
   const [placeInfo, setPlaceInfo] = useState<google.maps.places.PlaceResult | null>(null);
 
-  useEffect(() => {
-    dispatch(setCurrentLatLng());
-  }, []);
-
   return(
     <div className='d-flex'>
       <LoadScript
         googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY ?? ''}
-        libraries={libraries}>
+        libraries={libraries}
+        onLoad={() => {dispatch(setCurrentLatLng())}}>
         <div className={`Header ${placeInfo !== null ? 'active' : ''} d-flex gap-2 justify-content-between align-items-center`}>
           <Menu
             showTraffic={showTraffic}

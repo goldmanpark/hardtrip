@@ -11,7 +11,7 @@ const Compass = () => {
 
   return (    
     <button className='CompassButton' onClick={getCurrentPos}>
-      <ExploreOutlinedIcon style={{ fontSize: '64px' }}/>
+      <ExploreOutlinedIcon fontSize="large"/>
     </button>
   )
 }

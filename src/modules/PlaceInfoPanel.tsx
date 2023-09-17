@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
 
-
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import AccessAlarmRoundedIcon from '@mui/icons-material/AccessAlarmRounded';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
@@ -9,6 +8,7 @@ import StarHalfRoundedIcon from '@mui/icons-material/StarHalfRounded';
 import TurnedInNotRoundedIcon from '@mui/icons-material/TurnedInNotRounded';
 import TurnedInRoundedIcon from '@mui/icons-material/TurnedInRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import LanguageRoundedIcon from '@mui/icons-material/LanguageRounded';
 import { Card, Carousel, Navbar, Nav, Container, Row, Col } from 'react-bootstrap';
 
 interface PlaceInfoPanelProps{
@@ -16,7 +16,7 @@ interface PlaceInfoPanelProps{
   exit: () => void;
 }
 
-//https://developers.google.com/maps/documentation/javascript/reference/places-service?hl=ko#PlaceResult  
+//https://developers.google.com/maps/documentation/javascript/reference/places-service?hl=ko#PlaceResult
 const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
   const [selectedTab, setSelectedTab] = useState<'summary' | 'review' | 'info'>('summary');
 
@@ -37,7 +37,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
           <span>{drawStarRating(props.placeInfo.rating)}</span>
           <span>{`(${props.placeInfo.user_ratings_total})`}</span>
         </span>
-        
+
         {/* <span>{`${props.placeInfo.types.join(', ')}`}</span> */}
 
         {
@@ -62,11 +62,25 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
             <Col xs={10} sm={10} className='d-flex justify-content-start'>
               { props.placeInfo.vicinity }
             </Col>
+          </Row>
+          <Row>
             <Col>
               <AccessAlarmRoundedIcon/>
             </Col>
-            <Col xs={10} sm={10} className='d-flex justify-content-start'>
-              
+            <Col xs={10} sm={10} className='d-flex flex-column'>
+              { drawOpening() }
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <LanguageRoundedIcon/>
+            </Col>
+            <Col xs={10} sm={10} className='d-flex flex-column'>
+              {
+                props.placeInfo.website
+                  ? <a href={props.placeInfo.website}>{props.placeInfo.website}</a>
+                  : 'N/A'
+              }
             </Col>
           </Row>
         </Container>
@@ -79,17 +93,67 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
     const integerPart = Math.floor(rating);
     const decimalPart = rating - integerPart;
     const stars: JSX.Element[] = [];
-  
+
     for(let i = 0 ; i < integerPart ; i++){
       stars.push(<StarRoundedIcon/>)
     }
     if(decimalPart >= 0.5){
       stars.push(<StarHalfRoundedIcon/>)
     }
-    
+
     return stars;
   }
-  
+
+  const drawOpening = () => {
+    if(!props.placeInfo.opening_hours || !(props.placeInfo.opening_hours.periods instanceof Array))
+      return <span>N/A</span>;
+
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    let today = new Date();
+    let results = [];
+
+    if(props.placeInfo.opening_hours.periods.length === 7){
+      for (let i = 0; i < 7; i++) {
+        let t1 = props.placeInfo.opening_hours.periods[i];
+        results.push({
+          day : t1.open.day,
+          res : t1.open.time.slice(0, 2) + ':' + t1.open.time.slice(2) + ' ~ ' + t1.close.time.slice(0, 2) + ':' + t1.close.time.slice(2)
+        });
+      }
+    }
+    else if(props.placeInfo.opening_hours.periods.length === 14){
+      for (let i = 0; i < 14; i += 2) {
+        let t1 = props.placeInfo.opening_hours.periods[i];
+        let t2 = props.placeInfo.opening_hours.periods[i + 1];
+
+        let res = t1.open.time.slice(0, 2) + ':' + t1.open.time.slice(2) + ' ~ ' + t1.close.time.slice(0, 2) + ':' + t1.close.time.slice(2);
+        res += ' / ';
+        res += t2.open.time.slice(0, 2) + ':' + t2.open.time.slice(2) + ' ~ ' + t2.close.time.slice(0, 2) + ':' + t2.close.time.slice(2);
+        results.push({
+          day : t1.open.day,
+          res : res
+        });
+      }
+    }
+
+    return(
+      <Container>
+        <Row>{ props.placeInfo.opening_hours.isOpen ? '영업 중' : '영업 종료' }</Row>
+      {
+        results.map(r => (
+          <Row className='items-align-center' style={{fontWeight : today.getDay() === r.day ? 'bold' : 'normal'}}>
+            <Col className='p-1'>
+              { days[r.day] }
+            </Col>
+            <Col xs={10} sm={10} className='d-flex justify-content-start' style={{fontSize : '14px'}}>
+              { r.res }
+            </Col>
+          </Row>
+        ))
+      }
+      </Container>
+    )
+  }
 
   return (
     <Card className="custom-card">
@@ -111,10 +175,10 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
             <TurnedInNotRoundedIcon/>
             <CloseRoundedIcon onClick={props.exit}/>
           </Container>
-        </Navbar>        
+        </Navbar>
       </Card.Header>
 
-      <Card.Body className='overflow-auto'>        
+      <Card.Body className='overflow-auto'>
         {renderContent()}
       </Card.Body>
     </Card>
