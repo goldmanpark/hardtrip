@@ -2,11 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { Dropdown, Form, Button } from 'react-bootstrap';
-
-import { db } from '../config/firebase';
-import { collection, getDocs, addDoc, QuerySnapshot } from 'firebase/firestore'
-import { query, where } from 'firebase/firestore'
-import { Travel } from '../DataType/Travel';
+import { useAppSelector, useAppDispatch } from '../redux/store';
+import { getTravelListFromDB, addTravel2DB } from '../redux/travelListSlice';
+import Travel from '../DataType/Travel';
 
 interface MenuProps{
   showTraffic: boolean;
@@ -16,14 +14,13 @@ interface MenuProps{
 }
 
 const Menu = (props: MenuProps) => {
+  const dispatch = useAppDispatch();
+  const travelList: Travel[] = useAppSelector((state) => state.travelList);
   const { userData } = useAuth();
-  const travelCollectionRef = collection(db, "travel");
   const [travelName, setTravelName] = useState<string>('');
-  const [travelList, setTravelList] = useState<Travel[]>([]);
-
+  
   useEffect(() => {
     if(userData) getTravelList(userData.uid);
-    else setTravelList([]);
   }, [userData]);
 
   const onClickTraffic = () => {
@@ -34,37 +31,19 @@ const Menu = (props: MenuProps) => {
     props.setShowTransit(prev => !prev);
   }
 
-  const getTravelList = async (uid: string) => {
-    try {
-      const qr = query(travelCollectionRef, where('uid', '==', uid));
-      const docSnap = await getDocs(qr);
-      
-      if(docSnap instanceof QuerySnapshot){
-        setTravelList(docSnap.docs.map((doc) => {
-          let data = doc.data();
-          return new Travel(doc.id, data.uid, data.name);
-        }))
-      } else {
-        setTravelList([]);
-      }     
-    } catch (error) {
-      console.error(error);
-    }
+  const getTravelList = (uid: string) => {
+    dispatch(getTravelListFromDB(uid));
   }
 
-  const addTravel = async () => {
+  const addTravel = () => {
     if(!userData) return;
     
-    try {
-      await addDoc(travelCollectionRef, {
-        uid: userData.uid,
-        name: travelName
-      });
-      await getTravelList(userData.uid);
-      setTravelName('');
-    } catch (error) {
-      console.error(error);
-    }
+    dispatch(addTravel2DB({ uid: userData.uid, name: travelName}))
+    .then((result) => {
+      if(addTravel2DB.fulfilled.match(result)){
+        dispatch(getTravelListFromDB(userData.uid)); //reload
+      }
+    });
   }
 
   return (

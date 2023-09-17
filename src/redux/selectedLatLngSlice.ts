@@ -2,7 +2,7 @@ import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 
 //geolocation기능으로 현재 위치 추적
 export const setCurrentLatLng = createAsyncThunk(
-  'selectedCoordinate/setCurrentCoordinate',
+  'selectedLatLng/setCurrentLatLng',
   async () => {
     return new Promise<google.maps.LatLng>((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(

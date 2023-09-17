@@ -27,6 +27,7 @@ const MapComponent = (props: MapProps) => {
       let request = {
         placeId: _id,
         fields: [
+          'place_id',
           'adr_address',
           'vicinity',
           'icon',
@@ -38,7 +39,8 @@ const MapComponent = (props: MapProps) => {
           'user_ratings_total',
           'reviews',
           'types',
-          'website'
+          'website',
+          'geometry'
         ]
       } as google.maps.places.PlaceDetailsRequest;
 

@@ -1,5 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
+import { useAppSelector, useAppDispatch } from '../redux/store';
+import { Card, Carousel, Navbar, Nav, Container, Row, Col, Dropdown } from 'react-bootstrap';
+import Travel from '../DataType/Travel';
+import Place from '../DataType/Place';
 
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import AccessAlarmRoundedIcon from '@mui/icons-material/AccessAlarmRounded';
@@ -9,7 +13,6 @@ import TurnedInNotRoundedIcon from '@mui/icons-material/TurnedInNotRounded';
 import TurnedInRoundedIcon from '@mui/icons-material/TurnedInRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import LanguageRoundedIcon from '@mui/icons-material/LanguageRounded';
-import { Card, Carousel, Navbar, Nav, Container, Row, Col } from 'react-bootstrap';
 
 interface PlaceInfoPanelProps{
   placeInfo: google.maps.places.PlaceResult
@@ -18,6 +21,8 @@ interface PlaceInfoPanelProps{
 
 //https://developers.google.com/maps/documentation/javascript/reference/places-service?hl=ko#PlaceResult
 const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
+  const dispatch = useAppDispatch();
+  const travelList: Travel[] = useAppSelector((state) => state.travelList);
   const [selectedTab, setSelectedTab] = useState<'summary' | 'review' | 'info'>('summary');
 
   const renderContent = () => {
@@ -155,6 +160,11 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
     )
   }
 
+  const saveCurrentPlace = (travel: Travel) => {
+    let place = new Place(props.placeInfo, travel);
+    travel.places.set(place.key, place);
+  }
+
   return (
     <Card className="custom-card">
       <Card.Header>
@@ -172,7 +182,21 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
                 <Nav.Link eventKey="info" onSelect={() => setSelectedTab('info')}>Info</Nav.Link>
               </Nav.Item>
             </Nav>
-            <TurnedInNotRoundedIcon/>
+            
+            <Dropdown>
+              <Dropdown.Toggle id="dropdown-basic">
+                <TurnedInNotRoundedIcon />
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                {
+                  travelList.map(t => (
+                    <Dropdown.Item onClick={() => {saveCurrentPlace(t)}}>
+                      {t.name}
+                    </Dropdown.Item>
+                  ))
+                }
+              </Dropdown.Menu>
+            </Dropdown>
             <CloseRoundedIcon onClick={props.exit}/>
           </Container>
         </Navbar>
