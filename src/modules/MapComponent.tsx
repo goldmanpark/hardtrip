@@ -14,11 +14,20 @@ const MapComponent = (props: MapProps) => {
   const selectedLatLng = useAppSelector((state) => state.selectedLatLng);
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [currentPosition, setCurrentPosition] = useState<google.maps.LatLng>(null);
   
   const placesService = useMemo(() => {
     if(map) return new google.maps.places.PlacesService(map)
     else return null;
   }, [map]);
+
+  useEffect(() => {
+    //직렬화된 데이터를 google.maps.LatLng 로 변환
+    if(selectedLatLng){
+      let pos = new google.maps.LatLng(selectedLatLng.lat, selectedLatLng.lng);
+      setCurrentPosition(pos);
+    }
+  }, [selectedLatLng]);
 
   const onClickMap = (e: google.maps.MapMouseEvent) => {
     e.stop();
@@ -55,7 +64,7 @@ const MapComponent = (props: MapProps) => {
 
   return (
     <GoogleMap mapContainerStyle={{ width: '100%', height: '100vh' }}
-               center={selectedLatLng}
+               center={currentPosition}
                zoom={12}
                clickableIcons={true}
                options={{ disableDefaultUI : true }}
@@ -64,7 +73,7 @@ const MapComponent = (props: MapProps) => {
                onUnmount={() => {setMap(null)}}>
       { props.showTraffic && <TrafficLayer/> }
       { props.showTransit && <TransitLayer/> }
-      <MarkerF position={selectedLatLng}/>
+      <MarkerF position={currentPosition}/>
     </GoogleMap>
   );
 };
