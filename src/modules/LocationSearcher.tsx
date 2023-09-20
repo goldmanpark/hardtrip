@@ -14,8 +14,7 @@ const LocationSearcher = () => {
     const place: google.maps.places.PlaceResult = autocomplete.getPlace();
     let lat = place.geometry.location.lat();
     let lng = place.geometry.location.lng();
-    let latLng = new google.maps.LatLng(lat, lng);
-    dispatch(setSelectedLatLng(latLng));
+    dispatch(setSelectedLatLng({lat, lng}));
   }
 
   return (
