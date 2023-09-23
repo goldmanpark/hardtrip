@@ -4,7 +4,7 @@ import { useAuth } from '../AuthContext';
 import { Dropdown, Form, Button } from 'react-bootstrap';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { getTravelListFromDB, addTravel2DB } from '../redux/travelListSlice';
-import Travel from '../DataType/Travel';
+import { Travel } from '../DataType/Travel';
 
 interface MenuProps{
   showTraffic: boolean;

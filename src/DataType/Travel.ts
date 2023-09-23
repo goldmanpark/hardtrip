@@ -1,17 +1,24 @@
-import Place from "./Place";
+import { IPlace, Place } from "./Place";
 
-class Travel{
-  doc_id: string;
-  name: string;
+export interface ITravel{
+  id: string;
   uid: string;
-  places: Map<string, Place>
-
-  constructor(doc_id: string, uid: string, name: string){
-    this.doc_id = doc_id;
-    this.uid = uid;
-    this.name = name;
-    this.places = new Map<string, Place>();
-  }
+  name: string;
+  places: IPlace[];
 }
 
-export default Travel;
+export class Travel implements ITravel{
+  id: string;
+  uid: string;
+  name: string;
+  places: IPlace[];
+  placeMap: Map<string, Place>
+
+  constructor(id: string, uid: string, name: string){
+    this.id = id;
+    this.uid = uid;
+    this.name = name;
+    this.placeMap = new Map<string, Place>();
+  }
+  
+}

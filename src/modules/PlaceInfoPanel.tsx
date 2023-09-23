@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Card, Carousel, Navbar, Nav, Container, Row, Col, Dropdown } from 'react-bootstrap';
-import Travel from '../DataType/Travel';
-import Place from '../DataType/Place';
+import { Travel } from '../DataType/Travel';
+import { Place } from '../DataType/Place';
 import { addPlace2Travel } from '../redux/travelListSlice';
 
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
@@ -163,9 +163,8 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
 
   const saveCurrentPlace = (travel: Travel) => {
     let place = new Place(props.placeInfo);
-    travel.places.set(travel.doc_id, place);
     dispatch(addPlace2Travel({
-      travel_doc_id : travel.doc_id,
+      travel_doc_id : travel.id,
       place: place
     }));
   }

@@ -2,8 +2,8 @@ import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { db } from '../config/firebase';
 import { doc, setDoc, collection, getDocs, addDoc, QuerySnapshot } from 'firebase/firestore'
 import { query, where } from 'firebase/firestore'
-import Travel from '../DataType/Travel';
-import Place from '../DataType/Place';
+import { Travel } from '../DataType/Travel';
+import { Place } from '../DataType/Place';
 
 const travelCollectionRef = collection(db, "travel");
 const placeCollectionRef = collection(db, "place");
