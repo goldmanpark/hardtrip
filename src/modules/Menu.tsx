@@ -4,7 +4,7 @@ import { useAuth } from '../AuthContext';
 import { Dropdown, Form, Button } from 'react-bootstrap';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { getTravelListFromDB, addTravel2DB } from '../redux/travelListSlice';
-import { Travel } from '../DataType/Travel';
+import { ITravel, Travel } from '../DataType/Travel';
 
 interface MenuProps{
   showTraffic: boolean;
@@ -15,13 +15,21 @@ interface MenuProps{
 
 const Menu = (props: MenuProps) => {
   const dispatch = useAppDispatch();
-  const travelList: Travel[] = useAppSelector((state) => state.travelList);
+  const travelListRedux: ITravel[] = useAppSelector((state) => state.travelList);
   const { userData } = useAuth();
   const [travelName, setTravelName] = useState<string>('');
+  const [travelList, setTravelList] = useState<Travel[]>([]);
+
   
   useEffect(() => {
     if(userData) getTravelList(userData.uid);
   }, [userData]);
+
+  useEffect(() => {
+    setTravelList(travelListRedux.map(x => {
+      return new Travel(x);
+    }));
+  }, [travelListRedux]);
 
   const onClickTraffic = () => {
     props.setShowTraffic(prev => !prev);
@@ -86,8 +94,8 @@ const Menu = (props: MenuProps) => {
           }
         </Dropdown.Item>
         {
-          travelList.map(t => (
-            <Dropdown.Item>
+          travelList.map((t, i) => (
+            <Dropdown.Item key={i}>
               {t.name}
             </Dropdown.Item>
           ))

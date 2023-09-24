@@ -14,10 +14,10 @@ export class Travel implements ITravel{
   places: IPlace[];
   placeMap: Map<string, Place>
 
-  constructor(id: string, uid: string, name: string){
-    this.id = id;
-    this.uid = uid;
-    this.name = name;
+  constructor(travelRef: ITravel){
+    this.id = travelRef.id;
+    this.uid = travelRef.uid;
+    this.name = travelRef.name;
     this.placeMap = new Map<string, Place>();
   }
   

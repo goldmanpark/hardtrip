@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Card, Carousel, Navbar, Nav, Container, Row, Col, Dropdown } from 'react-bootstrap';
-import { Travel } from '../DataType/Travel';
-import { Place } from '../DataType/Place';
+import { ITravel, Travel } from '../DataType/Travel';
+import { IPlace, Place } from '../DataType/Place';
 import { addPlace2Travel } from '../redux/travelListSlice';
 
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
@@ -23,8 +23,15 @@ interface PlaceInfoPanelProps{
 //https://developers.google.com/maps/documentation/javascript/reference/places-service?hl=ko#PlaceResult
 const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
   const dispatch = useAppDispatch();
-  const travelList: Travel[] = useAppSelector((state) => state.travelList);
+  const travelListRedux: ITravel[] = useAppSelector((state) => state.travelList);
   const [selectedTab, setSelectedTab] = useState<'summary' | 'review' | 'info'>('summary');
+  const [travelList, setTravelList] = useState<Travel[]>([]);
+
+  useEffect(() => {
+    setTravelList(travelListRedux.map(x => {
+      return new Travel(x);
+    }));
+  }, [travelListRedux]);
 
   const renderContent = () => {
     switch (selectedTab) {
@@ -50,8 +57,8 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
           props.placeInfo.photos && props.placeInfo.photos.length > 0 &&
           <Carousel>
             {
-              props.placeInfo.photos.map(p => (
-              <Carousel.Item>
+              props.placeInfo.photos.map((p, i) => (
+              <Carousel.Item key={'carousel' + i.toString()}>
                 <div className='d-flex justify-content-center align-items-center' style={{'maxHeight' : '400px'}}>
                   <img src={p.getUrl()} alt='' className='img-fluid'/>
                 </div>
@@ -162,9 +169,13 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
   }
 
   const saveCurrentPlace = (travel: Travel) => {
-    let place = new Place(props.placeInfo);
+    let place = {
+      place_id : props.placeInfo.place_id,
+      name : props.placeInfo.name,
+      order : 0
+    } as IPlace;
     dispatch(addPlace2Travel({
-      travel_doc_id : travel.id,
+      travelId : travel.id,
       place: place
     }));
   }
@@ -193,8 +204,8 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
               </Dropdown.Toggle>
               <Dropdown.Menu>
                 {
-                  travelList.map(t => (
-                    <Dropdown.Item onClick={() => {saveCurrentPlace(t)}}>
+                  travelList.map((t, i) => (
+                    <Dropdown.Item onClick={() => {saveCurrentPlace(t)}} key={'travel' + i.toString()}>
                       {t.name}
                     </Dropdown.Item>
                   ))
