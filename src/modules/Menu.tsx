@@ -26,6 +26,7 @@ const Menu = (props: MenuProps) => {
   }, [userData]);
 
   useEffect(() => {
+    console.log(travelListRedux)
     setTravelList(travelListRedux.map(x => {
       return new Travel(x);
     }));

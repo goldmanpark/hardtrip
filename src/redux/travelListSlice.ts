@@ -13,14 +13,26 @@ export const getTravelListFromDB = createAsyncThunk(
     try {
       const qr = query(travelCollectionRef, where('uid', '==', uid));
       const docSnap = await getDocs(qr);
+      const travelList = [];
 
-      if(docSnap instanceof QuerySnapshot){
-        return docSnap.docs.map((doc) => {
-          return { id: doc.id, ...doc.data() } as ITravel;
-        });
-      } else {
-        return [];
+      if (docSnap instanceof QuerySnapshot){
+        for(const doc of docSnap.docs){
+          const travelData = { id: doc.id, ...doc.data() } as ITravel;
+          const placesRef = collection(doc.ref, 'places');
+          const placesSnap = await getDocs(placesRef);
+
+          if (placesSnap instanceof QuerySnapshot) {
+            travelData.places = placesSnap.docs.map((placeDoc) => ({
+              id: placeDoc.id, ...placeDoc.data(),
+            })) as IPlace[];
+          } else {
+            travelData.places = [];
+          }
+          travelList.push(travelData);
+        }        
       }
+      
+      return travelList;
     } catch (error) {
       console.log(error);
     }
@@ -56,10 +68,10 @@ interface AddPlaceParam{
 export const addPlace2Travel = createAsyncThunk(
   'travelList/addPlace2Travel',
   async (param: AddPlaceParam) => {
-    try{      
+    try{
       const travelDocRef = doc(travelCollectionRef, param.travelId);
       const placeSubCollection = collection(travelDocRef, 'places');
-      
+
       await addDoc(placeSubCollection, param.place)
       .then((docRef) => {
         console.log("Place가 성공적으로 추가되었습니다. Place 문서 ID:", docRef.id);
@@ -84,7 +96,7 @@ const travelListSlice = createSlice({
       return action.payload;
     });
     builder.addCase(addTravel2DB.fulfilled, (state, action) => {
-      
+
     });
   },
 })
