@@ -55,7 +55,6 @@ const MapComponent = (props: MapProps) => {
 
       placesService.getDetails(request, (place: any, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK) {
-          console.log(place);
           props.setPlaceInfo(place);
         }
       });

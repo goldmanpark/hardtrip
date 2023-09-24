@@ -31,10 +31,9 @@ export const getTravelListFromDB = createAsyncThunk(
           travelList.push(travelData);
         }        
       }
-      
       return travelList;
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 )
@@ -55,7 +54,7 @@ export const addTravel2DB = createAsyncThunk(
       });
       return true;
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 )
@@ -80,7 +79,7 @@ export const addPlace2Travel = createAsyncThunk(
         console.error("Place 추가 중 오류 발생:", error);
       });
     } catch(error){
-      console.log(error);
+      console.error(error);
     }
   }
 )

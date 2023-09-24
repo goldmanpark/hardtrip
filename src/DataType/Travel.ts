@@ -18,6 +18,7 @@ export class Travel implements ITravel{
     this.id = travelRef.id;
     this.uid = travelRef.uid;
     this.name = travelRef.name;
+    this.places = travelRef.places;
     this.placeMap = new Map<string, Place>();
   }
   

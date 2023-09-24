@@ -183,9 +183,12 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
   return (
     <Card className="custom-card">
       <Card.Header>
-        { props.placeInfo.name }
+        <div className='d-flex flex-row justify-content-between'>
+          <span>{ props.placeInfo.name }</span>
+          <CloseRoundedIcon onClick={props.exit}/>
+        </div>
         <Navbar className='p-0'>
-          <Container>
+          <Container className="p-0">
             <Nav className="justify-content-around" activeKey="/summary" variant="underline">
               <Nav.Item>
                 <Nav.Link eventKey="summary" onSelect={() => setSelectedTab('summary')}>Summary</Nav.Link>
@@ -212,7 +215,6 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
                 }
               </Dropdown.Menu>
             </Dropdown>
-            <CloseRoundedIcon onClick={props.exit}/>
           </Container>
         </Navbar>
       </Card.Header>

@@ -11,6 +11,8 @@ interface MenuProps{
   showTransit: boolean;
   setShowTraffic: React.Dispatch<React.SetStateAction<boolean>>;
   setShowTransit: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedTravel: Travel;
+  setSelectedTravel: React.Dispatch<React.SetStateAction<Travel>>;
 }
 
 const Menu = (props: MenuProps) => {
@@ -20,17 +22,23 @@ const Menu = (props: MenuProps) => {
   const [travelName, setTravelName] = useState<string>('');
   const [travelList, setTravelList] = useState<Travel[]>([]);
 
-  
   useEffect(() => {
     if(userData) getTravelList(userData.uid);
   }, [userData]);
 
   useEffect(() => {
-    console.log(travelListRedux)
     setTravelList(travelListRedux.map(x => {
       return new Travel(x);
     }));
   }, [travelListRedux]);
+
+  useEffect(() => {
+    console.log(travelList)
+    if(props.selectedTravel){
+      let item = travelList.find(x => x.id === props.selectedTravel.id);
+      props.setSelectedTravel(item ?? null);
+    }
+  }, [travelList]);
 
   const onClickTraffic = () => {
     props.setShowTraffic(prev => !prev);
@@ -42,6 +50,11 @@ const Menu = (props: MenuProps) => {
 
   const getTravelList = (uid: string) => {
     dispatch(getTravelListFromDB(uid));
+  }
+
+  const onSelectTravel = (travel: Travel) => {
+    console.log(travel)
+    props.setSelectedTravel(travel);
   }
 
   const addTravel = () => {
@@ -96,7 +109,7 @@ const Menu = (props: MenuProps) => {
         </Dropdown.Item>
         {
           travelList.map((t, i) => (
-            <Dropdown.Item key={i}>
+            <Dropdown.Item key={i} onClick={() => {onSelectTravel(t)}}>
               {t.name}
             </Dropdown.Item>
           ))
