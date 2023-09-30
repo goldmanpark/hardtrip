@@ -8,18 +8,15 @@ import { setCurrentLatLng } from '../redux/selectedLatLngSlice';
 
 import Login from './Login';
 import MapComponent from './MapComponent';
-import Menu from './Menu';
+import TravelListDropdown from './TravelListDropdown';
 import LocationSearcher from './LocationSearcher';
 import PlaceInfoPanel from './PlaceInfoPanel';
-import Compass from './Compass';
 import TravelInfoPanel from './TravelInfoPanel';
 import { Travel } from '../DataType/Travel';
 
 const Main = () => {
   const dispatch = useAppDispatch();
   const libraries: Libraries = ['places'];
-  const [showTraffic, setShowTraffic] = useState<boolean>(false);
-  const [showTransit, setShowTransit] = useState<boolean>(false);
   const [placeInfo, setPlaceInfo] = useState<google.maps.places.PlaceResult | null>(null);
   const [selectedTravel, setSelectedTravel] = useState<Travel | null>(null);
 
@@ -38,11 +35,7 @@ const Main = () => {
         libraries={libraries}
         onLoad={() => {dispatch(setCurrentLatLng())}}>
         <div className={`Header ${placeInfo !== null ? 'active' : ''} d-flex gap-2 justify-content-between align-items-center`}>
-          <Menu
-            showTraffic={showTraffic}
-            showTransit={showTransit}
-            setShowTraffic={setShowTraffic}
-            setShowTransit={setShowTransit}
+          <TravelListDropdown
             selectedTravel={selectedTravel}
             setSelectedTravel={setSelectedTravel}
           />
@@ -51,14 +44,10 @@ const Main = () => {
         </div> 
 
         <MapComponent
-          showTraffic={showTraffic}
-          showTransit={showTransit}
           setPlaceInfo={setPlaceInfo}
         />
 
-        <div className='Footer d-flex flex-column'>
-          <Compass/>
-        </div>
+        
         {
           placeInfo !== null &&
           <PlaceInfoPanel

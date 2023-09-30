@@ -7,8 +7,8 @@ import { IPlace } from '../DataType/Place';
 
 const travelCollectionRef = collection(db, "travel");
 
-export const getTravelListFromDB = createAsyncThunk(
-  'travelList/getTravelListFromDB',
+export const readTravelList = createAsyncThunk(
+  'travelList/readTravelList',
   async (uid: string) => {
     try {
       const qr = query(travelCollectionRef, where('uid', '==', uid));
@@ -43,8 +43,8 @@ interface AddParam{
   name: string;
 }
 
-export const addTravel2DB = createAsyncThunk(
-  'travelList/addTravel2DB',
+export const createTravel = createAsyncThunk(
+  'travelList/createTravel',
   async (param: AddParam) => {
     try {
       //doc_id자동생성
@@ -91,10 +91,10 @@ const travelListSlice = createSlice({
 
   },
   extraReducers: (builder) => {
-    builder.addCase(getTravelListFromDB.fulfilled, (state, action) => {
+    builder.addCase(readTravelList.fulfilled, (state, action) => {
       return action.payload;
     });
-    builder.addCase(addTravel2DB.fulfilled, (state, action) => {
+    builder.addCase(createTravel.fulfilled, (state, action) => {
 
     });
   },

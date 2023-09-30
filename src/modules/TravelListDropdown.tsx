@@ -3,19 +3,15 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { Dropdown, Form, Button } from 'react-bootstrap';
 import { useAppSelector, useAppDispatch } from '../redux/store';
-import { getTravelListFromDB, addTravel2DB } from '../redux/travelListSlice';
+import { readTravelList, createTravel } from '../redux/travelListSlice';
 import { ITravel, Travel } from '../DataType/Travel';
 
 interface MenuProps{
-  showTraffic: boolean;
-  showTransit: boolean;
-  setShowTraffic: React.Dispatch<React.SetStateAction<boolean>>;
-  setShowTransit: React.Dispatch<React.SetStateAction<boolean>>;
   selectedTravel: Travel;
   setSelectedTravel: React.Dispatch<React.SetStateAction<Travel>>;
 }
 
-const Menu = (props: MenuProps) => {
+const TravelListDropdown = (props: MenuProps) => {
   const dispatch = useAppDispatch();
   const travelListRedux: ITravel[] = useAppSelector((state) => state.travelList);
   const { userData } = useAuth();
@@ -40,16 +36,8 @@ const Menu = (props: MenuProps) => {
     }
   }, [travelList]);
 
-  const onClickTraffic = () => {
-    props.setShowTraffic(prev => !prev);
-  }
-
-  const onClickTransit = () => {
-    props.setShowTransit(prev => !prev);
-  }
-
   const getTravelList = (uid: string) => {
-    dispatch(getTravelListFromDB(uid));
+    dispatch(readTravelList(uid));
   }
 
   const onSelectTravel = (travel: Travel) => {
@@ -60,40 +48,21 @@ const Menu = (props: MenuProps) => {
   const addTravel = () => {
     if(!userData) return;
     
-    dispatch(addTravel2DB({ uid: userData.uid, name: travelName}))
+    dispatch(createTravel({ uid: userData.uid, name: travelName}))
     .then((result) => {
-      if(addTravel2DB.fulfilled.match(result)){
-        dispatch(getTravelListFromDB(userData.uid)); //reload
+      if(createTravel.fulfilled.match(result)){
+        dispatch(readTravelList(userData.uid)); //reload
       }
     });
   }
 
   return (
-    <Dropdown title="Menu" autoClose="outside">
-      <Dropdown.Toggle className='MenuButton' >
-        Menu
+    <Dropdown autoClose="outside">
+      <Dropdown.Toggle className='MenuButton'>
+        Travels
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
-        <Dropdown.Header>Layers</Dropdown.Header>
-        <Dropdown.Item as="button">
-          <div className="toggle-switch" onClick={onClickTraffic}>
-            <input type="checkbox" className="toggle-input" id="toggleTraffic"
-                   checked={props.showTraffic} onChange={onClickTraffic}/>
-            <label className="toggle-label" htmlFor="toggleTraffic"></label>
-            <span className="toggle-text">{props.showTraffic ? 'Traffic On' : 'Traffic Off'}</span>
-          </div>
-        </Dropdown.Item>
-        <Dropdown.Item>
-          <div className="toggle-switch" onClick={onClickTransit}>
-            <input type="checkbox" className="toggle-input" id="toggleTransit"
-                   checked={props.showTransit} onChange={onClickTransit}/>
-            <label className="toggle-label" htmlFor="toggleTransit"></label>
-            <span className="toggle-text">{props.showTransit ? 'Transit On' : 'Transit Off'}</span>
-          </div>
-        </Dropdown.Item>
-        <Dropdown.Header>Travels</Dropdown.Header>
-
         <Dropdown.Item>
           {
             userData
@@ -120,4 +89,4 @@ const Menu = (props: MenuProps) => {
   );
 };
 
-export default Menu;
+export default TravelListDropdown;
