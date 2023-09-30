@@ -1,6 +1,6 @@
 import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined';
-import { useAppDispatch } from '../redux/store';
-import { setCurrentLatLng } from '../redux/selectedLatLngSlice';
+import { useAppDispatch } from '../../redux/store';
+import { setCurrentLatLng } from '../../redux/selectedLatLngSlice';
 
 const Compass = () => {
   const dispatch = useAppDispatch();

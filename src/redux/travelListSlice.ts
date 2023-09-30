@@ -1,9 +1,16 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { db } from '../config/firebase';
-import { doc, setDoc, collection, getDocs, addDoc, QuerySnapshot } from 'firebase/firestore'
+import { doc, setDoc, collection, getDocs, addDoc, QuerySnapshot, deleteDoc } from 'firebase/firestore'
 import { query, where } from 'firebase/firestore'
 import { ITravel } from '../DataType/Travel';
 import { IPlace } from '../DataType/Place';
+
+//#region [Travel CRUD]
+interface TravelParam{
+  id?: string;
+  uid?: string;
+  name?: string;
+}
 
 const travelCollectionRef = collection(db, "travel");
 
@@ -38,26 +45,53 @@ export const readTravelList = createAsyncThunk(
   }
 )
 
-interface AddParam{
-  uid: string;
-  name: string;
-}
-
 export const createTravel = createAsyncThunk(
   'travelList/createTravel',
-  async (param: AddParam) => {
-    try {
-      //doc_id자동생성
-      await addDoc(travelCollectionRef, {
+  async (param: TravelParam) => {
+    try {      
+      const docRef = await addDoc(travelCollectionRef, {
         uid: param.uid,
         name: param.name
-      });
-      return true;
+      }); //doc_id자동생성
+
+      return {
+        id: docRef.id,
+        uid: param.uid,
+        name: param.name,
+        places: []
+      } as ITravel;
     } catch (error) {
       console.error(error);
     }
   }
 )
+
+export const updateTravel = createAsyncThunk(
+  'travelList/updateTravel',
+  async (param: ITravel) => {
+    try {
+      await setDoc(doc(db, 'travel', param.id), {
+        name: param.name
+      });
+      return param;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+)
+
+export const deleteTravel = createAsyncThunk(
+  'travelList/deleteTravel',
+  async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'travel', id));
+      return id;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+)
+//#endregion
 
 interface AddPlaceParam{
   travelId: string;
@@ -95,7 +129,13 @@ const travelListSlice = createSlice({
       return action.payload;
     });
     builder.addCase(createTravel.fulfilled, (state, action) => {
-
+      return [...state, action.payload];
+    });
+    builder.addCase(updateTravel.fulfilled, (state, action) => {
+      return state.map(x => x.id === action.payload.id ? action.payload : x);
+    });
+    builder.addCase(deleteTravel.fulfilled, (state, action) => {
+      return state.filter(x => x.id !== action.payload)
     });
   },
 })

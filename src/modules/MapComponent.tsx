@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { GoogleMap, TrafficLayer, TransitLayer, MarkerF } from '@react-google-maps/api';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Dropdown, Button } from 'react-bootstrap';
-import Compass from './Compass';
+import Compass from './subModules/Compass';
 
 interface MapProps{
   setPlaceInfo: React.Dispatch<React.SetStateAction<google.maps.places.PlaceResult | null>>;
