@@ -22,7 +22,7 @@ const TravelInfoPanel = (props : PROPS) => {
       </Card.Header>
       <Card.Body className='overflow-auto'>
         {
-          props.travel.places instanceof Array &&
+          props.travel.getPlaceList() instanceof Array &&
           <Table>
             <thead>
               <tr>
@@ -32,7 +32,7 @@ const TravelInfoPanel = (props : PROPS) => {
             </thead>
             <tbody>
               {
-                props.travel.places.map(x => (
+                props.travel.getPlaceList().map(x => (
                   <tr>
                     <td>{x.name}</td>
                     <td>{x.order}</td>

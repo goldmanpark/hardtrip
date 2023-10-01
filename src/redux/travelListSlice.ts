@@ -1,11 +1,9 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { db } from '../config/firebase';
-import { doc, setDoc, collection, getDocs, addDoc, QuerySnapshot, deleteDoc } from 'firebase/firestore'
+import { doc, setDoc, collection, getDocs, addDoc, QuerySnapshot, deleteDoc, getDoc } from 'firebase/firestore'
 import { query, where } from 'firebase/firestore'
 import { ITravel } from '../DataType/Travel';
-import { IPlace } from '../DataType/Place';
 
-//#region [Travel CRUD]
 interface TravelParam{
   id?: string;
   uid?: string;
@@ -20,30 +18,34 @@ export const readTravelList = createAsyncThunk(
     try {
       const qr = query(travelCollectionRef, where('uid', '==', uid));
       const docSnap = await getDocs(qr);
-      const travelList = [];
-
+      
       if (docSnap instanceof QuerySnapshot){
-        for(const doc of docSnap.docs){
-          const travelData = { id: doc.id, ...doc.data() } as ITravel;
-          const placesRef = collection(doc.ref, 'places');
-          const placesSnap = await getDocs(placesRef);
-
-          if (placesSnap instanceof QuerySnapshot) {
-            travelData.places = placesSnap.docs.map((placeDoc) => ({
-              id: placeDoc.id, ...placeDoc.data(),
-            })) as IPlace[];
-          } else {
-            travelData.places = [];
-          }
-          travelList.push(travelData);
-        }        
+        return docSnap.docs.map(doc => ({
+          id: doc.id, ...doc.data()
+        } as ITravel));        
+      } else {
+        return [];
       }
-      return travelList;
     } catch (error) {
       console.error(error);
     }
   }
 )
+
+export const readTravel = createAsyncThunk(
+  'travelList/readTravel',
+  async (id: string) => {
+    try {      
+      const docSnap = await getDoc(doc(db, 'travel', id));
+      if(docSnap.exists()){
+        return { id: docSnap.id, ...docSnap.data() } as ITravel;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+)
+
 
 export const createTravel = createAsyncThunk(
   'travelList/createTravel',
@@ -91,45 +93,20 @@ export const deleteTravel = createAsyncThunk(
     }
   }
 )
-//#endregion
-
-interface AddPlaceParam{
-  travelId: string;
-  place: IPlace;
-}
-
-export const addPlace2Travel = createAsyncThunk(
-  'travelList/addPlace2Travel',
-  async (param: AddPlaceParam) => {
-    try{
-      const travelDocRef = doc(travelCollectionRef, param.travelId);
-      const placeSubCollection = collection(travelDocRef, 'places');
-
-      await addDoc(placeSubCollection, param.place)
-      .then((docRef) => {
-        console.log("Place가 성공적으로 추가되었습니다. Place 문서 ID:", docRef.id);
-      })
-      .catch((error) => {
-        console.error("Place 추가 중 오류 발생:", error);
-      });
-    } catch(error){
-      console.error(error);
-    }
-  }
-)
 
 const travelListSlice = createSlice({
   name : 'travelList',
   initialState : [],
-  reducers : {
-
-  },
+  reducers : {},
   extraReducers: (builder) => {
     builder.addCase(readTravelList.fulfilled, (state, action) => {
       return action.payload;
     });
     builder.addCase(createTravel.fulfilled, (state, action) => {
       return [...state, action.payload];
+    });
+    builder.addCase(readTravel.fulfilled, (state, action) => {
+      return state.map(x => x.id === action.payload.id ? action.payload : x);
     });
     builder.addCase(updateTravel.fulfilled, (state, action) => {
       return state.map(x => x.id === action.payload.id ? action.payload : x);
