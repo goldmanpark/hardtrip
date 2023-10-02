@@ -25,14 +25,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
   const dispatch = useAppDispatch();
   const travelListRedux: ITravel[] = useAppSelector((state) => state.travelList);
   const [selectedTab, setSelectedTab] = useState<'summary' | 'review' | 'info'>('summary');
-  const [travelList, setTravelList] = useState<Travel[]>([]);
-
-  useEffect(() => {
-    setTravelList(travelListRedux.map(x => {
-      return new Travel(x);
-    }));
-  }, [travelListRedux]);
-
+  
   const renderContent = () => {
     switch (selectedTab) {
       case 'summary':
@@ -168,13 +161,13 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
     )
   }
 
-  const saveCurrentPlace = (travel: Travel) => {
+  const saveCurrentPlace = (travel: ITravel) => {
     let place = {
       place_id : props.placeInfo.place_id,
       name : props.placeInfo.name,
       order : 0
     } as IPlace;
-    dispatch(createPlace({ travel: travel, place: place }));
+    dispatch(createPlace({ travelId: travel.id, place: place }));
   }
 
   return (
@@ -204,7 +197,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
               </Dropdown.Toggle>
               <Dropdown.Menu>
                 {
-                  travelList.map((t, i) => (
+                  travelListRedux.map((t, i) => (
                     <Dropdown.Item onClick={() => {saveCurrentPlace(t)}} key={'travel' + i.toString()}>
                       {t.name}
                     </Dropdown.Item>

@@ -11,7 +11,7 @@ interface TravelParam{
 }
 
 interface PlaceParam{
-  travel: ITravel;
+  travelId: string;
   place: IPlace;
 }
 
@@ -120,21 +120,38 @@ export const createPlace = createAsyncThunk(
   'travelList/createPlace',
   async (param: PlaceParam) => {
     try{
-      const travelDocRef = doc(travelCollectionRef, param.travel.id);
+      const travelDocRef = doc(travelCollectionRef, param.travelId);
       const placeSubCollection = collection(travelDocRef, 'places');
       const placeDocRef = await addDoc(placeSubCollection, param.place);
-
-      param.place.id = placeDocRef.id;
-      param.travel.places.push(param.place);
       
-      return param.travel;
+      return {
+        id: param.travelId,
+        place: {...param.place, id: placeDocRef.id} as IPlace
+      };
     } catch(error){
       console.error(error);
     }
   }
 )
 
+export const deletePlace = createAsyncThunk(
+  'travelList/deletePlace',
+  async (param: PlaceParam) => {
+    try{
+      const travelDocRef = doc(travelCollectionRef, param.travelId);
+      const placeSubCollection = collection(travelDocRef, 'places');
+      const placeDocRef = doc(placeSubCollection, param.place.id);      
+      await deleteDoc(placeDocRef);
 
+      return {
+        travelId: param.travelId,
+        placeId: param.place.id
+      };
+    } catch(error){
+      console.error(error);
+    }
+  }
+)
 //#endregion
 
 const travelListSlice = createSlice({
@@ -161,7 +178,28 @@ const travelListSlice = createSlice({
       return state.map(x => x.id === action.payload.id ? {...x, places: action.payload.places} : x);
     });
     builder.addCase(createPlace.fulfilled, (state, action) => {
-      return state.map(x => x.id === action.payload.id ? action.payload : x);
+      return state.map((x: ITravel) => {
+        if(x.id !== action.payload.id){
+          return x;          
+        } else {
+          return {
+            ...x, 
+            places: [...(x.places || []), action.payload.place]
+          } as ITravel;
+        }
+      });
+    });
+    builder.addCase(deletePlace.fulfilled, (state, action) => {
+      return state.map((x: ITravel) => {
+        if(x.id !== action.payload.travelId){
+          return x;          
+        } else {
+          return {
+            ...x, 
+            places: x.places.filter(y => y.id !== action.payload.placeId)
+          } as ITravel;
+        }
+      });
     });
   },
 })

@@ -4,6 +4,9 @@ import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Card, Table } from 'react-bootstrap';
 import { ITravel, Travel } from '../DataType/Travel';
 import { IPlace, Place } from '../DataType/Place';
+import { deletePlace } from '../redux/travelListSlice';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
@@ -14,6 +17,13 @@ interface PROPS{
 
 const TravelInfoPanel = (props : PROPS) => {
   const dispatch = useAppDispatch();
+
+  const removePlace = (place: IPlace) => {
+    dispatch(deletePlace({
+      travelId: props.travel.id,
+      place: place
+    }))
+  }
 
   return(
     <Card className="custom-card">
@@ -31,6 +41,7 @@ const TravelInfoPanel = (props : PROPS) => {
               <tr>
                 <th>place</th>
                 <th>order</th>
+                <th>edit</th>
               </tr>
             </thead>
             <tbody>
@@ -39,6 +50,10 @@ const TravelInfoPanel = (props : PROPS) => {
                   <tr>
                     <td>{x.name}</td>
                     <td>{x.order}</td>
+                    <td>
+                      <EditIcon onClick={() => {}}/>
+                      <DeleteIcon onClick={() => {removePlace(x)}}/>
+                    </td>
                   </tr>
                 ))
               }
