@@ -4,6 +4,7 @@ import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Card, Carousel, Navbar, Nav, Container, Row, Col, Dropdown } from 'react-bootstrap';
 import { ITravel, Travel } from '../DataType/Travel';
 import { IPlace, Place } from '../DataType/Place';
+import { createPlace } from '../redux/travelListSlice';
 
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import AccessAlarmRoundedIcon from '@mui/icons-material/AccessAlarmRounded';
@@ -173,10 +174,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
       name : props.placeInfo.name,
       order : 0
     } as IPlace;
-    // dispatch(addPlace2Travel({
-    //   travelId : travel.id,
-    //   place: place
-    // }));
+    dispatch(createPlace({ travel: travel, place: place }));
   }
 
   return (

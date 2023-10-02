@@ -4,13 +4,14 @@ import { useAuth } from '../AuthContext';
 import { Dropdown, Form, Button } from 'react-bootstrap';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { readTravelList, createTravel, updateTravel, deleteTravel } from '../redux/travelListSlice';
+import { readPlaceList } from '../redux/travelListSlice';
 import { ITravel, Travel } from '../DataType/Travel';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 interface MenuProps{
-  selectedTravel: Travel;
-  setSelectedTravel: React.Dispatch<React.SetStateAction<Travel>>;
+  selectedTravel: ITravel;
+  setSelectedTravel: React.Dispatch<React.SetStateAction<ITravel>>;
 }
 
 const TravelListDropdown = (props: MenuProps) => {
@@ -18,33 +19,25 @@ const TravelListDropdown = (props: MenuProps) => {
   const travelListRedux: ITravel[] = useAppSelector((state) => state.travelList);
   const { userData } = useAuth();
   const [travelName, setTravelName] = useState<string>('');
-  const [travelList, setTravelList] = useState<Travel[]>([]);
-
+  
   useEffect(() => {
     if(userData) getTravelList(userData.uid);
   }, [userData]);
 
   useEffect(() => {
-    setTravelList(travelListRedux.map(x => {
-      return new Travel(x);
-    }));
-  }, [travelListRedux]);
-
-  useEffect(() => {
-    console.log(travelList)
     if(props.selectedTravel){
-      let item = travelList.find(x => x.id === props.selectedTravel.id);
+      let item = travelListRedux.find(x => x.id === props.selectedTravel.id);
       props.setSelectedTravel(item ?? null);
     }
-  }, [travelList]);
+  }, [travelListRedux]);
 
   const getTravelList = (uid: string) => {
     dispatch(readTravelList(uid));
   }
 
-  const onSelectTravel = (travel: Travel) => {
-    console.log(travel)
+  const onSelectTravel = (travel: ITravel) => {
     props.setSelectedTravel(travel);
+    dispatch(readPlaceList(travel.id));
   }
 
   const addTravel = () => {
@@ -52,11 +45,11 @@ const TravelListDropdown = (props: MenuProps) => {
     dispatch(createTravel({ uid: userData.uid, name: travelName }));
   }
 
-  const editTravel = (travel: Travel) => {
+  const editTravel = (travel: ITravel) => {
     if(!userData) return;
   }
 
-  const removeTravel = (travel: Travel) => {
+  const removeTravel = (travel: ITravel) => {
     if(!userData) return;
     dispatch(deleteTravel(travel.id))
   }
@@ -82,7 +75,7 @@ const TravelListDropdown = (props: MenuProps) => {
           }
         </Dropdown.Item>
         {
-          travelList.map((t, i) => (
+          travelListRedux.map((t, i) => (
             <Dropdown.Item key={i} className='d-flex flex-row justify-content-between'>
               <span onClick={() => {onSelectTravel(t)}}>
                 {t.name}

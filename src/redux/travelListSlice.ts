@@ -3,13 +3,19 @@ import { db } from '../config/firebase';
 import { doc, setDoc, collection, getDocs, addDoc, QuerySnapshot, deleteDoc, getDoc } from 'firebase/firestore'
 import { query, where } from 'firebase/firestore'
 import { ITravel } from '../DataType/Travel';
-
+import { IPlace } from '../DataType/Place';
 interface TravelParam{
   id?: string;
   uid?: string;
   name?: string;
 }
 
+interface PlaceParam{
+  travel: ITravel;
+  place: IPlace;
+}
+
+//#region [Travel CRUD]
 const travelCollectionRef = collection(db, "travel");
 
 export const readTravelList = createAsyncThunk(
@@ -45,7 +51,6 @@ export const readTravel = createAsyncThunk(
     }
   }
 )
-
 
 export const createTravel = createAsyncThunk(
   'travelList/createTravel',
@@ -93,6 +98,44 @@ export const deleteTravel = createAsyncThunk(
     }
   }
 )
+//#endregion
+
+//#region [Place CRUD]
+export const readPlaceList = createAsyncThunk(
+  'travelList/readPlaceList',
+  async (id: string) => {
+    try{
+      const querySnap = await getDocs(collection(db, "travel", id, 'places'));
+      return {
+        id: id,
+        places: querySnap.docs.map(x => ({id: x.id, ...x.data()} as IPlace))
+      }
+    } catch(error){
+      console.error(error);
+    }
+  }
+)
+
+export const createPlace = createAsyncThunk(
+  'travelList/createPlace',
+  async (param: PlaceParam) => {
+    try{
+      const travelDocRef = doc(travelCollectionRef, param.travel.id);
+      const placeSubCollection = collection(travelDocRef, 'places');
+      const placeDocRef = await addDoc(placeSubCollection, param.place);
+
+      param.place.id = placeDocRef.id;
+      param.travel.places.push(param.place);
+      
+      return param.travel;
+    } catch(error){
+      console.error(error);
+    }
+  }
+)
+
+
+//#endregion
 
 const travelListSlice = createSlice({
   name : 'travelList',
@@ -113,6 +156,12 @@ const travelListSlice = createSlice({
     });
     builder.addCase(deleteTravel.fulfilled, (state, action) => {
       return state.filter(x => x.id !== action.payload)
+    });
+    builder.addCase(readPlaceList.fulfilled, (state, action) => {
+      return state.map(x => x.id === action.payload.id ? {...x, places: action.payload.places} : x);
+    });
+    builder.addCase(createPlace.fulfilled, (state, action) => {
+      return state.map(x => x.id === action.payload.id ? action.payload : x);
     });
   },
 })

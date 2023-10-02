@@ -4,6 +4,7 @@ import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Card, Table } from 'react-bootstrap';
 import { ITravel, Travel } from '../DataType/Travel';
 import { IPlace, Place } from '../DataType/Place';
+
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
 interface PROPS{
@@ -12,6 +13,8 @@ interface PROPS{
 }
 
 const TravelInfoPanel = (props : PROPS) => {
+  const dispatch = useAppDispatch();
+
   return(
     <Card className="custom-card">
       <Card.Header>
@@ -22,7 +25,7 @@ const TravelInfoPanel = (props : PROPS) => {
       </Card.Header>
       <Card.Body className='overflow-auto'>
         {
-          props.travel.getPlaceList() instanceof Array &&
+          props.travel.places instanceof Array &&
           <Table>
             <thead>
               <tr>
@@ -32,7 +35,7 @@ const TravelInfoPanel = (props : PROPS) => {
             </thead>
             <tbody>
               {
-                props.travel.getPlaceList().map(x => (
+                props.travel.places.map(x => (
                   <tr>
                     <td>{x.name}</td>
                     <td>{x.order}</td>
