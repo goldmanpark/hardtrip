@@ -15,6 +15,11 @@ interface PlaceParam{
   place: IPlace;
 }
 
+interface PlaceParamList{
+  travelId: string;
+  placeList: IPlace[];
+}
+
 //#region [Travel CRUD]
 const travelCollectionRef = collection(db, "travel");
 
@@ -122,7 +127,9 @@ export const createPlace = createAsyncThunk(
     try{
       const travelDocRef = doc(travelCollectionRef, param.travelId);
       const placeSubCollection = collection(travelDocRef, 'places');
-      const placeDocRef = await addDoc(placeSubCollection, param.place);
+      const placeSnap = await getDocs(placeSubCollection);
+      const newPlace ={...param.place, order: placeSnap.size + 1} as IPlace;
+      const placeDocRef = await addDoc(placeSubCollection, newPlace);
       
       return {
         id: param.travelId,
@@ -134,18 +141,43 @@ export const createPlace = createAsyncThunk(
   }
 )
 
-export const deletePlace = createAsyncThunk(
-  'travelList/deletePlace',
-  async (param: PlaceParam) => {
+export const updatePlaceList = createAsyncThunk(
+  'travelList/updatePlaceList',
+  async (param: PlaceParamList) => {
     try{
       const travelDocRef = doc(travelCollectionRef, param.travelId);
       const placeSubCollection = collection(travelDocRef, 'places');
-      const placeDocRef = doc(placeSubCollection, param.place.id);      
-      await deleteDoc(placeDocRef);
+      
+      for(const place of param.placeList){
+        const placeDocRef = doc(placeSubCollection, place.id);      
+        await setDoc(placeDocRef, {...place});
+      }
 
       return {
         travelId: param.travelId,
-        placeId: param.place.id
+        updateIdList: param.placeList
+      };
+    } catch(error){
+      console.error(error);
+    }
+  }
+)
+
+export const deletePlaceList = createAsyncThunk(
+  'travelList/deletePlaceList',
+  async (param: PlaceParamList) => {
+    try{
+      const travelDocRef = doc(travelCollectionRef, param.travelId);
+      const placeSubCollection = collection(travelDocRef, 'places');
+      
+      for(const place of param.placeList){
+        const placeDocRef = doc(placeSubCollection, place.id);      
+        await deleteDoc(placeDocRef);
+      }
+
+      return {
+        travelId: param.travelId,
+        deletedIdList: param.placeList.map(x => x.id)
       };
     } catch(error){
       console.error(error);
@@ -189,14 +221,31 @@ const travelListSlice = createSlice({
         }
       });
     });
-    builder.addCase(deletePlace.fulfilled, (state, action) => {
+    builder.addCase(updatePlaceList.fulfilled, (state, action) => {
+      const item = action.payload;
       return state.map((x: ITravel) => {
-        if(x.id !== action.payload.travelId){
+        if(x.id !== item.travelId){
           return x;          
         } else {
           return {
             ...x, 
-            places: x.places.filter(y => y.id !== action.payload.placeId)
+            places: x.places.map(y => {
+              const updated = item.updateIdList.some(z => z.id === y.id);
+              return updated || y;
+            })
+          } as ITravel;
+        }
+      });
+    });
+    builder.addCase(deletePlaceList.fulfilled, (state, action) => {
+      const item = action.payload;
+      return state.map((x: ITravel) => {
+        if(x.id !== item.travelId){
+          return x;          
+        } else {
+          return {
+            ...x, 
+            places: x.places.filter(y => !item.deletedIdList.some(z => z === y.id))
           } as ITravel;
         }
       });

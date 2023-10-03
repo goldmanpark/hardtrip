@@ -5,11 +5,10 @@ import { Card, Table } from 'react-bootstrap';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
 import { ITravel, Travel } from '../DataType/Travel';
 import { IPlace, Place } from '../DataType/Place';
-import { deletePlace } from '../redux/travelListSlice';
-import EditIcon from '@mui/icons-material/Edit';
+import { updatePlaceList, deletePlaceList } from '../redux/travelListSlice';
 import DeleteIcon from '@mui/icons-material/Delete';
-import CheckIcon from '@mui/icons-material/Check';
 import DoDisturbIcon from '@mui/icons-material/DoDisturb';
+import CheckIcon from '@mui/icons-material/Check';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
 interface PROPS{
@@ -17,34 +16,52 @@ interface PROPS{
   exit: () => void;
 }
 
+interface PlaceAug extends IPlace{
+  isDel: boolean;
+}
+
 const TravelInfoPanel = (props : PROPS) => {
   const dispatch = useAppDispatch();
-  const [orderedPlaces, setOrderedPlaces] = useState<IPlace[]>([]);
+  const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [orderedPlaces, setOrderedPlaces] = useState<PlaceAug[]>([]);
 
   useEffect(() => {
     if(props.travel && props.travel.places instanceof Array){
       let temp = [...props.travel.places].sort((x, y) => x.order - y.order);
-      setOrderedPlaces(temp)
+      setOrderedPlaces(temp.map(x => ({...x, isEdit: false, isDel: false})));
     }
   }, [props.travel]);
 
   //#region [Event Handler]
   const onDragEnd = (result: DropResult) => {
-    if (!result.destination) {
-      return;
-    }
+    if (!result.destination) return;
 
-    const reorderedData = Array.from(orderedPlaces);
+    const reorderedData = [...orderedPlaces];
     const [removed] = reorderedData.splice(result.source.index, 1);
     reorderedData.splice(result.destination.index, 0, removed);
-    setOrderedPlaces(reorderedData.map((x, i) => ({...x, order: i + 1})));
+    setOrderedPlaces(reorderedData.map((x, i) => ({...x, order: x.order === 999 ? 999 : i + 1})));
+    setIsEdit(true);
   };
 
   const removePlace = (place: IPlace) => {
-    dispatch(deletePlace({
-      travelId: props.travel.id,
-      place: place
-    }))
+    const data = orderedPlaces.map(x => x.id === place.id ? {...x, isDel: true, order: 999} : x).sort((x, y) => x.order - y.order);
+    data.forEach((x, i) => {
+      if(x.order !== 999) x.order = i + 1;
+    });
+    setOrderedPlaces(data);
+    setIsEdit(true);
+  }
+
+  const cancelRemove = (place: IPlace) => {
+    const newOrder = orderedPlaces.filter(x => !x.isDel).length + 1;
+    const data = orderedPlaces.map(x => x.id === place.id ? {...x, isDel: false, order: newOrder} : x);
+    setOrderedPlaces(data.sort(x => x.order));
+  }
+
+  const confirmEdit = () => {
+    dispatch(deletePlaceList({travelId: props.travel.id, placeList: orderedPlaces.filter(x => x.isDel)}));
+    dispatch(updatePlaceList({travelId: props.travel.id, placeList: orderedPlaces.filter(x => !x.isDel)}));
+    props.exit();
   }
   //#endregion
 
@@ -53,7 +70,12 @@ const TravelInfoPanel = (props : PROPS) => {
       <Card.Header>
         <div className='d-flex flex-row justify-content-between'>
           <span>{ props.travel.name }</span>
-          <CloseRoundedIcon onClick={props.exit}/>
+          <span>
+            {
+              isEdit && <CheckIcon onClick={() => {confirmEdit();}}/>
+            }
+            <CloseRoundedIcon onClick={props.exit}/>
+          </span>          
         </div>
       </Card.Header>
       <Card.Body className='overflow-auto'>
@@ -62,7 +84,7 @@ const TravelInfoPanel = (props : PROPS) => {
             <tr>
               <th>place</th>
               <th>order</th>
-              <th>edit</th>
+              <th></th>
             </tr>
           </thead>
             <DragDropContext onDragEnd={onDragEnd}>
@@ -76,10 +98,16 @@ const TravelInfoPanel = (props : PROPS) => {
                           <tr ref={p2.innerRef}
                               {...p2.draggableProps}
                               {...p2.dragHandleProps}>
-                            <td className='text-align-left'>{x.name}</td>
+                            <td className='text-align-left' style={{textDecoration: x.isDel ? 'line-through' : ''}}>
+                              {x.name}
+                            </td>
                             <td>{x.order}</td>
                             <td>
-                              <DeleteIcon onClick={() => {removePlace(x)}}/>
+                              {
+                                x.isDel
+                                  ? <DoDisturbIcon onClick={() => {cancelRemove(x)}}/>
+                                  : <DeleteIcon onClick={() => {removePlace(x)}}/>
+                              }                              
                             </td>
                           </tr>
                         )}

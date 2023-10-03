@@ -165,7 +165,6 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
     let place = {
       place_id : props.placeInfo.place_id,
       name : props.placeInfo.name,
-      order : (travel.places || []).length + 1
     } as IPlace;
     dispatch(createPlace({ travelId: travel.id, place: place }));
   }
