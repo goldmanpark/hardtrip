@@ -15,7 +15,7 @@
         bottom: 0px;
         right: 0px;
         padding: 10px;
-        z-index: 9999;
+        z-index: 2;
     }
 
     .CompassButton {
@@ -40,7 +40,7 @@
         bottom: 0px;
         right: 0px;
         padding: 20px;
-        z-index: 9999;
+        z-index: 2;
     }
 
     .CompassButton {

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import './css/custom_button.css'
 import './css/custom_place.css'
+import './css/custom_etc.css';
 import { LoadScript, Libraries } from '@react-google-maps/api';
 import { useAppDispatch } from '../redux/store';
 import { setCurrentLatLng } from '../redux/selectedLatLngSlice';
@@ -12,13 +13,13 @@ import TravelListDropdown from './TravelListDropdown';
 import LocationSearcher from './LocationSearcher';
 import PlaceInfoPanel from './PlaceInfoPanel';
 import TravelInfoPanel from './TravelInfoPanel';
-import { Travel } from '../DataType/Travel';
+import { ITravel } from '../DataType/Travel';
 
 const Main = () => {
   const dispatch = useAppDispatch();
   const libraries: Libraries = ['places'];
   const [placeInfo, setPlaceInfo] = useState<google.maps.places.PlaceResult | null>(null);
-  const [selectedTravel, setSelectedTravel] = useState<Travel | null>(null);
+  const [selectedTravel, setSelectedTravel] = useState<ITravel | null>(null);
 
   useEffect(() => {
     if(placeInfo) setSelectedTravel(null);
@@ -45,9 +46,7 @@ const Main = () => {
 
         <MapComponent
           setPlaceInfo={setPlaceInfo}
-        />
-
-        
+        />        
         {
           placeInfo !== null &&
           <PlaceInfoPanel
