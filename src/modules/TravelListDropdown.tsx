@@ -5,13 +5,19 @@ import { Dropdown, Form, Button } from 'react-bootstrap';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { readTravelList, createTravel, updateTravel, deleteTravel } from '../redux/travelListSlice';
 import { readPlaceList } from '../redux/travelListSlice';
-import { ITravel, Travel } from '../DataType/Travel';
+import { ITravel } from '../DataType/Travel';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CheckIcon from '@mui/icons-material/Check';
+import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 
 interface MenuProps{
   selectedTravel: ITravel;
   setSelectedTravel: React.Dispatch<React.SetStateAction<ITravel>>;
+}
+
+interface TravelAug extends ITravel{
+  isEdit: boolean;
 }
 
 const TravelListDropdown = (props: MenuProps) => {
@@ -19,40 +25,64 @@ const TravelListDropdown = (props: MenuProps) => {
   const travelListRedux: ITravel[] = useAppSelector((state) => state.travelList);
   const { userData } = useAuth();
   const [travelName, setTravelName] = useState<string>('');
-  
+  const [travelList, setTravelList] = useState<TravelAug[]>([]);
+  const [tempName, setTempName] = useState<string>('');
+
   useEffect(() => {
     if(userData) getTravelList(userData.uid);
   }, [userData]);
 
   useEffect(() => {
+    setTravelList(travelListRedux.map(x => ({...x, isEdit: false} as TravelAug)));
     if(props.selectedTravel){
       let item = travelListRedux.find(x => x.id === props.selectedTravel.id);
       props.setSelectedTravel(item ?? null);
     }
   }, [travelListRedux]);
 
+  //#region [Event Handler]
+  /** 유저접속정보 기반 travel전체목록 조회 */
   const getTravelList = (uid: string) => {
     dispatch(readTravelList(uid));
   }
 
+  /** travel이하 place등 상세정보 조회 위해 travel선택 */
   const onSelectTravel = (travel: ITravel) => {
     props.setSelectedTravel(travel);
     dispatch(readPlaceList(travel.id));
   }
 
+  /** 신규 travel등록 */
   const addTravel = () => {
     if(!userData) return;
     dispatch(createTravel({ uid: userData.uid, name: travelName }));
   }
 
-  const editTravel = (travel: ITravel) => {
-    if(!userData) return;
+  /** 기존 travel편집 */
+  const editTravel = (travel : TravelAug) => {
+    setTravelList(prev => prev.map(x => x.id === travel.id
+      ? {...x, isEdit: true}
+      : x)
+    );
   }
 
-  const removeTravel = (travel: ITravel) => {
+  /** travel 수정 확정 */
+  const confirmEdit = (travel : TravelAug) => {
+    travel.name = tempName;
+    dispatch(updateTravel(travel));
+  }
+
+  /** travel 수정 취소 */
+  const cancelEdit = (travel : TravelAug) => {
+    setTravelList(prev => prev.map(x => x.id === travel.id ? {...x, isEdit: false} : x));
+  }
+
+  /** travel 삭제 */
+  const removeTravel = (travel : TravelAug) => {
     if(!userData) return;
     dispatch(deleteTravel(travel.id))
   }
+  //#endregion
 
   return (
     <Dropdown autoClose="outside">
@@ -75,15 +105,29 @@ const TravelListDropdown = (props: MenuProps) => {
           }
         </Dropdown.Item>
         {
-          travelListRedux.map((t, i) => (
+          travelList.map((t, i) => (
             <Dropdown.Item key={i} className='d-flex flex-row justify-content-between'>
-              <span onClick={() => {onSelectTravel(t)}}>
-                {t.name}
-              </span>
-              <span>
-                <EditIcon onClick={() => {editTravel(t)}}/>
-                <DeleteIcon onClick={() => {removeTravel(t)}}/>
-              </span>
+              {
+                t.isEdit
+                  ? (
+                    <React.Fragment>
+                      <input type='text' value={tempName} onChange={(e) => setTempName(e.target.value)}/>
+                      <span>
+                        <CheckIcon onClick={() => {confirmEdit(t)}}/>
+                        <DoDisturbIcon onClick={() => {cancelEdit(t)}}/>
+                      </span>
+                    </React.Fragment>)
+                  : (
+                    <React.Fragment>
+                      <span onClick={() => {onSelectTravel(t)}}>
+                        {t.name}
+                      </span>
+                      <span>
+                        <EditIcon onClick={() => {editTravel(t)}}/>
+                        <DeleteIcon onClick={() => {removeTravel(t)}}/>
+                      </span>
+                    </React.Fragment>)
+              }
             </Dropdown.Item>
           ))
         }

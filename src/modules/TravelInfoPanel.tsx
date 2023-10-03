@@ -7,7 +7,8 @@ import { IPlace, Place } from '../DataType/Place';
 import { deletePlace } from '../redux/travelListSlice';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-
+import CheckIcon from '@mui/icons-material/Check';
+import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
 interface PROPS{
@@ -46,8 +47,8 @@ const TravelInfoPanel = (props : PROPS) => {
             </thead>
             <tbody>
               {
-                props.travel.places.map(x => (
-                  <tr>
+                props.travel.places.map((x, i) => (
+                  <tr key={'place' + i}>
                     <td>{x.name}</td>
                     <td>{x.order}</td>
                     <td>

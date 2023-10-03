@@ -1,6 +1,6 @@
-import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { db } from '../config/firebase';
-import { doc, setDoc, collection, getDocs, addDoc, QuerySnapshot, deleteDoc, getDoc } from 'firebase/firestore'
+import { doc, setDoc, collection, getDocs, addDoc, QuerySnapshot, deleteDoc, getDoc, updateDoc } from 'firebase/firestore'
 import { query, where } from 'firebase/firestore'
 import { ITravel } from '../DataType/Travel';
 import { IPlace } from '../DataType/Place';
@@ -77,7 +77,7 @@ export const updateTravel = createAsyncThunk(
   'travelList/updateTravel',
   async (param: ITravel) => {
     try {
-      await setDoc(doc(db, 'travel', param.id), {
+      await updateDoc(doc(db, 'travel', param.id), {
         name: param.name
       });
       return param;
