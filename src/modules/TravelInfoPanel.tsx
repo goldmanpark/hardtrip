@@ -9,6 +9,7 @@ import { updatePlaceList, deletePlaceList } from '../redux/travelListSlice';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import CheckIcon from '@mui/icons-material/Check';
+import RouteIcon from '@mui/icons-material/Route';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
 interface PROPS{
@@ -43,6 +44,10 @@ const TravelInfoPanel = (props : PROPS) => {
     setIsEdit(true);
   };
 
+  const createRoute = async () => {
+    
+  }
+
   const removePlace = (place: IPlace) => {
     const data = orderedPlaces.map(x => x.id === place.id ? {...x, isDel: true, order: 999} : x).sort((x, y) => x.order - y.order);
     data.forEach((x, i) => {
@@ -71,8 +76,9 @@ const TravelInfoPanel = (props : PROPS) => {
         <div className='d-flex flex-row justify-content-between'>
           <span>{ props.travel.name }</span>
           <span>
+            <RouteIcon onClick={createRoute}/>
             {
-              isEdit && <CheckIcon onClick={() => {confirmEdit();}}/>
+              isEdit && <CheckIcon onClick={confirmEdit}/>
             }
             <CloseRoundedIcon onClick={props.exit}/>
           </span>          

@@ -77,10 +77,11 @@ const MapComponent = (props: MapProps) => {
                 center={currentPosition}
                 zoom={12}
                 clickableIcons={true}
-                options={{ disableDefaultUI : true }}
+                options={{ disableDefaultUI : true, gestureHandling : 'greedy' }}
                 onClick={onClickMap}
                 onLoad={setMap}
-                onUnmount={() => {setMap(null)}}>
+                onUnmount={() => {setMap(null)}}
+                >
         { showTraffic && <TrafficLayer/> }
         { showTransit && <TransitLayer/> }
         <MarkerF position={currentPosition}/>
