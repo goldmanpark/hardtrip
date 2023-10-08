@@ -45,7 +45,9 @@ const TravelInfoPanel = (props : PROPS) => {
   };
 
   const createRoute = async () => {
-    
+    for(let i = 0 ; i < orderedPlaces.length - 1 ; i++){
+      
+    }
   }
 
   const removePlace = (place: IPlace) => {
