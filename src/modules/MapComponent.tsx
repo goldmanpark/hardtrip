@@ -1,12 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useMemo } from 'react';
-import { GoogleMap, TrafficLayer, TransitLayer, MarkerF } from '@react-google-maps/api';
+import { GoogleMap, TrafficLayer, TransitLayer, MarkerF, DirectionsRenderer } from '@react-google-maps/api';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Dropdown, Button } from 'react-bootstrap';
 import Compass from './subModules/Compass';
 
 interface MapProps{
   setPlaceInfo: React.Dispatch<React.SetStateAction<google.maps.places.PlaceResult | null>>;
+  directions: google.maps.DirectionsResult[];
 }
 
 const MapComponent = (props: MapProps) => {
@@ -84,6 +85,7 @@ const MapComponent = (props: MapProps) => {
                 >
         { showTraffic && <TrafficLayer/> }
         { showTransit && <TransitLayer/> }
+        { props.directions.map(d => (<DirectionsRenderer directions={d}/>)) }
         <MarkerF position={currentPosition}/>
       </GoogleMap>
 

@@ -12,17 +12,19 @@ import CheckIcon from '@mui/icons-material/Check';
 import RouteIcon from '@mui/icons-material/Route';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
-interface PROPS{
+interface TravelInfoProps{
   travel: ITravel;
   exit: () => void;
+  setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>
 }
 
 interface PlaceAug extends IPlace{
   isDel: boolean;
 }
 
-const TravelInfoPanel = (props : PROPS) => {
+const TravelInfoPanel = (props : TravelInfoProps) => {
   const dispatch = useAppDispatch();
+  const directionsService = new google.maps.DirectionsService();
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [orderedPlaces, setOrderedPlaces] = useState<PlaceAug[]>([]);
 
@@ -45,7 +47,22 @@ const TravelInfoPanel = (props : PROPS) => {
   };
 
   const createRoute = async () => {
-    
+    for(let i = 0 ; i < orderedPlaces.length - 1 ; i++){
+      let req = {
+        origin: { placeId: orderedPlaces[i].place_id } as google.maps.Place,
+        destination: { placeId: orderedPlaces[i + 1].place_id } as google.maps.Place,
+        travelMode: google.maps.TravelMode.TRANSIT
+      } as google.maps.DirectionsRequest;
+
+      directionsService.route(req, (result, status) => {
+        if(status === google.maps.DirectionsStatus.OK){
+          console.log(result);
+          props.setDirections(prev => [...prev, result]);
+        } else {
+          console.error(result);
+        }
+      });
+    }
   }
 
   const removePlace = (place: IPlace) => {

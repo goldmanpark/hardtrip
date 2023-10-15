@@ -20,6 +20,7 @@ const Main = () => {
   const libraries: Libraries = ['places'];
   const [placeInfo, setPlaceInfo] = useState<google.maps.places.PlaceResult | null>(null);
   const [selectedTravel, setSelectedTravel] = useState<ITravel | null>(null);
+  const [directions, setDirections] = useState<google.maps.DirectionsResult[]>([]);
 
   useEffect(() => {
     if(placeInfo) setSelectedTravel(null);
@@ -46,6 +47,7 @@ const Main = () => {
 
         <MapComponent
           setPlaceInfo={setPlaceInfo}
+          directions={directions}
         />        
         {
           placeInfo !== null &&
@@ -57,6 +59,7 @@ const Main = () => {
           selectedTravel !== null &&
           <TravelInfoPanel
             travel={selectedTravel}
+            setDirections={setDirections}
             exit={() => {setSelectedTravel(null)}}/>
         }
       </LoadScript>
