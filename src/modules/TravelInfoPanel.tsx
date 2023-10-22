@@ -6,6 +6,7 @@ import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautif
 import { ITravel, Travel } from '../DataType/Travel';
 import { IPlace, Place } from '../DataType/Place';
 import { updatePlaceList, deletePlaceList } from '../redux/travelListSlice';
+import { MarkerInfo } from './MapComponent';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import CheckIcon from '@mui/icons-material/Check';
@@ -14,10 +15,9 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
 interface TravelInfoProps{
   travel: ITravel;
-  placesService: google.maps.places.PlacesService;
   exit: () => void;
   setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;
-  setPlacePositions: React.Dispatch<React.SetStateAction<google.maps.LatLng[]>>;
+  setMarkers: React.Dispatch<React.SetStateAction<MarkerInfo[]>>;
 }
 
 interface PlaceAug extends IPlace{
@@ -38,32 +38,11 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   }, [props.travel]);
 
   useEffect(() => {
-    const getDetailFunction = (place_id: string): any => {
-      return new Promise((resolve) => {
-        let request = {
-          placeId: place_id,
-          fields: ['geometry']
-        } as google.maps.places.PlaceDetailsRequest;
-
-        props.placesService.getDetails(request, (place: google.maps.places.PlaceResult, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK) {
-            resolve({
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng()
-            });
-          }
-        });
-      })
-    }
-
-    const getPlacePositions = async () => {
-      const result = await Promise.all(orderedPlaces.map(p => {
-        return getDetailFunction(p.place_id);
-      }));
-      props.setPlacePositions(result);
-    }
-    
-    getPlacePositions();
+    props.setMarkers(orderedPlaces.map(x => ({
+      lat: x.lat,
+      lng: x.lng,
+      order: x.order
+    })));
   }, [orderedPlaces]);
 
   //#region [Event Handler]

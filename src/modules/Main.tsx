@@ -18,8 +18,7 @@ const Main = () => {
   const libraries: Libraries = ['places'];
   const [placeInfo, setPlaceInfo] = useState<google.maps.places.PlaceResult | null>(null);
   const [selectedTravel, setSelectedTravel] = useState<ITravel | null>(null);
-  const [directions, setDirections] = useState<google.maps.DirectionsResult[]>([]);
-
+  
   useEffect(() => {
     if(placeInfo) setSelectedTravel(null);
   }, [placeInfo]);
@@ -30,10 +29,9 @@ const Main = () => {
 
   return(
     <div className='d-flex'>
-      <LoadScript
-        googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY ?? ''}
-        libraries={libraries}
-        onLoad={() => {dispatch(setCurrentLatLng())}}>
+      <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY ?? ''}
+                  libraries={libraries}
+                  onLoad={() => {dispatch(setCurrentLatLng())}}>
         <div className={`Header ${placeInfo !== null || selectedTravel !== null ? 'active' : ''} d-flex gap-2 justify-content-between align-items-center`}>
           <TravelListDropdown
             selectedTravel={selectedTravel}
@@ -47,9 +45,7 @@ const Main = () => {
           placeInfo={placeInfo}
           setPlaceInfo={setPlaceInfo}
           selectedTravel={selectedTravel}
-          setSelectedTravel={setSelectedTravel}
-          directions={directions}
-          setDirections={setDirections}
+          deSelectTravel={() => {setSelectedTravel(null)}}
         />
       </LoadScript>
     </div>

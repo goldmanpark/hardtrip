@@ -13,9 +13,13 @@ interface MapProps{
   placeInfo: google.maps.places.PlaceResult | null;
   setPlaceInfo: React.Dispatch<React.SetStateAction<google.maps.places.PlaceResult | null>>;
   selectedTravel: ITravel | null;
-  setSelectedTravel: React.Dispatch<React.SetStateAction<ITravel>>;
-  directions: google.maps.DirectionsResult[];
-  setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;
+  deSelectTravel: () => void;
+}
+
+export interface MarkerInfo{
+  lat: number;
+  lng: number;
+  order: number;
 }
 
 const MapComponent = (props: MapProps) => {
@@ -26,7 +30,8 @@ const MapComponent = (props: MapProps) => {
   const [showTraffic, setShowTraffic] = useState<boolean>(false);
   const [showTransit, setShowTransit] = useState<boolean>(false);
   const [currentPosition, setCurrentPosition] = useState<google.maps.LatLng>(null);
-  const [placePositions, setPlacePositions] = useState<google.maps.LatLng[]>([]);
+  const [markers, setMarkers] = useState<MarkerInfo[]>([]);
+  const [directions, setDirections] = useState<google.maps.DirectionsResult[]>([]);
   
   const placesService = useMemo(() => {
     if(map) return new google.maps.places.PlacesService(map)
@@ -82,6 +87,12 @@ const MapComponent = (props: MapProps) => {
     setShowTransit(prev => !prev);
   }
 
+  const exitSelectedTravel = () => {
+    props.deSelectTravel();
+    setDirections([]);
+    setMarkers([]);
+  }
+
   return (
     <React.Fragment>
       <GoogleMap mapContainerStyle={{ width: '100%', height: '100vh' }}
@@ -94,9 +105,15 @@ const MapComponent = (props: MapProps) => {
                 onUnmount={() => {setMap(null)}}>
         { showTraffic && <TrafficLayer/> }
         { showTransit && <TransitLayer/> }
-        { props.directions.map(d => (<DirectionsRenderer directions={d}/>)) }
+        { directions.map(d => (<DirectionsRenderer directions={d}/>)) }
         <MarkerF position={currentPosition}/>
-        { placePositions.map(p => (<MarkerF position={p}/>)) }
+        { markers.map(p => {
+          const label = {
+            text: p.order.toString(),
+            fontWeight: 'bold'
+          } as google.maps.MarkerLabel;
+          return <MarkerF position={p} label={label}/>
+        }) }
       </GoogleMap>
 
       {
@@ -109,10 +126,9 @@ const MapComponent = (props: MapProps) => {
         props.selectedTravel !== null &&
         <TravelInfoPanel
           travel={props.selectedTravel}
-          placesService={placesService}
-          setDirections={props.setDirections}
-          setPlacePositions={setPlacePositions}
-          exit={() => {props.setSelectedTravel(null)}}/>
+          setDirections={setDirections}
+          setMarkers={setMarkers}
+          exit={exitSelectedTravel}/>
       }
 
       <div className='Footer w-100 d-flex flex-row justify-content-between'>

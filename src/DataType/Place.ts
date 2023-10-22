@@ -1,5 +1,3 @@
-import { Travel } from "./Travel";
-
 export interface IPlace{
   id: string;
   place_id: string;
