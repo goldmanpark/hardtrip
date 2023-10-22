@@ -5,6 +5,8 @@ export interface IPlace{
   place_id: string;
   name: string;
   order: number;
+  lat: number;
+  lng: number;
 }
 
 export class Place implements IPlace{
@@ -12,6 +14,8 @@ export class Place implements IPlace{
   place_id: string;
   name: string;
   order: number;
+  lat: number;
+  lng: number;
 
   placeInfo: google.maps.places.PlaceResult;  
 

@@ -165,6 +165,8 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
     let place = {
       place_id : props.placeInfo.place_id,
       name : props.placeInfo.name,
+      lat: props.placeInfo.geometry.location.lat(),
+      lng: props.placeInfo.geometry.location.lng()
     } as IPlace;
     dispatch(createPlace({ travelId: travel.id, place: place }));
   }
