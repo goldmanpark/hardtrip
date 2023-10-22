@@ -14,8 +14,10 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
 interface TravelInfoProps{
   travel: ITravel;
+  placesService: google.maps.places.PlacesService;
   exit: () => void;
-  setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>
+  setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;
+  setPlacePositions: React.Dispatch<React.SetStateAction<google.maps.LatLng[]>>;
 }
 
 interface PlaceAug extends IPlace{
@@ -34,6 +36,35 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       setOrderedPlaces(temp.map(x => ({...x, isEdit: false, isDel: false})));
     }
   }, [props.travel]);
+
+  useEffect(() => {
+    const getDetailFunction = (place_id: string): any => {
+      return new Promise((resolve) => {
+        let request = {
+          placeId: place_id,
+          fields: ['geometry']
+        } as google.maps.places.PlaceDetailsRequest;
+
+        props.placesService.getDetails(request, (place: google.maps.places.PlaceResult, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK) {
+            resolve({
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng()
+            });
+          }
+        });
+      })
+    }
+
+    const getPlacePositions = async () => {
+      const result = await Promise.all(orderedPlaces.map(p => {
+        return getDetailFunction(p.place_id);
+      }));
+      props.setPlacePositions(result);
+    }
+    
+    getPlacePositions();
+  }, [orderedPlaces]);
 
   //#region [Event Handler]
   const onDragEnd = (result: DropResult) => {

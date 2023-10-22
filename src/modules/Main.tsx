@@ -11,8 +11,6 @@ import Login from './Login';
 import MapComponent from './MapComponent';
 import TravelListDropdown from './TravelListDropdown';
 import LocationSearcher from './LocationSearcher';
-import PlaceInfoPanel from './PlaceInfoPanel';
-import TravelInfoPanel from './TravelInfoPanel';
 import { ITravel } from '../DataType/Travel';
 
 const Main = () => {
@@ -36,7 +34,7 @@ const Main = () => {
         googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY ?? ''}
         libraries={libraries}
         onLoad={() => {dispatch(setCurrentLatLng())}}>
-        <div className={`Header ${placeInfo !== null ? 'active' : ''} d-flex gap-2 justify-content-between align-items-center`}>
+        <div className={`Header ${placeInfo !== null || selectedTravel !== null ? 'active' : ''} d-flex gap-2 justify-content-between align-items-center`}>
           <TravelListDropdown
             selectedTravel={selectedTravel}
             setSelectedTravel={setSelectedTravel}
@@ -46,22 +44,13 @@ const Main = () => {
         </div> 
 
         <MapComponent
+          placeInfo={placeInfo}
           setPlaceInfo={setPlaceInfo}
+          selectedTravel={selectedTravel}
+          setSelectedTravel={setSelectedTravel}
           directions={directions}
-        />        
-        {
-          placeInfo !== null &&
-          <PlaceInfoPanel
-            placeInfo={placeInfo}
-            exit={() => {setPlaceInfo(null)}}/>
-        }
-        {
-          selectedTravel !== null &&
-          <TravelInfoPanel
-            travel={selectedTravel}
-            setDirections={setDirections}
-            exit={() => {setSelectedTravel(null)}}/>
-        }
+          setDirections={setDirections}
+        />
       </LoadScript>
     </div>
   )

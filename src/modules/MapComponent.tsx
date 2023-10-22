@@ -2,12 +2,20 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { GoogleMap, TrafficLayer, TransitLayer, MarkerF, DirectionsRenderer } from '@react-google-maps/api';
 import { useAppSelector, useAppDispatch } from '../redux/store';
-import { Dropdown, Button } from 'react-bootstrap';
+import { Dropdown } from 'react-bootstrap';
+import PlaceInfoPanel from './PlaceInfoPanel';
+import TravelInfoPanel from './TravelInfoPanel';
 import Compass from './subModules/Compass';
+import { ITravel } from '../DataType/Travel';
+import { Place } from '../DataType/Place';
 
 interface MapProps{
+  placeInfo: google.maps.places.PlaceResult | null;
   setPlaceInfo: React.Dispatch<React.SetStateAction<google.maps.places.PlaceResult | null>>;
+  selectedTravel: ITravel | null;
+  setSelectedTravel: React.Dispatch<React.SetStateAction<ITravel>>;
   directions: google.maps.DirectionsResult[];
+  setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;
 }
 
 const MapComponent = (props: MapProps) => {
@@ -18,6 +26,7 @@ const MapComponent = (props: MapProps) => {
   const [showTraffic, setShowTraffic] = useState<boolean>(false);
   const [showTransit, setShowTransit] = useState<boolean>(false);
   const [currentPosition, setCurrentPosition] = useState<google.maps.LatLng>(null);
+  const [placePositions, setPlacePositions] = useState<google.maps.LatLng[]>([]);
   
   const placesService = useMemo(() => {
     if(map) return new google.maps.places.PlacesService(map)
@@ -29,6 +38,7 @@ const MapComponent = (props: MapProps) => {
     if(selectedLatLng){
       let pos = new google.maps.LatLng(selectedLatLng.lat, selectedLatLng.lng);
       setCurrentPosition(pos);
+      props.setPlaceInfo(null);
     }
   }, [selectedLatLng]);
 
@@ -56,7 +66,7 @@ const MapComponent = (props: MapProps) => {
         ]
       } as google.maps.places.PlaceDetailsRequest;
 
-      placesService.getDetails(request, (place: any, status) => {
+      placesService.getDetails(request, (place: google.maps.places.PlaceResult, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK) {
           props.setPlaceInfo(place);
         }
@@ -81,13 +91,29 @@ const MapComponent = (props: MapProps) => {
                 options={{ disableDefaultUI : true, gestureHandling : 'greedy' }}
                 onClick={onClickMap}
                 onLoad={setMap}
-                onUnmount={() => {setMap(null)}}
-                >
+                onUnmount={() => {setMap(null)}}>
         { showTraffic && <TrafficLayer/> }
         { showTransit && <TransitLayer/> }
         { props.directions.map(d => (<DirectionsRenderer directions={d}/>)) }
         <MarkerF position={currentPosition}/>
+        { placePositions.map(p => (<MarkerF position={p}/>)) }
       </GoogleMap>
+
+      {
+        props.placeInfo !== null &&
+        <PlaceInfoPanel
+          placeInfo={props.placeInfo}
+          exit={() => {props.setPlaceInfo(null)}}/>
+      }
+      {
+        props.selectedTravel !== null &&
+        <TravelInfoPanel
+          travel={props.selectedTravel}
+          placesService={placesService}
+          setDirections={props.setDirections}
+          setPlacePositions={setPlacePositions}
+          exit={() => {props.setSelectedTravel(null)}}/>
+      }
 
       <div className='Footer w-100 d-flex flex-row justify-content-between'>
         <Dropdown title="Menu" autoClose="outside">
