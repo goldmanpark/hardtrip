@@ -93,7 +93,6 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   const confirmEdit = () => {
     dispatch(deletePlaceList({travelId: props.travel.id, placeList: orderedPlaces.filter(x => x.isDel)}));
     dispatch(updatePlaceList({travelId: props.travel.id, placeList: orderedPlaces.filter(x => !x.isDel)}));
-    props.exit();
   }
   //#endregion
 

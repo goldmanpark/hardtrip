@@ -133,7 +133,7 @@ export const createPlace = createAsyncThunk(
       
       return {
         id: param.travelId,
-        place: {...param.place, id: placeDocRef.id} as IPlace
+        place: {...newPlace, id: placeDocRef.id} as IPlace
       };
     } catch(error){
       console.error(error);
@@ -230,7 +230,7 @@ const travelListSlice = createSlice({
           return {
             ...x, 
             places: x.places.map(y => {
-              const updated = item.updateIdList.some(z => z.id === y.id);
+              const updated = item.updateIdList.find(z => z.id === y.id);
               return updated || y;
             })
           } as ITravel;

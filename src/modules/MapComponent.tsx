@@ -27,9 +27,12 @@ const MapComponent = (props: MapProps) => {
   const selectedLatLng = useAppSelector((state) => state.selectedLatLng);
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [zoom, setZoom] = useState(12);
+  const [showCurrentMarker, setShowCurrentMarker] = useState(true);
   const [showTraffic, setShowTraffic] = useState<boolean>(false);
   const [showTransit, setShowTransit] = useState<boolean>(false);
   const [currentPosition, setCurrentPosition] = useState<google.maps.LatLng>(null);
+  //TravelInfoPanel에서 가져오는 데이터
   const [markers, setMarkers] = useState<MarkerInfo[]>([]);
   const [directions, setDirections] = useState<google.maps.DirectionsResult[]>([]);
   
@@ -43,9 +46,23 @@ const MapComponent = (props: MapProps) => {
     if(selectedLatLng){
       let pos = new google.maps.LatLng(selectedLatLng.lat, selectedLatLng.lng);
       setCurrentPosition(pos);
+      setShowCurrentMarker(true);
       props.setPlaceInfo(null);
     }
   }, [selectedLatLng]);
+
+  useEffect(() => {
+    if(props.selectedTravel){
+      const list = props.selectedTravel.places;
+      if(list instanceof Array && list.length > 0){
+        const lat = list.reduce((acc, cur) => acc + cur.lat, 0) / list.length;
+        const lng = list.reduce((acc, cur) => acc + cur.lng, 0) / list.length;
+        setCurrentPosition(new google.maps.LatLng(lat, lng));
+        setZoom(13);
+        setShowCurrentMarker(false);
+      }      
+    }
+  }, [props.selectedTravel])
 
   const onClickMap = (e: google.maps.MapMouseEvent) => {
     e.stop();
@@ -74,6 +91,7 @@ const MapComponent = (props: MapProps) => {
       placesService.getDetails(request, (place: google.maps.places.PlaceResult, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK) {
           props.setPlaceInfo(place);
+          setShowCurrentMarker(true);
         }
       });
     }
@@ -97,7 +115,7 @@ const MapComponent = (props: MapProps) => {
     <React.Fragment>
       <GoogleMap mapContainerStyle={{ width: '100%', height: '100vh' }}
                 center={currentPosition}
-                zoom={12}
+                zoom={zoom}
                 clickableIcons={true}
                 options={{ disableDefaultUI : true, gestureHandling : 'greedy' }}
                 onClick={onClickMap}
@@ -106,8 +124,9 @@ const MapComponent = (props: MapProps) => {
         { showTraffic && <TrafficLayer/> }
         { showTransit && <TransitLayer/> }
         { directions.map(d => (<DirectionsRenderer directions={d}/>)) }
-        <MarkerF position={currentPosition}/>
+        { showCurrentMarker && <MarkerF position={currentPosition}/> }
         { markers.map(p => {
+          console.log(p);
           const label = {
             text: p.order.toString(),
             fontWeight: 'bold'
