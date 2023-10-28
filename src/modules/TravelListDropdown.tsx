@@ -55,7 +55,7 @@ const TravelListDropdown = (props: MenuProps) => {
   /** 신규 travel등록 */
   const addTravel = () => {
     if(!userData) return;
-    dispatch(createTravel({ uid: userData.uid, name: travelName }));
+    //dispatch(createTravel({ uid: userData.uid, name: travelName }));
   }
 
   /** 기존 travel편집 */

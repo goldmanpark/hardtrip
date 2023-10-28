@@ -4,11 +4,6 @@ import { doc, setDoc, collection, getDocs, addDoc, QuerySnapshot, deleteDoc, get
 import { query, where } from 'firebase/firestore'
 import { ITravel } from '../DataType/Travel';
 import { IPlace } from '../DataType/Place';
-interface TravelParam{
-  id?: string;
-  uid?: string;
-  name?: string;
-}
 
 interface PlaceParam{
   travelId: string;
@@ -59,17 +54,21 @@ export const readTravel = createAsyncThunk(
 
 export const createTravel = createAsyncThunk(
   'travelList/createTravel',
-  async (param: TravelParam) => {
+  async (param: ITravel) => {
     try {      
       const docRef = await addDoc(travelCollectionRef, {
         uid: param.uid,
-        name: param.name
+        name: param.name,
+        startDate: param.startDate,
+        endDate: param.endDate
       }); //doc_id자동생성
 
       return {
         id: docRef.id,
         uid: param.uid,
         name: param.name,
+        startDate: param.startDate,
+        endDate: param.endDate,
         places: []
       } as ITravel;
     } catch (error) {
