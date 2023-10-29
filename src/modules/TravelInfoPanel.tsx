@@ -6,7 +6,6 @@ import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautif
 import { ITravel, Travel } from '../DataType/Travel';
 import { IPlace, Place } from '../DataType/Place';
 import { updatePlaceList, deletePlaceList } from '../redux/travelListSlice';
-import { MarkerInfo } from './MapComponent';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import CheckIcon from '@mui/icons-material/Check';

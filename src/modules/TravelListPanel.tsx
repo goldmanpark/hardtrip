@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { Card, Table } from 'react-bootstrap';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
+
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { readTravelList, createTravel, updateTravel, deleteTravel } from '../redux/travelListSlice';
 import { readPlaceList } from '../redux/travelListSlice';
@@ -75,7 +78,8 @@ const TravelListPanel = (props: PanelProps) => {
     return (
       <tr>
         <td onClick={() => {onSelectTravel(travel)}}>{travel.name}</td>
-        <td onClick={() => {onSelectTravel(travel)}}>{`${travel.startDate} ~ ${travel.endDate}`}</td>
+        <td onClick={() => {onSelectTravel(travel)}}>{travel.startDate}</td>
+        <td onClick={() => {onSelectTravel(travel)}}>{travel.endDate}</td>
         <td><EditIcon onClick={() => {editTravel(idx)}}/></td>
         <td><DeleteIcon onClick={() => {removeTravel(travel)}}/></td>
       </tr>
@@ -87,9 +91,14 @@ const TravelListPanel = (props: PanelProps) => {
 
     return (
       <tr>
-        <td><input type='text' value={tempTravel.name} onChange={(e) => setTempTravel(prev => ({...prev, name: e.target.value}))}/></td>
         <td>
-        <input type='date' value={tempTravel.startDate} onChange={(e) => setTempTravel(prev => ({...prev, startDate: e.target.value}))}/>
+          <input type='text' value={tempTravel.name} onChange={(e) => setTempTravel(prev => ({...prev, name: e.target.value}))}/>
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
         </td>
         <td><CheckIcon onClick={() => {confirmEdit()}}/></td>
         <td><DoDisturbIcon onClick={() => {cancelEdit()}}/></td>
@@ -100,11 +109,8 @@ const TravelListPanel = (props: PanelProps) => {
   return(
     <Card className="custom-card">
       <Card.Header>
-        <div className='d-flex flex-row justify-content-between'>
-          
-          <span>
-            <CloseRoundedIcon onClick={props.exit}/>
-          </span>          
+        <div className='d-flex flex-row justify-content-end'>          
+          <CloseRoundedIcon onClick={props.exit}/>
         </div>
       </Card.Header>
       <Card.Body className='overflow-auto'>
@@ -112,12 +118,26 @@ const TravelListPanel = (props: PanelProps) => {
           <thead>
             <tr>
               <th>travel</th>
-              <th>date</th>
+              <th>start</th>
+              <th>end</th>
               <th>edit</th>
               <th>delete</th>
             </tr>
           </thead>
           <tbody>
+            <tr>
+              <td>
+                <input type='text' placeholder='new Travel' value={newTravel.name} onChange={(e) => setNewTravel(prev => ({...prev, name: e.target.value}))}/>
+              </td>
+              <td>
+                <DatePicker isClearable dateFormat="yy.MM.dd"  selected={newTravel.startDate}/>
+              </td>
+              <td>
+                <DatePicker isClearable dateFormat="yy.MM.dd" selected={newTravel.endDate}/>
+              </td>
+              <td><CheckIcon onClick={() => {confirmEdit()}}/></td>
+              <td><DoDisturbIcon onClick={() => {cancelEdit()}}/></td>
+            </tr>
           {
             travelListRedux.map((t, i) => {
               return i === editIdx ? EditRow(t) : NormalRow(t, i)
