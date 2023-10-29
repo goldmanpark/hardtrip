@@ -6,25 +6,30 @@ import './css/custom_etc.css';
 import { LoadScript, Libraries } from '@react-google-maps/api';
 import { useAppDispatch } from '../redux/store';
 import { setCurrentLatLng } from '../redux/selectedLatLngSlice';
+import { Button } from 'react-bootstrap';
 
 import Login from './Login';
 import MapComponent from './MapComponent';
-import TravelListDropdown from './TravelListDropdown';
+import TravelListPanel from './TravelListPanel';
 import LocationSearcher from './LocationSearcher';
+import PlaceInfoPanel from './PlaceInfoPanel';
+import TravelInfoPanel from './TravelInfoPanel';
 import { ITravel } from '../DataType/Travel';
 
 const Main = () => {
   const dispatch = useAppDispatch();
   const libraries: Libraries = ['places'];
-  const [placeInfo, setPlaceInfo] = useState<google.maps.places.PlaceResult | null>(null);
+  const [showTravelList, setShowTravelList] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
   const [selectedTravel, setSelectedTravel] = useState<ITravel | null>(null);
+  const [directions, setDirections] = useState<google.maps.DirectionsResult[]>([]);
   
   useEffect(() => {
-    if(placeInfo) setSelectedTravel(null);
-  }, [placeInfo]);
+    if(selectedPlace) setSelectedTravel(null);
+  }, [selectedPlace]);
 
   useEffect(() => {
-    if(selectedTravel) setPlaceInfo(null);
+    if(selectedTravel) setSelectedPlace(null);
   }, [selectedTravel])
 
   return(
@@ -32,21 +37,38 @@ const Main = () => {
       <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY ?? ''}
                   libraries={libraries}
                   onLoad={() => {dispatch(setCurrentLatLng())}}>
-        <div className={`Header ${placeInfo !== null || selectedTravel !== null ? 'active' : ''} d-flex gap-2 justify-content-between align-items-center`}>
-          <TravelListDropdown
-            selectedTravel={selectedTravel}
-            setSelectedTravel={setSelectedTravel}
-          />
+        <div className={`Header ${showTravelList || selectedPlace !== null || selectedTravel !== null ? 'active' : ''} d-flex gap-2 justify-content-between align-items-center`}>
+          <Button variant="primary" onClick={() => {setShowTravelList(true)}}>Travels</Button>
           <LocationSearcher/>
           <Login/>
         </div> 
 
         <MapComponent
-          placeInfo={placeInfo}
-          setPlaceInfo={setPlaceInfo}
+          placeInfo={selectedPlace}
+          setPlaceInfo={setSelectedPlace}
           selectedTravel={selectedTravel}
-          deSelectTravel={() => {setSelectedTravel(null)}}
+          directions={directions}
         />
+
+      {
+        showTravelList &&
+        <TravelListPanel
+          setSelectedTravel={setSelectedTravel}
+          exit={() => {setShowTravelList(false)}}/>
+      }
+      {
+        selectedPlace !== null &&
+        <PlaceInfoPanel
+          placeInfo={selectedPlace}
+          exit={() => {setSelectedPlace(null)}}/>
+      }
+      {
+        selectedTravel !== null &&
+        <TravelInfoPanel
+          travel={selectedTravel}
+          setDirections={setDirections}
+          exit={() => {setSelectedTravel(null)}}/>
+      }
       </LoadScript>
     </div>
   )

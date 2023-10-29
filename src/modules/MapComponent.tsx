@@ -3,8 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { GoogleMap, TrafficLayer, TransitLayer, MarkerF, DirectionsRenderer } from '@react-google-maps/api';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Dropdown } from 'react-bootstrap';
-import PlaceInfoPanel from './PlaceInfoPanel';
-import TravelInfoPanel from './TravelInfoPanel';
+
 import Compass from './subModules/Compass';
 import { ITravel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
@@ -13,7 +12,7 @@ interface MapProps{
   placeInfo: google.maps.places.PlaceResult | null;
   setPlaceInfo: React.Dispatch<React.SetStateAction<google.maps.places.PlaceResult | null>>;
   selectedTravel: ITravel | null;
-  deSelectTravel: () => void;
+  directions: google.maps.DirectionsResult[];
 }
 
 export interface MarkerInfo{
@@ -34,7 +33,6 @@ const MapComponent = (props: MapProps) => {
   const [currentPosition, setCurrentPosition] = useState<google.maps.LatLng>(null);
   //TravelInfoPanel에서 가져오는 데이터
   const [markers, setMarkers] = useState<MarkerInfo[]>([]);
-  const [directions, setDirections] = useState<google.maps.DirectionsResult[]>([]);
   
   const placesService = useMemo(() => {
     if(map) return new google.maps.places.PlacesService(map)
@@ -53,6 +51,7 @@ const MapComponent = (props: MapProps) => {
 
   useEffect(() => {
     if(props.selectedTravel){
+      //1. 화면이동
       const list = props.selectedTravel.places;
       if(list instanceof Array && list.length > 0){
         const lat = list.reduce((acc, cur) => acc + cur.lat, 0) / list.length;
@@ -60,6 +59,9 @@ const MapComponent = (props: MapProps) => {
         setCurrentPosition(new google.maps.LatLng(lat, lng));
         setZoom(13);
         setShowCurrentMarker(false);
+
+        //2. 마커 그리기
+        setMarkers(list.map(x => ({...x} as MarkerInfo)));
       }      
     }
   }, [props.selectedTravel])
@@ -105,12 +107,6 @@ const MapComponent = (props: MapProps) => {
     setShowTransit(prev => !prev);
   }
 
-  const exitSelectedTravel = () => {
-    props.deSelectTravel();
-    setDirections([]);
-    setMarkers([]);
-  }
-
   return (
     <React.Fragment>
       <GoogleMap mapContainerStyle={{ width: '100%', height: '100vh' }}
@@ -123,7 +119,7 @@ const MapComponent = (props: MapProps) => {
                 onUnmount={() => {setMap(null)}}>
         { showTraffic && <TrafficLayer/> }
         { showTransit && <TransitLayer/> }
-        { directions.map(d => (<DirectionsRenderer directions={d}/>)) }
+        { props.directions.map(d => (<DirectionsRenderer directions={d}/>)) }
         { showCurrentMarker && <MarkerF position={currentPosition}/> }
         { markers.map(p => {
           console.log(p);
@@ -134,21 +130,6 @@ const MapComponent = (props: MapProps) => {
           return <MarkerF position={p} label={label}/>
         }) }
       </GoogleMap>
-
-      {
-        props.placeInfo !== null &&
-        <PlaceInfoPanel
-          placeInfo={props.placeInfo}
-          exit={() => {props.setPlaceInfo(null)}}/>
-      }
-      {
-        props.selectedTravel !== null &&
-        <TravelInfoPanel
-          travel={props.selectedTravel}
-          setDirections={setDirections}
-          setMarkers={setMarkers}
-          exit={exitSelectedTravel}/>
-      }
 
       <div className='Footer w-100 d-flex flex-row justify-content-between'>
         <Dropdown title="Menu" autoClose="outside">

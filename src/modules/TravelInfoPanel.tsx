@@ -17,7 +17,6 @@ interface TravelInfoProps{
   travel: ITravel;
   exit: () => void;
   setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;
-  setMarkers: React.Dispatch<React.SetStateAction<MarkerInfo[]>>;
 }
 
 interface PlaceAug extends IPlace{
@@ -36,14 +35,6 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       setOrderedPlaces(temp.map(x => ({...x, isEdit: false, isDel: false})));
     }
   }, [props.travel]);
-
-  useEffect(() => {
-    props.setMarkers(orderedPlaces.map(x => ({
-      lat: x.lat,
-      lng: x.lng,
-      order: x.order
-    })));
-  }, [orderedPlaces]);
 
   //#region [Event Handler]
   const onDragEnd = (result: DropResult) => {

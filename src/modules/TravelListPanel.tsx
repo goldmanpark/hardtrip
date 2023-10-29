@@ -13,6 +13,7 @@ import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
 interface PanelProps{
+  setSelectedTravel: React.Dispatch<React.SetStateAction<ITravel>>;
   exit: () => void;
 }
 
@@ -38,7 +39,7 @@ const TravelListPanel = (props: PanelProps) => {
 
   /** travel이하 place등 상세정보 조회 위해 travel선택 */
   const onSelectTravel = (travel: ITravel) => {
-    //props.setSelectedTravel(travel);
+    props.setSelectedTravel(travel);
     dispatch(readPlaceList(travel.id));
   }
 
@@ -73,8 +74,8 @@ const TravelListPanel = (props: PanelProps) => {
   const NormalRow = (travel : ITravel, idx: number): JSX.Element => {
     return (
       <tr>
-        <td>{travel.name}</td>
-        <td>{`${travel.startDate} ~ ${travel.endDate}`}</td>
+        <td onClick={() => {onSelectTravel(travel)}}>{travel.name}</td>
+        <td onClick={() => {onSelectTravel(travel)}}>{`${travel.startDate} ~ ${travel.endDate}`}</td>
         <td><EditIcon onClick={() => {editTravel(idx)}}/></td>
         <td><DeleteIcon onClick={() => {removeTravel(travel)}}/></td>
       </tr>
