@@ -1,11 +1,12 @@
+import { Timestamp } from "firebase/firestore";
 import { IPlace, Place } from "./Place";
 
 export interface ITravel{
   id: string;
   uid: string;
   name: string;
-  startDate: string; //yyyy.MM.dd
-  endDate: string; //yyyy.MM.dd
+  startDate: Timestamp;
+  endDate: Timestamp;
   places: IPlace[];
 }
 
@@ -13,8 +14,8 @@ export class Travel implements ITravel{
   id: string;
   uid: string;
   name: string;
-  startDate: string;
-  endDate: string;
+  startDate: Timestamp;
+  endDate: Timestamp;
   places: Place[];
   
   constructor(travelRef: ITravel){

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import './css/custom_button.css'
 import './css/custom_place.css'
 import './css/custom_etc.css';
+import "react-datepicker/dist/react-datepicker.css";
 import { LoadScript, Libraries } from '@react-google-maps/api';
 import { useAppDispatch } from '../redux/store';
 import { setCurrentLatLng } from '../redux/selectedLatLngSlice';

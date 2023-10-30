@@ -27,8 +27,8 @@
   }
 }
 
-/* 태블릿 환경 */
-@media (min-width: 768px) and (max-width: 1199px) {
+/* 태블릿 환경 ~ 일반모니터 환경 */
+@media (min-width: 768px) and (max-width: 1920px) {
   .custom-card-enter {
     transform: translateX(-100%);
   }
@@ -52,7 +52,7 @@
     bottom: 0;
     background-color: white;
     z-index: 999;
-    width: 30%; /* 데스크톱에서 카드의 너비는 화면 너비의 15% */
+    width: 30%; /* 데스크톱에서 카드의 너비는 화면 너비의 30% */
   }
 
   /* PlaceInfoPanel을 표시할 때, Header 컨테이너의 너비를 축소시킴 */
@@ -62,7 +62,7 @@
 }
 
 /*데스크톱 환경*/
-@media (min-width: 1200px) {
+@media (min-width: 1921px) {
   .custom-card-enter {
     transform: translateX(-100%);
   }

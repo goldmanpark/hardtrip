@@ -82,7 +82,9 @@ export const updateTravel = createAsyncThunk(
   async (param: ITravel) => {
     try {
       await updateDoc(doc(db, 'travel', param.id), {
-        name: param.name
+        name: param.name,
+        startDate: param.startDate,
+        endDate: param.endDate
       });
       return param;
     } catch (error) {
