@@ -3,6 +3,7 @@ export interface IPlace{
   place_id: string;
   name: string;
   order: number;
+  day?: number;
   lat: number;
   lng: number;
 }
@@ -12,6 +13,7 @@ export class Place implements IPlace{
   place_id: string;
   name: string;
   order: number;
+  day?: number;
   lat: number;
   lng: number;
 

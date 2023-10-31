@@ -24,11 +24,11 @@ export const readTravelList = createAsyncThunk(
     try {
       const qr = query(travelCollectionRef, where('uid', '==', uid));
       const docSnap = await getDocs(qr);
-      
+
       if (docSnap instanceof QuerySnapshot){
         return docSnap.docs.map(doc => ({
           id: doc.id, ...doc.data()
-        } as ITravel));        
+        } as ITravel)).sort((x, y) => x.startDate.seconds - y.startDate.seconds);
       } else {
         return [];
       }
@@ -41,7 +41,7 @@ export const readTravelList = createAsyncThunk(
 export const readTravel = createAsyncThunk(
   'travelList/readTravel',
   async (id: string) => {
-    try {      
+    try {
       const docSnap = await getDoc(doc(db, 'travel', id));
       if(docSnap.exists()){
         return { id: docSnap.id, ...docSnap.data() } as ITravel;
@@ -55,7 +55,7 @@ export const readTravel = createAsyncThunk(
 export const createTravel = createAsyncThunk(
   'travelList/createTravel',
   async (param: ITravel) => {
-    try {      
+    try {
       const docRef = await addDoc(travelCollectionRef, {
         uid: param.uid,
         name: param.name,
@@ -131,7 +131,7 @@ export const createPlace = createAsyncThunk(
       const placeSnap = await getDocs(placeSubCollection);
       const newPlace ={...param.place, order: placeSnap.size + 1} as IPlace;
       const placeDocRef = await addDoc(placeSubCollection, newPlace);
-      
+
       return {
         id: param.travelId,
         place: {...newPlace, id: placeDocRef.id} as IPlace
@@ -148,9 +148,9 @@ export const updatePlaceList = createAsyncThunk(
     try{
       const travelDocRef = doc(travelCollectionRef, param.travelId);
       const placeSubCollection = collection(travelDocRef, 'places');
-      
+
       for(const place of param.placeList){
-        const placeDocRef = doc(placeSubCollection, place.id);      
+        const placeDocRef = doc(placeSubCollection, place.id);
         await setDoc(placeDocRef, {...place});
       }
 
@@ -170,9 +170,9 @@ export const deletePlaceList = createAsyncThunk(
     try{
       const travelDocRef = doc(travelCollectionRef, param.travelId);
       const placeSubCollection = collection(travelDocRef, 'places');
-      
+
       for(const place of param.placeList){
-        const placeDocRef = doc(placeSubCollection, place.id);      
+        const placeDocRef = doc(placeSubCollection, place.id);
         await deleteDoc(placeDocRef);
       }
 
@@ -213,10 +213,10 @@ const travelListSlice = createSlice({
     builder.addCase(createPlace.fulfilled, (state, action) => {
       return state.map((x: ITravel) => {
         if(x.id !== action.payload.id){
-          return x;          
+          return x;
         } else {
           return {
-            ...x, 
+            ...x,
             places: [...(x.places || []), action.payload.place]
           } as ITravel;
         }
@@ -226,10 +226,10 @@ const travelListSlice = createSlice({
       const item = action.payload;
       return state.map((x: ITravel) => {
         if(x.id !== item.travelId){
-          return x;          
+          return x;
         } else {
           return {
-            ...x, 
+            ...x,
             places: x.places.map(y => {
               const updated = item.updateIdList.find(z => z.id === y.id);
               return updated || y;
@@ -242,10 +242,10 @@ const travelListSlice = createSlice({
       const item = action.payload;
       return state.map((x: ITravel) => {
         if(x.id !== item.travelId){
-          return x;          
+          return x;
         } else {
           return {
-            ...x, 
+            ...x,
             places: x.places.filter(y => !item.deletedIdList.some(z => z === y.id))
           } as ITravel;
         }

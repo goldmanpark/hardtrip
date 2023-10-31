@@ -44,6 +44,7 @@ const TravelListPanel = (props: PanelProps) => {
   /** 유저접속정보 기반 travel전체목록 조회 */
   const getTravelList = (uid: string) => {
     dispatch(readTravelList(uid));
+    setNewTravel({} as ITravel);
   }
 
   /** travel이하 place등 상세정보 조회 위해 travel선택 */

@@ -122,7 +122,6 @@ const MapComponent = (props: MapProps) => {
         { props.directions.map(d => (<DirectionsRenderer directions={d}/>)) }
         { showCurrentMarker && <MarkerF position={currentPosition}/> }
         { markers.map(p => {
-          console.log(p);
           const label = {
             text: p.order.toString(),
             fontWeight: 'bold'
