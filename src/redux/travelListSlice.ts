@@ -2,17 +2,17 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { db } from '../config/firebase';
 import { doc, setDoc, collection, getDocs, addDoc, QuerySnapshot, deleteDoc, getDoc, updateDoc } from 'firebase/firestore'
 import { query, where } from 'firebase/firestore'
-import { ITravel } from '../DataType/Travel';
-import { IPlace } from '../DataType/Place';
+import { TravelFireStore, TravelRedux, TravelFS2Redux, Travel } from '../DataType/Travel';
+import { PlaceFireStore, PlaceRedux, PlaceFS2Redux, PlaceRedux2FS, Place } from '../DataType/Place';
 
 interface PlaceParam{
   travelId: string;
-  place: IPlace;
+  place: PlaceRedux;
 }
 
 interface PlaceParamList{
   travelId: string;
-  placeList: IPlace[];
+  placeList: Place[];
 }
 
 //#region [Travel CRUD]
@@ -26,9 +26,10 @@ export const readTravelList = createAsyncThunk(
       const docSnap = await getDocs(qr);
 
       if (docSnap instanceof QuerySnapshot){
-        return docSnap.docs.map(doc => ({
-          id: doc.id, ...doc.data()
-        } as ITravel)).sort((x, y) => x.startDate.seconds - y.startDate.seconds);
+        //TravelFireStore -> TravelRedux 변환
+        const fsList = docSnap.docs.map(doc => ({id: doc.id, ...doc.data()} as TravelFireStore));
+        const rdList = fsList.map(x => (TravelFS2Redux(x))).sort((x, y) => x.startDateSeconds - y.startDateSeconds);
+        return rdList;        
       } else {
         return [];
       }
@@ -44,7 +45,8 @@ export const readTravel = createAsyncThunk(
     try {
       const docSnap = await getDoc(doc(db, 'travel', id));
       if(docSnap.exists()){
-        return { id: docSnap.id, ...docSnap.data() } as ITravel;
+        const fs = { id: docSnap.id, ...docSnap.data() } as TravelFireStore;
+        return TravelFS2Redux(fs);
       }
     } catch (error) {
       console.error(error);
@@ -54,23 +56,18 @@ export const readTravel = createAsyncThunk(
 
 export const createTravel = createAsyncThunk(
   'travelList/createTravel',
-  async (param: ITravel) => {
+  async (param: Travel) => {
     try {
       const docRef = await addDoc(travelCollectionRef, {
         uid: param.uid,
         name: param.name,
-        startDate: param.startDate,
+        startDate: param.startDate, //Timestamp 자동변환
         endDate: param.endDate
       }); //doc_id자동생성
 
-      return {
-        id: docRef.id,
-        uid: param.uid,
-        name: param.name,
-        startDate: param.startDate,
-        endDate: param.endDate,
-        places: []
-      } as ITravel;
+      const redux: TravelRedux = param.getRedux();
+      redux.id = docRef.id;
+      return redux;
     } catch (error) {
       console.error(error);
     }
@@ -79,7 +76,7 @@ export const createTravel = createAsyncThunk(
 
 export const updateTravel = createAsyncThunk(
   'travelList/updateTravel',
-  async (param: ITravel) => {
+  async (param: Travel) => {
     try {
       await updateDoc(doc(db, 'travel', param.id), {
         name: param.name,
@@ -109,12 +106,13 @@ export const deleteTravel = createAsyncThunk(
 //#region [Place CRUD]
 export const readPlaceList = createAsyncThunk(
   'travelList/readPlaceList',
-  async (id: string) => {
+  async (travelId: string) => {
     try{
-      const querySnap = await getDocs(collection(db, "travel", id, 'places'));
+      const querySnap = await getDocs(collection(db, "travel", travelId, 'places'));
+      const fsList = querySnap.docs.map(x => ({id: x.id, ...x.data()} as TravelFireStore));
       return {
-        id: id,
-        places: querySnap.docs.map(x => ({id: x.id, ...x.data()} as IPlace))
+        id: travelId,
+        places: fsList.map(x => (TravelFS2Redux(x)))
       }
     } catch(error){
       console.error(error);
@@ -128,13 +126,10 @@ export const createPlace = createAsyncThunk(
     try{
       const travelDocRef = doc(travelCollectionRef, param.travelId);
       const placeSubCollection = collection(travelDocRef, 'places');
-      const placeSnap = await getDocs(placeSubCollection);
-      const newPlace ={...param.place, order: placeSnap.size + 1} as IPlace;
-      const placeDocRef = await addDoc(placeSubCollection, newPlace);
-
+      const placeDocRef = await addDoc(placeSubCollection, PlaceRedux2FS(param.place));
       return {
         id: param.travelId,
-        place: {...newPlace, id: placeDocRef.id} as IPlace
+        place: {...param.place, id: placeDocRef.id} as PlaceRedux
       };
     } catch(error){
       console.error(error);
@@ -151,12 +146,12 @@ export const updatePlaceList = createAsyncThunk(
 
       for(const place of param.placeList){
         const placeDocRef = doc(placeSubCollection, place.id);
-        await setDoc(placeDocRef, {...place});
+        await setDoc(placeDocRef, place as unknown as PlaceFireStore);
       }
 
       return {
         travelId: param.travelId,
-        updateIdList: param.placeList
+        updateIdList: param.placeList.map(x => (x.getRedux()))
       };
     } catch(error){
       console.error(error);
@@ -211,20 +206,20 @@ const travelListSlice = createSlice({
       return state.map(x => x.id === action.payload.id ? {...x, places: action.payload.places} : x);
     });
     builder.addCase(createPlace.fulfilled, (state, action) => {
-      return state.map((x: ITravel) => {
+      return state.map((x: TravelRedux) => {
         if(x.id !== action.payload.id){
           return x;
         } else {
           return {
             ...x,
             places: [...(x.places || []), action.payload.place]
-          } as ITravel;
+          } as TravelRedux;
         }
       });
     });
     builder.addCase(updatePlaceList.fulfilled, (state, action) => {
       const item = action.payload;
-      return state.map((x: ITravel) => {
+      return state.map((x: TravelRedux) => {
         if(x.id !== item.travelId){
           return x;
         } else {
@@ -234,20 +229,20 @@ const travelListSlice = createSlice({
               const updated = item.updateIdList.find(z => z.id === y.id);
               return updated || y;
             })
-          } as ITravel;
+          } as TravelRedux;
         }
       });
     });
     builder.addCase(deletePlaceList.fulfilled, (state, action) => {
       const item = action.payload;
-      return state.map((x: ITravel) => {
+      return state.map((x: TravelRedux) => {
         if(x.id !== item.travelId){
           return x;
         } else {
           return {
             ...x,
             places: x.places.filter(y => !item.deletedIdList.some(z => z === y.id))
-          } as ITravel;
+          } as TravelRedux;
         }
       });
     });

@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useAppDispatch } from '../redux/store';
 import { Card, Table } from 'react-bootstrap';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
-import { ITravel, Travel } from '../DataType/Travel';
-import { IPlace, Place } from '../DataType/Place';
+import { Travel } from '../DataType/Travel';
+import { Place } from '../DataType/Place';
 import { updatePlaceList, deletePlaceList } from '../redux/travelListSlice';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DoDisturbIcon from '@mui/icons-material/DoDisturb';
@@ -13,13 +13,9 @@ import RouteIcon from '@mui/icons-material/Route';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
 interface TravelInfoProps{
-  travel: ITravel;
+  travel: Travel;
   exit: () => void;
   setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;
-}
-
-interface PlaceAug extends IPlace{
-  isDel: boolean;
 }
 
 interface TravelDay{
@@ -32,13 +28,13 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   const directionsService = new google.maps.DirectionsService();
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [travelDays, setTravelDays] = useState<TravelDay[]>([]);
-  const [orderedPlaces, setOrderedPlaces] = useState<PlaceAug[]>([]);
+  const [orderedPlaces, setOrderedPlaces] = useState<Place[]>([]);
 
   useEffect(() => {
     if(props.travel && props.travel.places instanceof Array){
       //1. travelDays생성
-      const startDate = props.travel.startDate.toDate();
-      const endDate = props.travel.endDate.toDate();
+      const startDate = props.travel.startDate;
+      const endDate = props.travel.endDate;
       const days = getDaysDiff(endDate, startDate);
 
       const list = [];
@@ -53,8 +49,8 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       list.unshift({ date: 'N/A' } as TravelDay);
       setTravelDays(list);
 
-      let temp = [...props.travel.places].sort((x, y) => x.order - y.order);
-      setOrderedPlaces(temp.map(x => ({...x, isEdit: false, isDel: false})));
+      let temp = [...props.travel.places].sort((x, y) => getDaysDiff(x.startDTTM, y.startDTTM));
+      setOrderedPlaces(temp);
     }
   }, [props.travel]);
 
@@ -72,7 +68,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     if(result.source.droppableId === result.destination.droppableId){
       const [removed] = reorderedData.splice(result.source.index, 1);
       reorderedData.splice(result.destination.index, 0, removed);
-      setOrderedPlaces(reorderedData.map((x, i) => ({...x, order: x.order === 999 ? 999 : i + 1})));
+      setOrderedPlaces(reorderedData);
       setIsEdit(true);
     } else {
       reorderedData[result.source.index].day = parseInt(result.destination.droppableId);
@@ -101,19 +97,19 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     }
   }
 
-  const removePlace = (place: IPlace) => {
-    const data = orderedPlaces.map(x => x.id === place.id ? {...x, isDel: true, order: 999} : x).sort((x, y) => x.order - y.order);
-    data.forEach((x, i) => {
-      if(x.order !== 999) x.order = i + 1;
-    });
+  const removePlace = (place: Place) => {
+    const data = [...orderedPlaces];
+    const i = data.findIndex(x => x.id === place.id);
+    data[i].isDel = true;
     setOrderedPlaces(data);
     setIsEdit(true);
   }
 
-  const cancelRemove = (place: IPlace) => {
-    const newOrder = orderedPlaces.filter(x => !x.isDel).length + 1;
-    const data = orderedPlaces.map(x => x.id === place.id ? {...x, isDel: false, order: newOrder} : x);
-    setOrderedPlaces(data.sort(x => x.order));
+  const cancelRemove = (place: Place) => {
+    const data = [...orderedPlaces];
+    const i = data.findIndex(x => x.id === place.id);
+    data[i].isDel = false;
+    setOrderedPlaces(data);
   }
 
   const confirmEdit = () => {
@@ -157,7 +153,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     )
   }
 
-  const drawDraggable = (i: number, place: PlaceAug) => {
+  const drawDraggable = (i: number, place: Place) => {
     return (
       <Draggable key={place.id} draggableId={place.id} index={i}>
       {(p2) => (

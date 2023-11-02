@@ -15,14 +15,14 @@ import TravelListPanel from './TravelListPanel';
 import LocationSearcher from './LocationSearcher';
 import PlaceInfoPanel from './PlaceInfoPanel';
 import TravelInfoPanel from './TravelInfoPanel';
-import { ITravel } from '../DataType/Travel';
+import { Travel } from '../DataType/Travel';
 
 const Main = () => {
   const dispatch = useAppDispatch();
   const libraries: Libraries = ['places'];
   const [showTravelList, setShowTravelList] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
-  const [selectedTravel, setSelectedTravel] = useState<ITravel | null>(null);
+  const [selectedTravel, setSelectedTravel] = useState<Travel | null>(null);
   const [directions, setDirections] = useState<google.maps.DirectionsResult[]>([]);
   
   useEffect(() => {

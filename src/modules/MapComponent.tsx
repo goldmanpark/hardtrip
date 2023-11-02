@@ -5,13 +5,13 @@ import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Dropdown } from 'react-bootstrap';
 
 import Compass from './subModules/Compass';
-import { ITravel } from '../DataType/Travel';
+import { Travel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
 
 interface MapProps{
   placeInfo: google.maps.places.PlaceResult | null;
   setPlaceInfo: React.Dispatch<React.SetStateAction<google.maps.places.PlaceResult | null>>;
-  selectedTravel: ITravel | null;
+  selectedTravel: Travel | null;
   directions: google.maps.DirectionsResult[];
 }
 
@@ -54,14 +54,18 @@ const MapComponent = (props: MapProps) => {
       //1. 화면이동
       const list = props.selectedTravel.places;
       if(list instanceof Array && list.length > 0){
-        const lat = list.reduce((acc, cur) => acc + cur.lat, 0) / list.length;
-        const lng = list.reduce((acc, cur) => acc + cur.lng, 0) / list.length;
+        const lat = list.reduce((acc, cur) => acc + cur.latLng.lat(), 0) / list.length;
+        const lng = list.reduce((acc, cur) => acc + cur.latLng.lng(), 0) / list.length;
         setCurrentPosition(new google.maps.LatLng(lat, lng));
         setZoom(13);
         setShowCurrentMarker(false);
 
         //2. 마커 그리기
-        setMarkers(list.map(x => ({...x} as MarkerInfo)));
+        setMarkers(list.map((x, i) => ({
+          lat: x.latLng.lat(),
+          lng: x.latLng.lng(),
+          order: i
+        } as MarkerInfo)));
       }      
     }
   }, [props.selectedTravel])
