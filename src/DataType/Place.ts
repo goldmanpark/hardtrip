@@ -64,24 +64,26 @@ export class Place{
   isDel: boolean;
   isEdit: boolean;
 
-  constructor(redux: PlaceRedux){
-    this.id = redux.id;
-    this.place_id = redux.place_id;
-    this.name = redux.name;
-    this.day = redux.day;
-
-    if(redux.startDTTMSeconds){
-      this.startDTTM = (new Timestamp(redux.startDTTMSeconds, redux.startDTTMNanoSeconds)).toDate();
-    }
-    if(redux.endDTTMSeconds){
-      this.endDTTM = (new Timestamp(redux.endDTTMSeconds, redux.endDTTMNanoSeconds)).toDate();
-    }
-    this.latLng = new google.maps.LatLng(redux.latLng);
-    this.isDel = false;
-    this.isEdit = false;
+  constructor(redux?: PlaceRedux){
+    if(redux){
+      this.id = redux.id;
+      this.place_id = redux.place_id;
+      this.name = redux.name;
+      this.day = redux.day;
+  
+      if(redux.startDTTMSeconds){
+        this.startDTTM = (new Timestamp(redux.startDTTMSeconds, redux.startDTTMNanoSeconds)).toDate();
+      }
+      if(redux.endDTTMSeconds){
+        this.endDTTM = (new Timestamp(redux.endDTTMSeconds, redux.endDTTMNanoSeconds)).toDate();
+      }
+      this.latLng = new google.maps.LatLng(redux.latLng);
+      this.isDel = false;
+      this.isEdit = false;
+    }    
   }
 
-  getRedux(): PlaceRedux{
+  public getRedux(): PlaceRedux{
     const redux = {
       id: this.id,
       place_id: this.place_id,

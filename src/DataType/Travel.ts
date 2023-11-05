@@ -49,25 +49,27 @@ export class Travel{
   endDate: Date;
   places: Place[];
   
-  constructor(redux: TravelRedux){
-    this.id = redux.id;
-    this.uid = redux.uid;
-    this.name = redux.name;
-    
-    if(redux.startDateSeconds){
-      this.startDate = new Timestamp(redux.startDateSeconds, redux.startDateNanoSeconds).toDate();
+  constructor(redux?: TravelRedux){
+    if(redux){
+      this.id = redux.id;
+      this.uid = redux.uid;
+      this.name = redux.name;
+      
+      if(redux.startDateSeconds){
+        this.startDate = new Timestamp(redux.startDateSeconds, redux.startDateNanoSeconds).toDate();
+      }
+      if(redux.endDateSeconds){
+        this.endDate = new Timestamp(redux.endDateSeconds, redux.endDateNanoSeconds).toDate();
+      }    
+      if(redux.places instanceof Array && redux.places.length > 0){
+        this.places = redux.places.map(x => { return new Place(x) });
+      } else {
+        this.places = [];
+      }    
     }
-    if(redux.endDateSeconds){
-      this.endDate = new Timestamp(redux.endDateSeconds, redux.endDateNanoSeconds).toDate();
-    }    
-    if(redux.places instanceof Array && redux.places.length > 0){
-      this.places = redux.places.map(x => { return new Place(x) });
-    } else {
-      this.places = [];
-    }    
   }
 
-  getRedux(): TravelRedux{
+  public getRedux(): TravelRedux{
     const redux = {
       id: this.id,
       uid: this.uid,
@@ -87,5 +89,22 @@ export class Travel{
     }
 
     return redux;
+  }
+
+  public getFS(): TravelFireStore{
+    const fs = {
+      id : this.id,
+      uid : this.uid,
+      name : this.name
+    } as TravelFireStore;
+
+    if(this.startDate){
+      fs.startDate = Timestamp.fromDate(this.startDate);
+    }
+    if(this.endDate){
+      fs.endDate = Timestamp.fromDate(this.endDate);
+    }
+
+    return fs;
   }
 }

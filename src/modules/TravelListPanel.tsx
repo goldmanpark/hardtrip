@@ -26,9 +26,9 @@ const TravelListPanel = (props: PanelProps) => {
   const { userData } = useAuth();
 
   const [travelList, setTravelList] = useState<Travel[]>([]);
-  const [newTravel, setNewTravel] = useState<Travel>({} as Travel);
+  const [newTravel, setNewTravel] = useState<Travel>(new Travel());
   const [editIdx, setEditIdx] = useState(-1);
-  const [tempTravel, setTempTravel] = useState<Travel>({} as Travel);
+  const [tempTravel, setTempTravel] = useState<Travel>(new Travel());
 
   useEffect(() => {
     if(userData) getTravelList(userData.uid);
@@ -49,7 +49,7 @@ const TravelListPanel = (props: PanelProps) => {
   /** 유저접속정보 기반 travel전체목록 조회 */
   const getTravelList = (uid: string) => {
     dispatch(readTravelList(uid));
-    setNewTravel({} as Travel);
+    setNewTravel(new Travel());
   }
 
   /** travel이하 place등 상세정보 조회 위해 travel선택 */
@@ -65,11 +65,12 @@ const TravelListPanel = (props: PanelProps) => {
   /** 신규 travel등록 */
   const addTravel = () => {
     if(!userData) return;
-    dispatch(createTravel({...newTravel, uid: userData.uid} as Travel));
+    newTravel.uid = userData.uid;
+    dispatch(createTravel(newTravel.getFS()));
   }
 
   const cancelAdd = () => {
-    setNewTravel({} as Travel);
+    setNewTravel(new Travel());
   }
 
   /** 기존 travel편집 */
@@ -79,7 +80,7 @@ const TravelListPanel = (props: PanelProps) => {
 
   /** travel 수정 확정 */
   const confirmEdit = () => {
-    dispatch(updateTravel(tempTravel));
+    dispatch(updateTravel(tempTravel.getFS()));
     setEditIdx(-1);
   }
 
@@ -113,19 +114,24 @@ const TravelListPanel = (props: PanelProps) => {
         <td>
           <input className='w-100' type='text' 
                  value={tempTravel.name} 
-                 onChange={(e) => setTempTravel(prev => ({...prev, name: e.target.value} as Travel))}/>
+                 onChange={(e) => {
+                  // setTempTravel(prev => ({
+                  //   ...prev,
+                  //   name : e.target.value
+                  // } as Travel)
+                }}/>
         </td>
         <td>
           <DatePicker className='w-100 text-align-center'
                       dateFormat="yy.MM.dd"
                       selected={tempTravel.startDate}
-                      onChange={(date) => setTempTravel(prev => ({...prev, startDate: date} as Travel))}/>
+                      onChange={(date) => {tempTravel.startDate = date;}}/>
         </td>
         <td>
           <DatePicker className='w-100 text-align-center'
                       dateFormat="yy.MM.dd"
                       selected={tempTravel.endDate}
-                      onChange={(date) => setTempTravel(prev => ({...prev, endDate: date} as Travel))}/>
+                      onChange={(date) => {tempTravel.endDate = date;}}/>
         </td>
         <td><CheckIcon onClick={() => {confirmEdit()}}/></td>
         <td><DoDisturbIcon onClick={() => {cancelEdit()}}/></td>
@@ -164,19 +170,19 @@ const TravelListPanel = (props: PanelProps) => {
                 <input className='w-100' type='text'
                        placeholder='new Travel'
                        value={newTravel.name}
-                       onChange={(e) => setNewTravel(prev => ({...prev, name: e.target.value} as Travel))}/>
+                       onChange={(e) => {newTravel.name = e.target.value}}/>
               </td>
               <td>
                 <DatePicker className='w-100 text-align-center'
                             dateFormat="yy.MM.dd"
                             selected={newTravel.startDate}
-                            onChange={(date) => setNewTravel(prev => ({...prev, startDate: date} as Travel))}/>
+                            onChange={(date) => {newTravel.startDate = date;}}/>
               </td>
               <td>
                 <DatePicker className='w-100 text-align-center'
                             dateFormat="yy.MM.dd"
                             selected={newTravel.endDate}
-                            onChange={(date) => setNewTravel(prev => ({...prev, endDate: date} as Travel))}/>
+                            onChange={(date) => {newTravel.endDate = date;}}/>
               </td>
               <td><CheckIcon onClick={addTravel}/></td>
               <td><DoDisturbIcon onClick={cancelAdd}/></td>

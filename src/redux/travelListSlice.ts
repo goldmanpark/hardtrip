@@ -56,16 +56,16 @@ export const readTravel = createAsyncThunk(
 
 export const createTravel = createAsyncThunk(
   'travelList/createTravel',
-  async (param: Travel) => {
+  async (param: TravelFireStore) => {
     try {
       const docRef = await addDoc(travelCollectionRef, {
         uid: param.uid,
         name: param.name,
-        startDate: param.startDate, //Timestamp 자동변환
-        endDate: param.endDate
+        ...(param.startDate && { startDate: param.startDate }),
+        ...(param.endDate && { endDate: param.endDate })
       }); //doc_id자동생성
 
-      const redux: TravelRedux = param.getRedux();
+      const redux: TravelRedux = TravelFS2Redux(param);
       redux.id = docRef.id;
       return redux;
     } catch (error) {
@@ -76,7 +76,7 @@ export const createTravel = createAsyncThunk(
 
 export const updateTravel = createAsyncThunk(
   'travelList/updateTravel',
-  async (param: Travel) => {
+  async (param: TravelFireStore) => {
     try {
       await updateDoc(doc(db, 'travel', param.id), {
         name: param.name,
