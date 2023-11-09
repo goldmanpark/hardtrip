@@ -5,7 +5,10 @@ import './css/custom_place.css'
 import './css/custom_etc.css';
 import "react-datepicker/dist/react-datepicker.css";
 import { LoadScript, Libraries } from '@react-google-maps/api';
+
+import { useAuth } from '../AuthContext';
 import { useAppDispatch } from '../redux/store';
+import { readTravelList } from '../redux/travelListSlice';
 import { setCurrentLatLng } from '../redux/selectedLatLngSlice';
 import { Button } from 'react-bootstrap';
 
@@ -20,6 +23,7 @@ import { Travel } from '../DataType/Travel';
 const Main = () => {
   const dispatch = useAppDispatch();
   const libraries: Libraries = ['places'];
+  const { userData } = useAuth();
   const [showTravelList, setShowTravelList] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
   const [selectedTravel, setSelectedTravel] = useState<Travel | null>(null);
@@ -31,7 +35,13 @@ const Main = () => {
 
   useEffect(() => {
     if(selectedTravel) setSelectedPlace(null);
-  }, [selectedTravel])
+  }, [selectedTravel]);
+
+  useEffect(() => {
+    if(userData){
+      dispatch(readTravelList(userData.uid)); 
+    }    
+  }, [userData])
 
   return(
     <div className='d-flex'>
@@ -54,7 +64,7 @@ const Main = () => {
       {
         showTravelList &&
         <TravelListPanel
-          setSelectedTravel={setSelectedTravel}
+          //setSelectedTravel={setSelectedTravel}
           exit={() => {setShowTravelList(false)}}/>
       }
       {

@@ -20,7 +20,7 @@ export function serializeTravel(travel: Travel): TravelSerialized{
     ...travel,
     startDate: travel.startDate ? travel.startDate.getTime() : undefined,
     endDate: travel.endDate ? travel.endDate.getTime() : undefined,
-    places: travel.places.map(x => serializePlace(x))
+    places: travel.places instanceof Array ? travel.places.map(x => serializePlace(x)) : []
   } as TravelSerialized;
 }
 
@@ -29,6 +29,6 @@ export function deSerializeTravel(travel: TravelSerialized): Travel{
     ...travel,
     startDate: travel.startDate ? new Date(travel.startDate) : undefined,
     endDate: travel.endDate ? new Date(travel.endDate) : undefined,
-    places: travel.places.map(x => deSerializePlace(x))
+    places: travel.places instanceof Array ? travel.places.map(x => deSerializePlace(x)) : []
   } as Travel;
 }

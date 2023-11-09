@@ -98,23 +98,23 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   }
 
   const removePlace = (place: Place) => {
-    const data = [...orderedPlaces];
-    const i = data.findIndex(x => x.id === place.id);
-    data[i].isDel = true;
-    setOrderedPlaces(data);
-    setIsEdit(true);
+    // const data = [...orderedPlaces];
+    // const i = data.findIndex(x => x.id === place.id);
+    // data[i].isDel = true;
+    // setOrderedPlaces(data);
+    // setIsEdit(true);
   }
 
   const cancelRemove = (place: Place) => {
-    const data = [...orderedPlaces];
-    const i = data.findIndex(x => x.id === place.id);
-    data[i].isDel = false;
-    setOrderedPlaces(data);
+    // const data = [...orderedPlaces];
+    // const i = data.findIndex(x => x.id === place.id);
+    // data[i].isDel = false;
+    // setOrderedPlaces(data);
   }
 
   const confirmEdit = () => {
-    dispatch(deletePlaceList({travelId: props.travel.id, placeList: orderedPlaces.filter(x => x.isDel)}));
-    dispatch(updatePlaceList({travelId: props.travel.id, placeList: orderedPlaces.filter(x => !x.isDel)}));
+    // dispatch(deletePlaceList({travelId: props.travel.id, placeList: orderedPlaces.filter(x => x.isDel)}));
+    // dispatch(updatePlaceList({travelId: props.travel.id, placeList: orderedPlaces.filter(x => !x.isDel)}));
   }
   //#endregion
 
@@ -158,7 +158,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       <Draggable key={place.id} draggableId={place.id} index={i}>
       {(p2) => (
         <tr ref={p2.innerRef} {...p2.draggableProps} {...p2.dragHandleProps}>
-          <td className='text-align-left' style={{textDecoration: place.isDel ? 'line-through' : ''}}>
+          {/* <td className='text-align-left' style={{textDecoration: place.isDel ? 'line-through' : ''}}>
             {place.name}
           </td>
           <td>
@@ -167,7 +167,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
                 ? <DoDisturbIcon onClick={() => {cancelRemove(place)}}/>
                 : <DeleteIcon onClick={() => {removePlace(place)}}/>
             }
-          </td>
+          </td> */}
         </tr>
       )}
       </Draggable>

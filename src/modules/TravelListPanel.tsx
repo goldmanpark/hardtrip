@@ -6,36 +6,31 @@ import DatePicker from 'react-datepicker';
 
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { readTravelList, createTravel, updateTravel, deleteTravel } from '../redux/travelListSlice';
-import { readPlaceList } from '../redux/travelListSlice';
-import { Travel, TravelRedux } from '../DataType/Travel';
+import { readPlaceList, setSelectedIdx } from '../redux/travelListSlice';
+import { Travel, TravelSerialized, deSerializeTravel } from '../DataType/Travel';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
 import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import { Place, PlaceRedux } from '../DataType/Place';
+import { Place, PlaceSerialized, deSerializePlace } from '../DataType/Place';
 
 interface PanelProps{
-  setSelectedTravel: React.Dispatch<React.SetStateAction<Travel>>;
   exit: () => void;
 }
 
 const TravelListPanel = (props: PanelProps) => {
   const dispatch = useAppDispatch();
-  const travelListRedux: TravelRedux[] = useAppSelector((state) => state.travelList);
+  const travelListRedux: TravelSerialized[] = useAppSelector((state) => state.travelList.list);
   const { userData } = useAuth();
 
   const [travelList, setTravelList] = useState<Travel[]>([]);
-  const [newTravel, setNewTravel] = useState<Travel>(new Travel());
+  const [newTravel, setNewTravel] = useState<Travel>({} as Travel);
   const [editIdx, setEditIdx] = useState(-1);
-  const [tempTravel, setTempTravel] = useState<Travel>(new Travel());
+  const [tempTravel, setTempTravel] = useState<Travel>({} as Travel);
 
   useEffect(() => {
-    if(userData) getTravelList(userData.uid);
-  }, [userData]);
-
-  useEffect(() => {
-    setTravelList(travelListRedux.map(x => (new Travel(x))));
+    setTravelList(travelListRedux.map(x => { return deSerializeTravel(x)}));
   }, [travelListRedux]);
 
   useEffect(() => { //이거 useEffect로 안하면 render에러발생
@@ -49,15 +44,13 @@ const TravelListPanel = (props: PanelProps) => {
   /** 유저접속정보 기반 travel전체목록 조회 */
   const getTravelList = (uid: string) => {
     dispatch(readTravelList(uid));
-    setNewTravel(new Travel());
+    setNewTravel({} as Travel);
   }
 
   /** travel이하 place등 상세정보 조회 위해 travel선택 */
-  const onSelectTravel = (travel: Travel) => {    
+  const onSelectTravel = (idx: number, travel: Travel) => {
     dispatch(readPlaceList(travel.id)).then((action) => {
-      const p = action.payload as any;
-      travel.places = p.places.map((x: PlaceRedux) => (new Place(x)));
-      props.setSelectedTravel(travel);
+      dispatch(setSelectedIdx(idx));
     });
     
   }
@@ -66,11 +59,11 @@ const TravelListPanel = (props: PanelProps) => {
   const addTravel = () => {
     if(!userData) return;
     newTravel.uid = userData.uid;
-    dispatch(createTravel(newTravel.getFS()));
+    dispatch(createTravel(newTravel));
   }
 
   const cancelAdd = () => {
-    setNewTravel(new Travel());
+    setNewTravel({} as Travel);
   }
 
   /** 기존 travel편집 */
@@ -80,7 +73,7 @@ const TravelListPanel = (props: PanelProps) => {
 
   /** travel 수정 확정 */
   const confirmEdit = () => {
-    dispatch(updateTravel(tempTravel.getFS()));
+    dispatch(updateTravel(tempTravel));
     setEditIdx(-1);
   }
 
@@ -99,9 +92,9 @@ const TravelListPanel = (props: PanelProps) => {
   const NormalRow = (idx: number, travel : Travel): JSX.Element => {
     return (
       <tr key={idx}>
-        <td onClick={() => {onSelectTravel(travel)}} className='text-align-left'>{travel.name}</td>
-        <td onClick={() => {onSelectTravel(travel)}}>{travel.startDate?.toLocaleDateString()}</td>
-        <td onClick={() => {onSelectTravel(travel)}}>{travel.endDate?.toLocaleDateString()}</td>
+        <td onClick={() => {onSelectTravel(idx, travel)}} className='text-align-left'>{travel.name}</td>
+        <td onClick={() => {onSelectTravel(idx, travel)}}>{travel.startDate?.toLocaleDateString()}</td>
+        <td onClick={() => {onSelectTravel(idx, travel)}}>{travel.endDate?.toLocaleDateString()}</td>
         <td><EditIcon onClick={() => {editTravel(idx)}}/></td>
         <td><DeleteIcon onClick={() => {removeTravel(travel)}}/></td>
       </tr>
@@ -114,24 +107,19 @@ const TravelListPanel = (props: PanelProps) => {
         <td>
           <input className='w-100' type='text' 
                  value={tempTravel.name} 
-                 onChange={(e) => {
-                  // setTempTravel(prev => ({
-                  //   ...prev,
-                  //   name : e.target.value
-                  // } as Travel)
-                }}/>
+                 onChange={(e) => {setTempTravel(prev => ({...prev, name: e.target.value}))}}/>
         </td>
         <td>
           <DatePicker className='w-100 text-align-center'
                       dateFormat="yy.MM.dd"
                       selected={tempTravel.startDate}
-                      onChange={(date) => {tempTravel.startDate = date;}}/>
+                      onChange={(date) => {setTempTravel(prev => ({...prev, startDate: date}))}}/>
         </td>
         <td>
           <DatePicker className='w-100 text-align-center'
                       dateFormat="yy.MM.dd"
                       selected={tempTravel.endDate}
-                      onChange={(date) => {tempTravel.endDate = date;}}/>
+                      onChange={(date) => {setTempTravel(prev => ({...prev, endDate: date}))}}/>
         </td>
         <td><CheckIcon onClick={() => {confirmEdit()}}/></td>
         <td><DoDisturbIcon onClick={() => {cancelEdit()}}/></td>
@@ -165,24 +153,25 @@ const TravelListPanel = (props: PanelProps) => {
             </tr>
           </thead>
           <tbody>
+            {/* new Travel 용 */}
             <tr>
               <td>
                 <input className='w-100' type='text'
                        placeholder='new Travel'
                        value={newTravel.name}
-                       onChange={(e) => {newTravel.name = e.target.value}}/>
+                       onChange={(e) => {setNewTravel(prev => ({...prev, name: e.target.value}))}}/>
               </td>
               <td>
                 <DatePicker className='w-100 text-align-center'
                             dateFormat="yy.MM.dd"
                             selected={newTravel.startDate}
-                            onChange={(date) => {newTravel.startDate = date;}}/>
+                            onChange={(date) => {setNewTravel(prev => ({...prev, startDate: date}))}}/>
               </td>
               <td>
                 <DatePicker className='w-100 text-align-center'
                             dateFormat="yy.MM.dd"
                             selected={newTravel.endDate}
-                            onChange={(date) => {newTravel.endDate = date;}}/>
+                            onChange={(date) => {setNewTravel(prev => ({...prev, endDate: date}))}}/>
               </td>
               <td><CheckIcon onClick={addTravel}/></td>
               <td><DoDisturbIcon onClick={cancelAdd}/></td>

@@ -1,18 +1,28 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { db } from '../config/firebase';
 import { doc, setDoc, collection, getDocs, addDoc, QuerySnapshot, deleteDoc, getDoc, updateDoc } from 'firebase/firestore'
 import { query, where } from 'firebase/firestore'
-import { TravelFireStore, TravelRedux, TravelFS2Redux, Travel } from '../DataType/Travel';
-import { PlaceFireStore, PlaceRedux, PlaceFS2Redux, PlaceRedux2FS, Place } from '../DataType/Place';
+import { Travel, TravelSerialized, serializeTravel, deSerializeTravel } from '../DataType/Travel';
+import { Place, PlaceSerialized, serializePlace, deSerializePlace } from '../DataType/Place';
 
 interface PlaceParam{
   travelId: string;
-  place: PlaceRedux;
+  place: Place;
 }
 
 interface PlaceParamList{
   travelId: string;
   placeList: Place[];
+}
+
+interface State{
+  list: TravelSerialized[];
+  selectedIdx: number;
+}
+
+const initialState: State = {
+  list: [],
+  selectedIdx: -1
 }
 
 //#region [Travel CRUD]
@@ -26,9 +36,12 @@ export const readTravelList = createAsyncThunk(
       const docSnap = await getDocs(qr);
 
       if (docSnap instanceof QuerySnapshot){
-        //TravelFireStore -> TravelRedux 변환
-        const fsList = docSnap.docs.map(doc => ({id: doc.id, ...doc.data()} as TravelFireStore));
-        const rdList = fsList.map(x => (TravelFS2Redux(x))).sort((x, y) => x.startDateSeconds - y.startDateSeconds);
+        const fsList = docSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+        const rdList = fsList.map((x: any) => ({
+          ...x,
+          startDate: x.startDate?.toDate().getTime(),
+          endDate: x.endDate?.toDate().getTime()
+        } as TravelSerialized)).sort((x, y) => x.startDate - y.startDate);
         return rdList;        
       } else {
         return [];
@@ -39,24 +52,9 @@ export const readTravelList = createAsyncThunk(
   }
 )
 
-export const readTravel = createAsyncThunk(
-  'travelList/readTravel',
-  async (id: string) => {
-    try {
-      const docSnap = await getDoc(doc(db, 'travel', id));
-      if(docSnap.exists()){
-        const fs = { id: docSnap.id, ...docSnap.data() } as TravelFireStore;
-        return TravelFS2Redux(fs);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }
-)
-
 export const createTravel = createAsyncThunk(
   'travelList/createTravel',
-  async (param: TravelFireStore) => {
+  async (param: Travel) => {
     try {
       const docRef = await addDoc(travelCollectionRef, {
         uid: param.uid,
@@ -65,9 +63,9 @@ export const createTravel = createAsyncThunk(
         ...(param.endDate && { endDate: param.endDate })
       }); //doc_id자동생성
 
-      const redux: TravelRedux = TravelFS2Redux(param);
-      redux.id = docRef.id;
-      return redux;
+      const ser = serializeTravel(param);
+      ser.id = docRef.id;
+      return ser;
     } catch (error) {
       console.error(error);
     }
@@ -76,14 +74,15 @@ export const createTravel = createAsyncThunk(
 
 export const updateTravel = createAsyncThunk(
   'travelList/updateTravel',
-  async (param: TravelFireStore) => {
+  async (param: Travel) => {
     try {
       await updateDoc(doc(db, 'travel', param.id), {
         name: param.name,
         startDate: param.startDate,
         endDate: param.endDate
       });
-      return param;
+
+      return serializeTravel(param);
     } catch (error) {
       console.error(error);
     }
@@ -109,11 +108,15 @@ export const readPlaceList = createAsyncThunk(
   async (travelId: string) => {
     try{
       const querySnap = await getDocs(collection(db, "travel", travelId, 'places'));
-      const fsList = querySnap.docs.map(x => ({id: x.id, ...x.data()} as TravelFireStore));
+      const fsList = querySnap.docs.map(x => ({id: x.id, ...x.data()}));
       return {
         id: travelId,
-        places: fsList.map(x => (TravelFS2Redux(x)))
-      }
+        places: fsList.map((x: any) => ({
+          ...x,
+          startDTTM: x.startDTTM?.toDate().getTime(),
+          endDTTM: x.endDTTM?.toDate().getTime()
+        } as PlaceSerialized))
+      };
     } catch(error){
       console.error(error);
     }
@@ -126,11 +129,11 @@ export const createPlace = createAsyncThunk(
     try{
       const travelDocRef = doc(travelCollectionRef, param.travelId);
       const placeSubCollection = collection(travelDocRef, 'places');
-      const placeDocRef = await addDoc(placeSubCollection, PlaceRedux2FS(param.place));
-      return {
-        id: param.travelId,
-        place: {...param.place, id: placeDocRef.id} as PlaceRedux
-      };
+      const placeDocRef = await addDoc(placeSubCollection, param.place);
+      const ser = serializePlace(param.place);
+      ser.id = placeDocRef.id;
+
+      return { id: param.travelId, place: ser };
     } catch(error){
       console.error(error);
     }
@@ -146,12 +149,12 @@ export const updatePlaceList = createAsyncThunk(
 
       for(const place of param.placeList){
         const placeDocRef = doc(placeSubCollection, place.id);
-        await setDoc(placeDocRef, place as unknown as PlaceFireStore);
+        await setDoc(placeDocRef, place);
       }
 
       return {
         travelId: param.travelId,
-        updateIdList: param.placeList.map(x => (x.getRedux()))
+        updateIdList: param.placeList.map(x => (serializePlace(x)))
       };
     } catch(error){
       console.error(error);
@@ -184,69 +187,102 @@ export const deletePlaceList = createAsyncThunk(
 
 const travelListSlice = createSlice({
   name : 'travelList',
-  initialState : [],
-  reducers : {},
+  initialState : initialState,
+  reducers : {
+    setSelectedIdx: (state, action: PayloadAction<number>) => {
+      return {
+        ...state,
+        selectedIdx : action.payload
+      }
+    }
+  },
   extraReducers: (builder) => {
     builder.addCase(readTravelList.fulfilled, (state, action) => {
-      return action.payload;
+      return {
+        ...state,
+        list : action.payload
+      };
     });
     builder.addCase(createTravel.fulfilled, (state, action) => {
-      return [...state, action.payload];
-    });
-    builder.addCase(readTravel.fulfilled, (state, action) => {
-      return state.map(x => x.id === action.payload.id ? action.payload : x);
+      return {
+        ...state,
+        list : [...state.list, action.payload]
+      };
     });
     builder.addCase(updateTravel.fulfilled, (state, action) => {
-      return state.map(x => x.id === action.payload.id ? action.payload : x);
+      return {
+        ...state,
+        list : state.list.map(x => x.id === action.payload.id ? action.payload : x)
+      };
     });
     builder.addCase(deleteTravel.fulfilled, (state, action) => {
-      return state.filter(x => x.id !== action.payload)
+      return {
+        ...state,
+        list : state.list.filter(x => x.id !== action.payload)
+      };
     });
     builder.addCase(readPlaceList.fulfilled, (state, action) => {
-      return state.map(x => x.id === action.payload.id ? {...x, places: action.payload.places} : x);
+      return {
+        ...state,
+        list : state.list.map(x => 
+          x.id === action.payload.id 
+            ? {...x, places: action.payload.places} 
+            : x
+        )
+      };
     });
     builder.addCase(createPlace.fulfilled, (state, action) => {
-      return state.map((x: TravelRedux) => {
-        if(x.id !== action.payload.id){
-          return x;
-        } else {
-          return {
-            ...x,
-            places: [...(x.places || []), action.payload.place]
-          } as TravelRedux;
-        }
-      });
+      return {
+        ...state,
+        list : state.list.map(x => {
+          if(x.id !== action.payload.id){
+            return x;
+          } else {
+            return {
+              ...x,
+              places: [...(x.places || []), action.payload.place]
+            };
+          }
+        })
+      };
     });
     builder.addCase(updatePlaceList.fulfilled, (state, action) => {
       const item = action.payload;
-      return state.map((x: TravelRedux) => {
-        if(x.id !== item.travelId){
-          return x;
-        } else {
-          return {
-            ...x,
-            places: x.places.map(y => {
-              const updated = item.updateIdList.find(z => z.id === y.id);
-              return updated || y;
-            })
-          } as TravelRedux;
-        }
-      });
+      return {
+        ...state,
+        list : state.list.map(x => {
+          if(x.id !== item.travelId){
+            return x;
+          } else {
+            return {
+              ...x,
+              places: x.places.map(y => {
+                const updated = item.updateIdList.find(z => z.id === y.id);
+                return updated || y;
+              })
+            };
+          }
+        })
+      };
     });
     builder.addCase(deletePlaceList.fulfilled, (state, action) => {
       const item = action.payload;
-      return state.map((x: TravelRedux) => {
-        if(x.id !== item.travelId){
-          return x;
-        } else {
-          return {
-            ...x,
-            places: x.places.filter(y => !item.deletedIdList.some(z => z === y.id))
-          } as TravelRedux;
-        }
-      });
+      return {
+        ...state,
+        list : state.list.map(x => {
+          if(x.id !== item.travelId){
+            return x;
+          } else {
+            return {
+              ...x,
+              places: x.places.filter(y => !item.deletedIdList.some(z => z === y.id))
+            };
+          }
+        })
+      };
     });
   },
 })
 
+export const { setSelectedIdx } = travelListSlice.actions;
 export default travelListSlice.reducer;

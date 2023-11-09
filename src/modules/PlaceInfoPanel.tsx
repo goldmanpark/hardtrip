@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Card, Carousel, Navbar, Nav, Container, Row, Col, Dropdown } from 'react-bootstrap';
-import { Travel, TravelRedux } from '../DataType/Travel';
-import { Place, PlaceRedux } from '../DataType/Place';
+import { Travel, TravelSerialized } from '../DataType/Travel';
+import { Place } from '../DataType/Place';
 import { createPlace } from '../redux/travelListSlice';
 
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
@@ -23,7 +23,7 @@ interface PlaceInfoPanelProps{
 //https://developers.google.com/maps/documentation/javascript/reference/places-service?hl=ko#PlaceResult
 const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
   const dispatch = useAppDispatch();
-  const travelListRedux: TravelRedux[] = useAppSelector((state) => state.travelList);
+  const travelListRedux: TravelSerialized[] = useAppSelector((state) => state.travelList.list);
   const [selectedTab, setSelectedTab] = useState<'summary' | 'review' | 'info'>('summary');
   
   const renderContent = () => {
@@ -161,7 +161,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
     )
   }
 
-  const saveCurrentPlace = (travel: TravelRedux) => {
+  const saveCurrentPlace = (travel: TravelSerialized) => {
     let place = {
       place_id : props.placeInfo.place_id,
       name : props.placeInfo.name,
@@ -169,7 +169,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
         lat: props.placeInfo.geometry.location.lat(),
         lng: props.placeInfo.geometry.location.lng()
       }      
-    } as PlaceRedux;
+    } as Place;
     dispatch(createPlace({ travelId: travel.id, place: place }));
   }
 
