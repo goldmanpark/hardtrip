@@ -13,7 +13,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
 import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import { Place, PlaceSerialized, deSerializePlace } from '../DataType/Place';
 
 interface PanelProps{
   exit: () => void;
@@ -49,10 +48,8 @@ const TravelListPanel = (props: PanelProps) => {
 
   /** travel이하 place등 상세정보 조회 위해 travel선택 */
   const onSelectTravel = (idx: number, travel: Travel) => {
-    dispatch(readPlaceList(travel.id)).then((action) => {
-      dispatch(setSelectedIdx(idx));
-    });
-    
+    dispatch(readPlaceList(travel.id));
+    dispatch(setSelectedIdx(idx));
   }
 
   /** 신규 travel등록 */

@@ -1,9 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
-import { useAppDispatch } from '../redux/store';
+import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Card, Table } from 'react-bootstrap';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
-import { Travel } from '../DataType/Travel';
+import { Travel, TravelSerialized, deSerializeTravel, serializeTravel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
 import { updatePlaceList, deletePlaceList } from '../redux/travelListSlice';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -13,7 +13,6 @@ import RouteIcon from '@mui/icons-material/Route';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
 interface TravelInfoProps{
-  travel: Travel;
   exit: () => void;
   setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;
 }
@@ -23,42 +22,71 @@ interface TravelDay{
   date: Date | string;
 }
 
+interface PlaceEdit extends Place{
+  isDel: boolean;
+  isEdit: boolean;
+}
+
 const TravelInfoPanel = (props : TravelInfoProps) => {
   const dispatch = useAppDispatch();
+  const travelListRedux: TravelSerialized[] = useAppSelector(state => state.travelList.list);
+  const selectedIdxRedux = useAppSelector(state => state.travelList.selectedIdx);
   const directionsService = new google.maps.DirectionsService();
+
+  const [selectedTravel, setSelectedTravel] = useState<Travel>(null);
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [travelDays, setTravelDays] = useState<TravelDay[]>([]);
-  const [orderedPlaces, setOrderedPlaces] = useState<Place[]>([]);
+  const [orderedPlaces, setOrderedPlaces] = useState<PlaceEdit[]>([]);
 
   useEffect(() => {
-    if(props.travel && props.travel.places instanceof Array){
-      //1. travelDays생성
-      const startDate = props.travel.startDate;
-      const endDate = props.travel.endDate;
-      const days = getDaysDiff(endDate, startDate);
+    if(travelListRedux.length > 0 && selectedIdxRedux >= 0){
+      setSelectedTravel(deSerializeTravel(travelListRedux[selectedIdxRedux]));      
+    } else {
+      setSelectedTravel(null);
+    }
+  }, [travelListRedux, selectedIdxRedux]);
 
+  useEffect(() => {
+    if(selectedTravel){
+      //1. travelDays생성
+      const startDate = selectedTravel.startDate;
+      const endDate = selectedTravel.endDate;
       const list = [];
-      for(let i = 0 ; i < days ; i++){
-        const newDate = new Date(startDate);
-        newDate.setDate(newDate.getDate() + (i * 1));
-        list.push({
-          day: i + 1,
-          date: newDate
-        } as TravelDay);
+
+      if(startDate instanceof Date && endDate instanceof Date){
+        const days = getDaysDiff(endDate, startDate);
+        
+        for(let i = 0 ; i < days ; i++){
+          const newDate = new Date(startDate);
+          newDate.setDate(newDate.getDate() + (i * 1));
+          list.push({
+            day: i + 1,
+            date: newDate
+          } as TravelDay);
+        }
       }
       list.unshift({ date: 'N/A' } as TravelDay);
       setTravelDays(list);
-
-      let temp = [...props.travel.places].sort((x, y) => getDaysDiff(x.startDTTM, y.startDTTM));
+      
+      let temp = [...selectedTravel.places]
+        .map(x => ({...x, isDel: false, isEdit: false} as PlaceEdit))
+        .sort((x, y) => getDaysDiff(x.startDTTM, y.startDTTM));
       setOrderedPlaces(temp);
+    } else {
+      setTravelDays([{ date: 'N/A' } as TravelDay]);
+      setOrderedPlaces([]);
     }
-  }, [props.travel]);
+  }, [selectedTravel]);
 
   //#region [Event Handler]
-  const getDaysDiff = (d1: Date, d2: Date) => {
-    const oneDay = 24 * 60 * 60 * 1000;
-    const diff = d1.getTime() - d2.getTime();
-    return Math.round(diff / oneDay);
+  const getDaysDiff = (d1?: Date, d2?: Date) => {
+    if(d1 instanceof Date && d2 instanceof Date){
+      const oneDay = 24 * 60 * 60 * 1000;
+      const diff = d1.getTime() - d2.getTime();
+      return Math.round(diff / oneDay);
+    } else {
+      return 0;
+    }    
   }
 
   const onDragEnd = (result: DropResult) => {
@@ -97,31 +125,31 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     }
   }
 
-  const removePlace = (place: Place) => {
-    // const data = [...orderedPlaces];
-    // const i = data.findIndex(x => x.id === place.id);
-    // data[i].isDel = true;
-    // setOrderedPlaces(data);
-    // setIsEdit(true);
+  const removePlace = (place: PlaceEdit) => {
+    const data = [...orderedPlaces];
+    const i = data.findIndex(x => x.id === place.id);
+    data[i].isDel = true;
+    setOrderedPlaces(data);
+    setIsEdit(true);
   }
 
   const cancelRemove = (place: Place) => {
-    // const data = [...orderedPlaces];
-    // const i = data.findIndex(x => x.id === place.id);
-    // data[i].isDel = false;
-    // setOrderedPlaces(data);
+    const data = [...orderedPlaces];
+    const i = data.findIndex(x => x.id === place.id);
+    data[i].isDel = false;
+    setOrderedPlaces(data);
   }
 
   const confirmEdit = () => {
-    // dispatch(deletePlaceList({travelId: props.travel.id, placeList: orderedPlaces.filter(x => x.isDel)}));
-    // dispatch(updatePlaceList({travelId: props.travel.id, placeList: orderedPlaces.filter(x => !x.isDel)}));
+    dispatch(deletePlaceList({travelId: selectedTravel.id, placeList: orderedPlaces.filter(x => x.isDel)}));
+    dispatch(updatePlaceList({travelId: selectedTravel.id, placeList: orderedPlaces.filter(x => x.isEdit)}));
   }
   //#endregion
 
   //#region [render element]
   const drawDroppable = (i: number, t: TravelDay) => {
     return(
-      <Droppable key={i} droppableId={t.day ? t.day.toString() : ''}>
+      <Droppable key={i} droppableId={t.day ? t.day.toString() : '0'}>
       {
         (p) => 
         <div ref={p.innerRef} {...p.droppableProps}>
@@ -147,19 +175,19 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
             </tbody>
           </Table>
         </div>
-      }
-      
+      }      
       </Droppable>
     )
   }
 
-  const drawDraggable = (i: number, place: Place) => {
+  const drawDraggable = (i: number, place: PlaceEdit) => {
     return (
       <Draggable key={place.id} draggableId={place.id} index={i}>
-      {(p2) => (
+      {(p2: any) => (
         <tr ref={p2.innerRef} {...p2.draggableProps} {...p2.dragHandleProps}>
-          {/* <td className='text-align-left' style={{textDecoration: place.isDel ? 'line-through' : ''}}>
+          <td className='text-align-left' style={{textDecoration: place.isDel ? 'line-through' : ''}}>
             {place.name}
+            {p2.placeholder}
           </td>
           <td>
             {
@@ -167,7 +195,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
                 ? <DoDisturbIcon onClick={() => {cancelRemove(place)}}/>
                 : <DeleteIcon onClick={() => {removePlace(place)}}/>
             }
-          </td> */}
+          </td>
         </tr>
       )}
       </Draggable>
@@ -179,7 +207,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     <Card className="custom-card">
       <Card.Header>
         <div className='d-flex flex-row justify-content-between'>
-          <span>{ props.travel.name }</span>
+          <span>{ selectedTravel?.name }</span>
           <span>
             <RouteIcon onClick={createRoute}/>
             {
