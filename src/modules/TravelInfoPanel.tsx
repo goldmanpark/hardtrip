@@ -34,7 +34,6 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   const directionsService = new google.maps.DirectionsService();
 
   const [selectedTravel, setSelectedTravel] = useState<Travel>(null);
-  const [isEdit, setIsEdit] = useState<boolean>(false);
   const [travelDays, setTravelDays] = useState<TravelDay[]>([]);
   const [orderedPlaces, setOrderedPlaces] = useState<PlaceEdit[]>([]);
 
@@ -54,7 +53,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       const list = [];
 
       if(startDate instanceof Date && endDate instanceof Date){
-        const days = getDaysDiff(endDate, startDate);
+        const days = getDaysDiff(endDate, startDate) + 1;
         
         for(let i = 0 ; i < days ; i++){
           const newDate = new Date(startDate);
@@ -97,13 +96,11 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       const [removed] = reorderedData.splice(result.source.index, 1);
       reorderedData.splice(result.destination.index, 0, removed);
       setOrderedPlaces(reorderedData);
-      setIsEdit(true);
     } else {
       reorderedData[result.source.index].day = parseInt(result.destination.droppableId);
+      reorderedData[result.source.index].isEdit = true;
       setOrderedPlaces(reorderedData);
-      setIsEdit(true);
-    }
-    
+    }    
   }
 
   const createRoute = async () => {
@@ -130,7 +127,6 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     const i = data.findIndex(x => x.id === place.id);
     data[i].isDel = true;
     setOrderedPlaces(data);
-    setIsEdit(true);
   }
 
   const cancelRemove = (place: Place) => {
@@ -141,8 +137,12 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   }
 
   const confirmEdit = () => {
-    dispatch(deletePlaceList({travelId: selectedTravel.id, placeList: orderedPlaces.filter(x => x.isDel)}));
-    dispatch(updatePlaceList({travelId: selectedTravel.id, placeList: orderedPlaces.filter(x => x.isEdit)}));
+    if(orderedPlaces.find(x => x.isDel)){
+      dispatch(deletePlaceList({travelId: selectedTravel.id, placeList: orderedPlaces.filter(x => x.isDel)}));
+    }
+    if(orderedPlaces.find(x => x.isEdit)){
+      dispatch(updatePlaceList({travelId: selectedTravel.id, placeList: orderedPlaces.filter(x => x.isEdit)}));
+    }    
   }
   //#endregion
 
@@ -155,7 +155,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
         <div ref={p.innerRef} {...p.droppableProps}>
           {
             t.day
-            ? <div className='text-align-left'>{`DAY-${t.day} ${t.date.toLocaleString()}`}</div>
+            ? <div className='text-align-left'>{`DAY-${t.day} ${(t.date as Date).toLocaleDateString()}`}</div>
             : <span>N/A</span>
           }
           <Table>
@@ -211,7 +211,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
           <span>
             <RouteIcon onClick={createRoute}/>
             {
-              isEdit && <CheckIcon onClick={confirmEdit}/>
+              orderedPlaces.find(x => x.isDel || x.isEdit) && <CheckIcon onClick={confirmEdit}/>
             }
             <CloseRoundedIcon onClick={props.exit}/>
           </span>

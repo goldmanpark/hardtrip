@@ -5,13 +5,12 @@ import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Dropdown } from 'react-bootstrap';
 
 import Compass from './subModules/Compass';
-import { Travel } from '../DataType/Travel';
+import { Travel, TravelSerialized, deSerializeTravel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
 
 interface MapProps{
   placeInfo: google.maps.places.PlaceResult | null;
   setPlaceInfo: React.Dispatch<React.SetStateAction<google.maps.places.PlaceResult | null>>;
-  selectedTravel: Travel | null;
   directions: google.maps.DirectionsResult[];
 }
 
@@ -23,7 +22,10 @@ export interface MarkerInfo{
 
 const MapComponent = (props: MapProps) => {
   const dispatch = useAppDispatch();
+  const travelListRedux: TravelSerialized[] = useAppSelector(state => state.travelList.list);
+  const selectedIdxRedux = useAppSelector(state => state.travelList.selectedIdx);
   const selectedLatLng = useAppSelector((state) => state.selectedLatLng);
+  const [selectedTravel, setSelectedTravel] = useState<Travel>(null);
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [zoom, setZoom] = useState(12);
@@ -50,9 +52,17 @@ const MapComponent = (props: MapProps) => {
   }, [selectedLatLng]);
 
   useEffect(() => {
-    if(props.selectedTravel){
+    if(travelListRedux.length > 0 && selectedIdxRedux >= 0){
+      setSelectedTravel(deSerializeTravel(travelListRedux[selectedIdxRedux]));      
+    } else {
+      setSelectedTravel(null);
+    }
+  }, [travelListRedux, selectedIdxRedux]);
+
+  useEffect(() => {
+    if(selectedTravel){
       //1. 화면이동
-      const list = props.selectedTravel.places;
+      const list = selectedTravel.places;
       if(list instanceof Array && list.length > 0){
         const lat = list.reduce((acc, cur) => acc + cur.latLng.lat, 0) / list.length;
         const lng = list.reduce((acc, cur) => acc + cur.latLng.lng, 0) / list.length;
@@ -68,7 +78,7 @@ const MapComponent = (props: MapProps) => {
         } as MarkerInfo)));
       }      
     }
-  }, [props.selectedTravel])
+  }, [selectedTravel])
 
   const onClickMap = (e: google.maps.MapMouseEvent) => {
     e.stop();

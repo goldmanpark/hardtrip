@@ -148,8 +148,16 @@ export const updatePlaceList = createAsyncThunk(
       const placeSubCollection = collection(travelDocRef, 'places');
 
       for(const place of param.placeList){
+        console.log(place)
         const placeDocRef = doc(placeSubCollection, place.id);
-        await setDoc(placeDocRef, place);
+        await setDoc(placeDocRef, {
+          place_id: place.place_id,
+          name: place.name,
+          latLng: place.latLng,
+          ...(place.day && { day: place.day }),
+          ...(place.startDTTM && { startDTTM: place.startDTTM }),
+          ...(place.endDTTM && { endDTTM: place.endDTTM })
+        });
       }
 
       return {
