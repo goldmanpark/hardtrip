@@ -1,8 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../AuthContext';
 import { useAppSelector, useAppDispatch } from '../redux/store';
-import { Card, Carousel, Navbar, Nav, Container, Row, Col, Dropdown } from 'react-bootstrap';
-import { Travel, TravelSerialized } from '../DataType/Travel';
+import { Card, Carousel, Navbar, Nav, Container, Row, Col, Button } from 'react-bootstrap';
+import { TravelSerialized } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
 import { createPlace } from '../redux/travelListSlice';
 
@@ -10,26 +11,28 @@ import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import AccessAlarmRoundedIcon from '@mui/icons-material/AccessAlarmRounded';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import StarHalfRoundedIcon from '@mui/icons-material/StarHalfRounded';
-import TurnedInNotRoundedIcon from '@mui/icons-material/TurnedInNotRounded';
-import TurnedInRoundedIcon from '@mui/icons-material/TurnedInRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import LanguageRoundedIcon from '@mui/icons-material/LanguageRounded';
 
 interface PlaceInfoPanelProps{
   placeInfo: google.maps.places.PlaceResult
-  exit: () => void;
+  onClose?: () => void;
 }
 
 //https://developers.google.com/maps/documentation/javascript/reference/places-service?hl=ko#PlaceResult
-const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
+const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
   const dispatch = useAppDispatch();
+  const { userData } = useAuth();
   const travelListRedux: TravelSerialized[] = useAppSelector((state) => state.travelList.list);
-  const [selectedTab, setSelectedTab] = useState<'summary' | 'review' | 'info'>('summary');
-  
+  const [selectedTab, setSelectedTab] = useState<'summary' | 'review' | 'register'>('summary');
+
+  //#region [conditional rendering]
   const renderContent = () => {
     switch (selectedTab) {
       case 'summary':
         return renderSummary();
+      case 'register':
+        return renderRegister();
       default:
         break;
     }
@@ -52,7 +55,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
             {
               props.placeInfo.photos.map((p, i) => (
               <Carousel.Item key={'carousel' + i.toString()}>
-                <div className='d-flex justify-content-center align-items-center' style={{'maxHeight' : '400px'}}>
+                <div className='d-flex justify-content-center align-items-center' style={{'maxHeight' : '300px'}}>
                   <img src={p.getUrl()} alt='' className='img-fluid'/>
                 </div>
               </Carousel.Item>
@@ -161,6 +164,44 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
     )
   }
 
+  const renderRegister = () => {
+    return (
+      <table className='w-100'>
+        <thead>
+          <th>name</th>
+          <th>start</th>
+          <th>end</th>
+          <th>register</th>
+        </thead>
+        <tbody>
+        {
+          travelListRedux.map((t, i) => (
+            <tr key={'travel' + i.toString()}>
+              <td className='text-align-left'>{t.name}</td>
+              <td>{t.startDate ? drawDate(t.startDate) : ''}</td>
+              <td>{t.endDate ? drawDate(t.endDate) : ''}</td>
+              <td>
+                <Button variant="secondary" onClick={() => {saveCurrentPlace(t)}}>
+                  register
+                </Button>
+              </td>
+            </tr>
+          ))
+        }
+        </tbody>
+      </table>
+    )
+  }
+
+  const drawDate = (d: number) => {
+    const date = new Date(d);
+    const yyyy = date.getFullYear();
+    const MM = date.getMonth();
+    const dd = date.getDate();
+    return `${yyyy}-${MM}-${dd}`;
+  }
+  //#endregion
+
   const saveCurrentPlace = (travel: TravelSerialized) => {
     let place = {
       place_id : props.placeInfo.place_id,
@@ -174,49 +215,36 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
   }
 
   return (
-    <Card className="custom-card">
-      <Card.Header>
-        <div className='d-flex flex-row justify-content-between'>
-          <span>{ props.placeInfo.name }</span>
-          <CloseRoundedIcon onClick={props.exit}/>
-        </div>
+    <Card className='custom-modal'>
+      <Card.Header className='d-flex flex-row justify-content-between align-items-center'>
+        <h4 className='m-0'>{ props.placeInfo.name }</h4>
+        <CloseRoundedIcon onClick={() => {props.onClose()}}/>
+      </Card.Header>
+
+      <Card.Body className='overflow-auto'>        
         <Navbar className='p-0'>
           <Container className="p-0">
-            <Nav className="justify-content-around" activeKey="/summary" variant="underline">
+            <Nav className="justify-content-around" activeKey="/summary" variant="underline"
+                onSelect={(key: 'summary' | 'review' | 'register') => {setSelectedTab(key)}}>
               <Nav.Item>
                 <Nav.Link eventKey="summary" onSelect={() => setSelectedTab('summary')}>Summary</Nav.Link>
               </Nav.Item>
               <Nav.Item>
                 <Nav.Link eventKey="review" onSelect={() => setSelectedTab('review')}>Review</Nav.Link>
               </Nav.Item>
-              <Nav.Item>
-                <Nav.Link eventKey="info" onSelect={() => setSelectedTab('info')}>Info</Nav.Link>
-              </Nav.Item>
+              {
+                userData &&
+                <Nav.Item>
+                  <Nav.Link eventKey="register" onSelect={() => setSelectedTab('register')}>Register</Nav.Link>
+                </Nav.Item>
+              }
             </Nav>
-            
-            <Dropdown>
-              <Dropdown.Toggle id="dropdown-basic">
-                <TurnedInNotRoundedIcon />
-              </Dropdown.Toggle>
-              <Dropdown.Menu>
-                {
-                  travelListRedux.map((t, i) => (
-                    <Dropdown.Item onClick={() => {saveCurrentPlace(t)}} key={'travel' + i.toString()}>
-                      {t.name}
-                    </Dropdown.Item>
-                  ))
-                }
-              </Dropdown.Menu>
-            </Dropdown>
           </Container>
         </Navbar>
-      </Card.Header>
-
-      <Card.Body className='overflow-auto'>
-        {renderContent()}
+        { renderContent() }
       </Card.Body>
     </Card>
   );
 }
 
-export default PlaceInfoPanel;
+export default PlaceInfoPopup;

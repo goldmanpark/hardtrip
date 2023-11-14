@@ -5,7 +5,7 @@ import { Card, Table } from 'react-bootstrap';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
 import { Travel, TravelSerialized, deSerializeTravel, serializeTravel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
-import { updatePlaceList, deletePlaceList } from '../redux/travelListSlice';
+import { updatePlaceList, deletePlaceList, setSelectedIdx } from '../redux/travelListSlice';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import CheckIcon from '@mui/icons-material/Check';
@@ -144,9 +144,13 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       dispatch(updatePlaceList({travelId: selectedTravel.id, placeList: orderedPlaces.filter(x => x.isEdit)}));
     }    
   }
+
+  const closeTravel = () => {
+    dispatch(setSelectedIdx(-1));
+  }
   //#endregion
 
-  //#region [render element]
+  //#region [conditional render]
   const drawDroppable = (i: number, t: TravelDay) => {
     return(
       <Droppable key={i} droppableId={t.day ? t.day.toString() : '0'}>
@@ -213,7 +217,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
             {
               orderedPlaces.find(x => x.isDel || x.isEdit) && <CheckIcon onClick={confirmEdit}/>
             }
-            <CloseRoundedIcon onClick={props.exit}/>
+            <CloseRoundedIcon onClick={() => {closeTravel(); props.exit();}}/>
           </span>
         </div>
       </Card.Header>

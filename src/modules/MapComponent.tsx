@@ -2,11 +2,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { GoogleMap, TrafficLayer, TransitLayer, MarkerF, DirectionsRenderer } from '@react-google-maps/api';
 import { useAppSelector, useAppDispatch } from '../redux/store';
-import { Dropdown } from 'react-bootstrap';
+import { Dropdown, Modal } from 'react-bootstrap';
 
 import Compass from './subModules/Compass';
 import { Travel, TravelSerialized, deSerializeTravel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
+import PlaceInfoPopup from './PlaceInfoPopup';
 
 interface MapProps{
   placeInfo: google.maps.places.PlaceResult | null;
@@ -35,6 +36,9 @@ const MapComponent = (props: MapProps) => {
   const [currentPosition, setCurrentPosition] = useState<google.maps.LatLng>(null);
   //TravelInfoPanel에서 가져오는 데이터
   const [markers, setMarkers] = useState<MarkerInfo[]>([]);
+
+  const [showPlace, setShowPlace] = useState(false);
+  const [placeInfo, setPlaceInfo] = useState<google.maps.places.PlaceResult | null>(null);
   
   const placesService = useMemo(() => {
     if(map) return new google.maps.places.PlacesService(map)
@@ -106,7 +110,7 @@ const MapComponent = (props: MapProps) => {
 
       placesService.getDetails(request, (place: google.maps.places.PlaceResult, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK) {
-          props.setPlaceInfo(place);
+          setPlaceInfo(place);
           setShowCurrentMarker(true);
         }
       });
@@ -170,6 +174,12 @@ const MapComponent = (props: MapProps) => {
         </Dropdown>
         <Compass/>
       </div>
+
+      {
+        placeInfo && 
+        <PlaceInfoPopup placeInfo={placeInfo} 
+                        onClose={() => {setPlaceInfo(null)}}/>
+      }      
     </React.Fragment>
   );
 };

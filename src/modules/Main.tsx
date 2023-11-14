@@ -16,7 +16,7 @@ import Login from './Login';
 import MapComponent from './MapComponent';
 import TravelListPanel from './TravelListPanel';
 import LocationSearcher from './LocationSearcher';
-import PlaceInfoPanel from './PlaceInfoPanel';
+import PlaceInfoPopup from './PlaceInfoPopup';
 import TravelInfoPanel from './TravelInfoPanel';
 import { Travel } from '../DataType/Travel';
 
@@ -68,12 +68,6 @@ const Main = () => {
       {
         showPanel === 'travelList' &&
         <TravelListPanel exit={() => {setShowPanel(null)}}/>
-      }
-      {
-        showPanel === 'placeInfo' &&
-        <PlaceInfoPanel
-          placeInfo={selectedPlace}
-          exit={() => {setShowPanel(null)}}/>
       }
       {
         showPanel === 'travelInfo' &&
