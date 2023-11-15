@@ -18,7 +18,7 @@ interface TravelInfoProps{
 }
 
 interface TravelDay{
-  day?: number;
+  day: number;
   date: Date | string;
 }
 
@@ -64,7 +64,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
           } as TravelDay);
         }
       }
-      list.unshift({ date: 'N/A' } as TravelDay);
+      list.unshift({ date: 'N/A', day: 0 } as TravelDay);
       setTravelDays(list);
       
       let temp = [...selectedTravel.places]
@@ -72,7 +72,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
         .sort((x, y) => getDaysDiff(x.startDTTM, y.startDTTM));
       setOrderedPlaces(temp);
     } else {
-      setTravelDays([{ date: 'N/A' } as TravelDay]);
+      setTravelDays([{ date: 'N/A', day: 0 } as TravelDay]);
       setOrderedPlaces([]);
     }
   }, [selectedTravel]);
@@ -99,7 +99,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     } else {
       reorderedData[result.source.index].day = parseInt(result.destination.droppableId);
       reorderedData[result.source.index].isEdit = true;
-      setOrderedPlaces(reorderedData);
+            setOrderedPlaces(reorderedData);
     }    
   }
 
@@ -147,6 +147,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
 
   const closeTravel = () => {
     dispatch(setSelectedIdx(-1));
+    props.exit();
   }
   //#endregion
 
@@ -217,7 +218,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
             {
               orderedPlaces.find(x => x.isDel || x.isEdit) && <CheckIcon onClick={confirmEdit}/>
             }
-            <CloseRoundedIcon onClick={() => {closeTravel(); props.exit();}}/>
+            <CloseRoundedIcon onClick={closeTravel}/>
           </span>
         </div>
       </Card.Header>

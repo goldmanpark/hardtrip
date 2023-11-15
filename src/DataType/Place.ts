@@ -2,7 +2,7 @@ export interface PlaceSerialized{
   id: string;
   place_id: string;
   name: string;
-  day?: number;
+  day: number;
   startDTTM?: number;  
   endDTTM?: number;
   latLng: google.maps.LatLngLiteral;

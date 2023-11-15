@@ -206,6 +206,7 @@ const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
     let place = {
       place_id : props.placeInfo.place_id,
       name : props.placeInfo.name,
+      day: 0,
       latLng : {
         lat: props.placeInfo.geometry.location.lat(),
         lng: props.placeInfo.geometry.location.lng()
