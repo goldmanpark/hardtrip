@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+///https://codesandbox.io/s/-w5szl?file=/src/index.js
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Card, Table } from 'react-bootstrap';
@@ -35,7 +36,8 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
 
   const [selectedTravel, setSelectedTravel] = useState<Travel>(null);
   const [travelDays, setTravelDays] = useState<TravelDay[]>([]);
-  const [orderedPlaces, setOrderedPlaces] = useState<PlaceEdit[]>([]);
+  const [orderedPlaceArray, setOrderedPlaceArray] = useState<PlaceEdit[]>([]);
+  const [orderedPlaceMatrix, setOrderedPlaceMatrix] = useState<PlaceEdit[][]>([[]]);
 
   useEffect(() => {
     if(travelListRedux.length > 0 && selectedIdxRedux >= 0){
@@ -50,7 +52,8 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       //1. travelDays생성
       const startDate = selectedTravel.startDate;
       const endDate = selectedTravel.endDate;
-      const list = [];
+      const tempTravelDays = [];
+      const tempPlaceList = [[]];
 
       if(startDate instanceof Date && endDate instanceof Date){
         const days = getDaysDiff(endDate, startDate) + 1;
@@ -58,24 +61,31 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
         for(let i = 0 ; i < days ; i++){
           const newDate = new Date(startDate);
           newDate.setDate(newDate.getDate() + (i * 1));
-          list.push({
+          tempTravelDays.push({
             day: i + 1,
             date: newDate
           } as TravelDay);
+          tempPlaceList.push([]);
         }
       }
-      list.unshift({ date: 'N/A', day: 0 } as TravelDay);
-      setTravelDays(list);
+      tempTravelDays.unshift({ date: 'N/A', day: 0 } as TravelDay);
+      setTravelDays(tempTravelDays);
       
-      let temp = [...selectedTravel.places]
-        .map(x => ({...x, isDel: false, isEdit: false} as PlaceEdit))
-        .sort((x, y) => getDaysDiff(x.startDTTM, y.startDTTM));
-      setOrderedPlaces(temp);
+      const temp = selectedTravel.places.map(x => ({...x, isDel: false, isEdit: false} as PlaceEdit));
+      temp.forEach(x => {
+        tempPlaceList[x.day].push(x);
+      });
+      //.sort((x, y) => getDaysDiff(x.startDTTM, y.startDTTM));
+      setOrderedPlaceMatrix(tempPlaceList);
     } else {
       setTravelDays([{ date: 'N/A', day: 0 } as TravelDay]);
-      setOrderedPlaces([]);
+      setOrderedPlaceMatrix([[]]);
     }
   }, [selectedTravel]);
+
+  useEffect(() => {
+    setOrderedPlaceArray(orderedPlaceMatrix.reduce((acc, cur) => acc.concat(cur), []));
+  }, [orderedPlaceMatrix]);
 
   //#region [Event Handler]
   const getDaysDiff = (d1?: Date, d2?: Date) => {
@@ -89,25 +99,30 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   }
 
   const onDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
+    const { source, destination } = result;
+    if(!destination) return;
 
-    const reorderedData = [...orderedPlaces];
-    if(result.source.droppableId === result.destination.droppableId){
-      const [removed] = reorderedData.splice(result.source.index, 1);
-      reorderedData.splice(result.destination.index, 0, removed);
-      setOrderedPlaces(reorderedData);
-    } else {
-      reorderedData[result.source.index].day = parseInt(result.destination.droppableId);
-      reorderedData[result.source.index].isEdit = true;
-            setOrderedPlaces(reorderedData);
+    const reorderedData = [...orderedPlaceMatrix];
+    const [removed] = reorderedData[source.droppableId].splice(source.index, 1);
+    const sourceDropID = parseInt(source.droppableId);
+    const destDropID = parseInt(destination.droppableId);
+
+    if(sourceDropID === destDropID){      
+      reorderedData[sourceDropID].splice(destination.index, 0, removed);
+      setOrderedPlaceMatrix(reorderedData);
+    } else {      
+      removed.day = destDropID;
+      removed.isEdit = true;
+      reorderedData[destDropID].splice(destination.index, 0, removed);
+      setOrderedPlaceMatrix(reorderedData);
     }    
   }
 
   const createRoute = async () => {
-    for(let i = 0 ; i < orderedPlaces.length - 1 ; i++){
+    for(let i = 0 ; i < orderedPlaceArray.length - 1 ; i++){
       let req = {
-        origin: { placeId: orderedPlaces[i].place_id } as google.maps.Place,
-        destination: { placeId: orderedPlaces[i + 1].place_id } as google.maps.Place,
+        origin: { placeId: orderedPlaceArray[i].place_id } as google.maps.Place,
+        destination: { placeId: orderedPlaceArray[i + 1].place_id } as google.maps.Place,
         travelMode: google.maps.TravelMode.TRANSIT
       } as google.maps.DirectionsRequest;
 
@@ -123,25 +138,25 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   }
 
   const removePlace = (place: PlaceEdit) => {
-    const data = [...orderedPlaces];
+    const data = [...orderedPlaceArray];
     const i = data.findIndex(x => x.id === place.id);
     data[i].isDel = true;
-    setOrderedPlaces(data);
+    setOrderedPlaceArray(data);
   }
 
   const cancelRemove = (place: Place) => {
-    const data = [...orderedPlaces];
+    const data = [...orderedPlaceArray];
     const i = data.findIndex(x => x.id === place.id);
     data[i].isDel = false;
-    setOrderedPlaces(data);
+    setOrderedPlaceArray(data);
   }
 
   const confirmEdit = () => {
-    if(orderedPlaces.find(x => x.isDel)){
-      dispatch(deletePlaceList({travelId: selectedTravel.id, placeList: orderedPlaces.filter(x => x.isDel)}));
+    if(orderedPlaceArray.find(x => x.isDel)){
+      dispatch(deletePlaceList({travelId: selectedTravel.id, placeList: orderedPlaceArray.filter(x => x.isDel)}));
     }
-    if(orderedPlaces.find(x => x.isEdit)){
-      dispatch(updatePlaceList({travelId: selectedTravel.id, placeList: orderedPlaces.filter(x => x.isEdit)}));
+    if(orderedPlaceArray.find(x => x.isEdit)){
+      dispatch(updatePlaceList({travelId: selectedTravel.id, placeList: orderedPlaceArray.filter(x => x.isEdit)}));
     }    
   }
 
@@ -152,31 +167,22 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   //#endregion
 
   //#region [conditional render]
-  const drawDroppable = (i: number, t: TravelDay) => {
+  const drawDroppable = (i: number, places: PlaceEdit[]) => {
+    const t = travelDays[i];
     return(
-      <Droppable key={i} droppableId={t.day ? t.day.toString() : '0'}>
+      <Droppable key={i} droppableId={i.toString()}>
       {
         (p) => 
         <div ref={p.innerRef} {...p.droppableProps}>
+          { p.placeholder }
           {
             t.day
             ? <div className='text-align-left'>{`DAY-${t.day} ${(t.date as Date).toLocaleDateString()}`}</div>
-            : <span>N/A</span>
+            : <div className='text-align-left'>N/A</div>
           }
           <Table>
-            {
-              t.day === undefined &&
-              <thead>
-                <tr>
-                  <th>place</th>
-                  <th></th>
-                </tr>
-              </thead>
-            }
             <tbody>
-            {
-              orderedPlaces.filter(x => x.day === t.day).map((x, i) => drawDraggable(i, x))
-            }
+            { places.map((x, i) => drawDraggable(i, x)) }
             </tbody>
           </Table>
         </div>
@@ -216,7 +222,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
           <span>
             <RouteIcon onClick={createRoute}/>
             {
-              orderedPlaces.find(x => x.isDel || x.isEdit) && <CheckIcon onClick={confirmEdit}/>
+              orderedPlaceArray.find(x => x.isDel || x.isEdit) && <CheckIcon onClick={confirmEdit}/>
             }
             <CloseRoundedIcon onClick={closeTravel}/>
           </span>
@@ -225,7 +231,8 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       <Card.Body className='overflow-auto'>
         <DragDropContext onDragEnd={onDragEnd}>
         {
-          travelDays.map((x, i) => drawDroppable(i, x))
+          orderedPlaceMatrix.length === travelDays.length && //안전장치
+          orderedPlaceMatrix.map((x, i) => drawDroppable(i, x))
         }
         </DragDropContext>
       </Card.Body>
