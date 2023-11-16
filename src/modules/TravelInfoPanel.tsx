@@ -7,6 +7,7 @@ import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautif
 import { Travel, TravelSerialized, deSerializeTravel, serializeTravel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
 import { updatePlaceList, deletePlaceList, setSelectedIdx } from '../redux/travelListSlice';
+import DatePicker from 'react-datepicker';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import CheckIcon from '@mui/icons-material/Check';
@@ -71,19 +72,19 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       tempTravelDays.unshift({ date: 'N/A', day: 0 } as TravelDay);
       setTravelDays(tempTravelDays);
       
-      const temp = selectedTravel.places.map(x => ({...x, isDel: false, isEdit: false} as PlaceEdit));
+      const temp = selectedTravel.places.map(x => ({...x, isDel: false, isEdit: false} as PlaceEdit));                                        
       temp.forEach(x => {
         tempPlaceList[x.day].push(x);
       });
-      //.sort((x, y) => getDaysDiff(x.startDTTM, y.startDTTM));
-      setOrderedPlaceMatrix(tempPlaceList);
+
+      setOrderedPlaceMatrix(tempPlaceList.map(list => list.sort((x, y) => getDaysDiff(x.startDTTM, y.startDTTM))));
     } else {
       setTravelDays([{ date: 'N/A', day: 0 } as TravelDay]);
       setOrderedPlaceMatrix([[]]);
     }
   }, [selectedTravel]);
 
-  useEffect(() => {
+  useEffect(() => {    
     setOrderedPlaceArray(orderedPlaceMatrix.reduce((acc, cur) => acc.concat(cur), []));
   }, [orderedPlaceMatrix]);
 
@@ -138,17 +139,64 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   }
 
   const removePlace = (place: PlaceEdit) => {
-    const data = [...orderedPlaceArray];
-    const i = data.findIndex(x => x.id === place.id);
-    data[i].isDel = true;
-    setOrderedPlaceArray(data);
+    const data = [...orderedPlaceMatrix];
+    loop: for(let i = 0 ; i < data.length ; i++){
+      for(let j = 0 ; j < data[i].length ; j++){
+        if(data[i][j].id === place.id){
+          data[i][j].isDel = true;
+          break loop;
+        }
+      }
+    }
+    setOrderedPlaceMatrix(data);
   }
 
   const cancelRemove = (place: Place) => {
-    const data = [...orderedPlaceArray];
-    const i = data.findIndex(x => x.id === place.id);
-    data[i].isDel = false;
-    setOrderedPlaceArray(data);
+    const data = [...orderedPlaceMatrix];
+    loop: for(let i = 0 ; i < data.length ; i++){
+      for(let j = 0 ; j < data[i].length ; j++){
+        if(data[i][j].id === place.id){
+          data[i][j].isDel = false;
+          break loop;
+        }
+      }
+    }
+    setOrderedPlaceMatrix(data);
+  }
+
+  const updateStartDTTM = (placeId: string, newDate: Date, travelDay?: Date) => {
+    if(!travelDay) return;
+
+    const data = [...orderedPlaceMatrix];
+    let rowIdx = 0;
+    loop: for(let i = 0 ; i < data.length ; i++){
+      for(let j = 0 ; j < data[i].length ; j++){
+        if(data[i][j].id === placeId){
+          data[i][j].isEdit = true;
+          data[i][j].startDTTM = new Date(travelDay.getFullYear(), travelDay.getMonth(), travelDay.getDate(), newDate.getHours(), newDate.getMinutes())
+          rowIdx = i;
+          break loop;
+        }
+      }
+    }
+    data[rowIdx] = data[rowIdx].sort((x, y) => getDaysDiff(x.startDTTM, y.startDTTM));
+    setOrderedPlaceMatrix(data);
+  }
+
+  const updateEndDTTM = (placeId: string, newDate: Date, travelDay?: Date) => {
+    if(!travelDay) return;
+
+    const data = [...orderedPlaceMatrix];
+    loop: for(let i = 0 ; i < data.length ; i++){
+      for(let j = 0 ; j < data[i].length ; j++){
+        if(data[i][j].id === placeId){
+          data[i][j].isEdit = true;
+          data[i][j].endDTTM = new Date(travelDay.getFullYear(), travelDay.getMonth(), travelDay.getDate(), newDate.getHours(), newDate.getMinutes())
+          break loop;
+        }
+      }
+    }
+    setOrderedPlaceMatrix(data);
   }
 
   const confirmEdit = () => {
@@ -173,7 +221,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       <Droppable key={i} droppableId={i.toString()}>
       {
         (p) => 
-        <div ref={p.innerRef} {...p.droppableProps}>
+        <div ref={p.innerRef} {...p.droppableProps} style={{background: 'lightgrey'}}>
           { p.placeholder }
           {
             t.day
@@ -181,8 +229,14 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
             : <div className='text-align-left'>N/A</div>
           }
           <Table>
+            <colgroup>
+              <col width='40%'/>
+              <col width='25%'/>
+              <col width='25%'/>
+              <col width='10%'/>
+            </colgroup>
             <tbody>
-            { places.map((x, i) => drawDraggable(i, x)) }
+            { places.map((x, j) => drawDraggable(j, x, i)) }
             </tbody>
           </Table>
         </div>
@@ -191,7 +245,8 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     )
   }
 
-  const drawDraggable = (i: number, place: PlaceEdit) => {
+  const drawDraggable = (i: number, place: PlaceEdit, day: number) => {
+    const travelDate: Date | undefined = typeof(travelDays[day].date) !== 'string' ? travelDays[day].date as Date : undefined;
     return (
       <Draggable key={place.id} draggableId={place.id} index={i}>
       {(p2: any) => (
@@ -199,6 +254,22 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
           <td className='text-align-left' style={{textDecoration: place.isDel ? 'line-through' : ''}}>
             {place.name}
             {p2.placeholder}
+          </td>
+          <td>
+            <DatePicker className='w-100 text-align-center'
+                        showTimeSelect
+                        dateFormat="MM-dd HH:mm"
+                        timeFormat="HH:mm"
+                        selected={place.startDTTM ? place.startDTTM : travelDate}
+                        onChange={(date) => {updateStartDTTM(place.id, date, travelDate)}}/>
+          </td>
+          <td>
+            <DatePicker className='w-100 text-align-center'
+                        showTimeSelect
+                        dateFormat="MM-dd HH:mm"
+                        timeFormat="HH:mm"
+                        selected={place.endDTTM ? place.endDTTM : travelDate}
+                        onChange={(date) => {updateEndDTTM(place.id, date, travelDate)}}/>
           </td>
           <td>
             {
