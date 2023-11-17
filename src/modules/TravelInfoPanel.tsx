@@ -111,7 +111,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     if(sourceDropID === destDropID){      
       reorderedData[sourceDropID].splice(destination.index, 0, removed);
       setOrderedPlaceMatrix(reorderedData);
-    } else {      
+    } else {
       removed.day = destDropID;
       removed.isEdit = true;
       reorderedData[destDropID].splice(destination.index, 0, removed);
