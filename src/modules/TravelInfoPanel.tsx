@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-///https://codesandbox.io/s/-w5szl?file=/src/index.js
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Card, Table } from 'react-bootstrap';
@@ -7,6 +6,7 @@ import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautif
 import { Travel, TravelSerialized, deSerializeTravel, serializeTravel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
 import { updatePlaceList, deletePlaceList, setSelectedIdx } from '../redux/travelListSlice';
+import { CompareDate, GetDaysDiff } from './CommonFunctions';
 import DatePicker from 'react-datepicker';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DoDisturbIcon from '@mui/icons-material/DoDisturb';
@@ -57,7 +57,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       const tempPlaceList = [[]];
 
       if(startDate instanceof Date && endDate instanceof Date){
-        const days = getDaysDiff(endDate, startDate) + 1;
+        const days = GetDaysDiff(endDate, startDate) + 1;
         
         for(let i = 0 ; i < days ; i++){
           const newDate = new Date(startDate);
@@ -72,12 +72,13 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       tempTravelDays.unshift({ date: 'N/A', day: 0 } as TravelDay);
       setTravelDays(tempTravelDays);
       
-      const temp = selectedTravel.places.map(x => ({...x, isDel: false, isEdit: false} as PlaceEdit));                                        
+      const temp = selectedTravel.places.map(x => ({...x, isDel: false, isEdit: false} as PlaceEdit))
+      temp.sort((x, y) => CompareDate(x.startDTTM, y.startDTTM));
       temp.forEach(x => {
         tempPlaceList[x.day].push(x);
       });
 
-      setOrderedPlaceMatrix(tempPlaceList.map(list => list.sort((x, y) => getDaysDiff(x.startDTTM, y.startDTTM))));
+      setOrderedPlaceMatrix(tempPlaceList);
     } else {
       setTravelDays([{ date: 'N/A', day: 0 } as TravelDay]);
       setOrderedPlaceMatrix([[]]);
@@ -89,15 +90,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   }, [orderedPlaceMatrix]);
 
   //#region [Event Handler]
-  const getDaysDiff = (d1?: Date, d2?: Date) => {
-    if(d1 instanceof Date && d2 instanceof Date){
-      const oneDay = 24 * 60 * 60 * 1000;
-      const diff = d1.getTime() - d2.getTime();
-      return Math.round(diff / oneDay);
-    } else {
-      return 0;
-    }    
-  }
+  
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
@@ -179,7 +172,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
         }
       }
     }
-    data[rowIdx] = data[rowIdx].sort((x, y) => getDaysDiff(x.startDTTM, y.startDTTM));
+    data[rowIdx] = data[rowIdx].sort((x, y) => CompareDate(x.startDTTM, y.startDTTM));
     setOrderedPlaceMatrix(data);
   }
 

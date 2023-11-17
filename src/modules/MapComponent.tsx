@@ -5,6 +5,7 @@ import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Dropdown, Modal } from 'react-bootstrap';
 
 import Compass from './subModules/Compass';
+import { CompareDate } from './CommonFunctions';
 import { Travel, TravelSerialized, deSerializeTravel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
 import PlaceInfoPopup from './PlaceInfoPopup';
@@ -27,6 +28,7 @@ const MapComponent = (props: MapProps) => {
   const selectedIdxRedux = useAppSelector(state => state.travelList.selectedIdx);
   const selectedLatLng = useAppSelector((state) => state.selectedLatLng);
   const [selectedTravel, setSelectedTravel] = useState<Travel>(null);
+  const [prevTravelId, setPrevTravelId] = useState('');
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [zoom, setZoom] = useState(12);
@@ -37,7 +39,6 @@ const MapComponent = (props: MapProps) => {
   //TravelInfoPanel에서 가져오는 데이터
   const [markers, setMarkers] = useState<MarkerInfo[]>([]);
 
-  const [showPlace, setShowPlace] = useState(false);
   const [placeInfo, setPlaceInfo] = useState<google.maps.places.PlaceResult | null>(null);
   
   const placesService = useMemo(() => {
@@ -64,23 +65,31 @@ const MapComponent = (props: MapProps) => {
   }, [travelListRedux, selectedIdxRedux]);
 
   useEffect(() => {
-    if(selectedTravel){
-      //1. 화면이동
+    if(selectedTravel){      
       const list = selectedTravel.places;
       if(list instanceof Array && list.length > 0){
-        const lat = list.reduce((acc, cur) => acc + cur.latLng.lat, 0) / list.length;
-        const lng = list.reduce((acc, cur) => acc + cur.latLng.lng, 0) / list.length;
-        setCurrentPosition(new google.maps.LatLng(lat, lng));
-        setZoom(13);
-        setShowCurrentMarker(false);
+        if(prevTravelId !== selectedTravel.id){
+          //1. 화면이동
+          const lat = list.reduce((acc, cur) => acc + cur.latLng.lat, 0) / list.length;
+          const lng = list.reduce((acc, cur) => acc + cur.latLng.lng, 0) / list.length;
+          setCurrentPosition(new google.maps.LatLng(lat, lng));
+          setZoom(10);
+          setShowCurrentMarker(false);
+          setPrevTravelId(selectedTravel.id);
+        }
 
         //2. 마커 그리기
-        setMarkers(list.map((x, i) => ({
+        list.sort((x, y) => CompareDate(x.startDTTM, y.startDTTM));
+        const markers = list.map((x, i) => ({
           lat: x.latLng.lat,
           lng: x.latLng.lng,
-          order: i
-        } as MarkerInfo)));
-      }      
+          order: i + 1
+        } as MarkerInfo))
+        
+        setMarkers(markers);        
+      }
+    } else {
+      setMarkers([]);
     }
   }, [selectedTravel])
 
