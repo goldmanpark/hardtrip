@@ -28,6 +28,7 @@ const Main = () => {
 
   const [showPanel, setShowPanel] = useState<null | 'travelList' | 'travelInfo' | 'placeInfo'>(null);
   const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
+  const [selectedPlaceId, setSelectedPlaceId] = useState('');
   const [directions, setDirections] = useState<google.maps.DirectionsResult[]>([]);
   
   useEffect(() => {
@@ -61,6 +62,7 @@ const Main = () => {
 
         <MapComponent
           placeInfo={selectedPlace}
+          placeId={selectedPlaceId}
           setPlaceInfo={setSelectedPlace}
           directions={directions}
         />
@@ -73,6 +75,7 @@ const Main = () => {
         showPanel === 'travelInfo' &&
         <TravelInfoPanel
           setDirections={setDirections}
+          setPlaceId={setSelectedPlaceId}
           exit={() => {setShowPanel(null)}}/>
       }
       </LoadScript>

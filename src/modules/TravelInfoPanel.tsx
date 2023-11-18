@@ -7,6 +7,7 @@ import { Travel, TravelSerialized, deSerializeTravel, serializeTravel } from '..
 import { Place } from '../DataType/Place';
 import { updatePlaceList, deletePlaceList, setSelectedIdx } from '../redux/travelListSlice';
 import { CompareDate, GetDaysDiff } from './CommonFunctions';
+import GetPlaceIcon from '../DataType/GetPlaceIcon';
 import DatePicker from 'react-datepicker';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DoDisturbIcon from '@mui/icons-material/DoDisturb';
@@ -17,6 +18,7 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 interface TravelInfoProps{
   exit: () => void;
   setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;
+  setPlaceId: React.Dispatch<React.SetStateAction<string>>;
 }
 
 interface TravelDay{
@@ -90,8 +92,6 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   }, [orderedPlaceMatrix]);
 
   //#region [Event Handler]
-  
-
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
     if(!destination) return;
@@ -223,10 +223,11 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
           }
           <Table>
             <colgroup>
+              <col width='5%'/>
               <col width='40%'/>
               <col width='25%'/>
               <col width='25%'/>
-              <col width='10%'/>
+              <col width='5%'/>
             </colgroup>
             <tbody>
             { places.map((x, j) => drawDraggable(j, x, i)) }
@@ -245,6 +246,10 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       {(p2: any) => (
         <tr ref={p2.innerRef} {...p2.draggableProps} {...p2.dragHandleProps}>
           <td className='text-align-left' style={{textDecoration: place.isDel ? 'line-through' : ''}}>
+            {GetPlaceIcon(place)}
+          </td>
+          <td className='text-align-left' style={{textDecoration: place.isDel ? 'line-through' : ''}}
+              onClick={() => {props.setPlaceId(place.place_id)}}>
             {place.name}
             {p2.placeholder}
           </td>

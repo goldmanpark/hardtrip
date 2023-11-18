@@ -2,8 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { GoogleMap, TrafficLayer, TransitLayer, MarkerF, DirectionsRenderer } from '@react-google-maps/api';
 import { useAppSelector, useAppDispatch } from '../redux/store';
-import { Dropdown, Modal } from 'react-bootstrap';
-
+import { Dropdown } from 'react-bootstrap';
 import Compass from './subModules/Compass';
 import { CompareDate } from './CommonFunctions';
 import { Travel, TravelSerialized, deSerializeTravel } from '../DataType/Travel';
@@ -12,6 +11,7 @@ import PlaceInfoPopup from './PlaceInfoPopup';
 
 interface MapProps{
   placeInfo: google.maps.places.PlaceResult | null;
+  placeId: string;
   setPlaceInfo: React.Dispatch<React.SetStateAction<google.maps.places.PlaceResult | null>>;
   directions: google.maps.DirectionsResult[];
 }
@@ -55,6 +55,14 @@ const MapComponent = (props: MapProps) => {
       props.setPlaceInfo(null);
     }
   }, [selectedLatLng]);
+
+  useEffect(() => {
+    setPlaceInfo(props.placeInfo);
+  }, [props.placeInfo]);
+
+  useEffect(() => {
+    getPlaceResult(props.placeId);
+  }, [props.placeId]);
 
   useEffect(() => {
     if(travelListRedux.length > 0 && selectedIdxRedux >= 0){
@@ -111,14 +119,13 @@ const MapComponent = (props: MapProps) => {
       setMarkers([]);
       setPrevTravelId('');
     }
-  }, [selectedTravel])
+  }, [selectedTravel]);
 
-  const onClickMap = (e: google.maps.MapMouseEvent) => {
-    e.stop();
-    let _id = (e as any).placeId;
-    if(map instanceof google.maps.Map && _id && placesService){
+  const getPlaceResult = (placeId: string) => {
+    console.log(placeId)
+    if(map instanceof google.maps.Map && placeId && placesService){
       let request = {
-        placeId: _id,
+        placeId: placeId,
         fields: [
           'place_id',
           'adr_address',
@@ -136,13 +143,21 @@ const MapComponent = (props: MapProps) => {
           'geometry'
         ]
       } as google.maps.places.PlaceDetailsRequest;
-
+  
       placesService.getDetails(request, (place: google.maps.places.PlaceResult, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK) {
           setPlaceInfo(place);
           setShowCurrentMarker(true);
         }
       });
+    }    
+  }
+
+  const onClickMap = (e: google.maps.MapMouseEvent) => {
+    e.stop();
+    let _id = (e as any).placeId;
+    if(_id){
+      getPlaceResult(_id);
     }
   }
 

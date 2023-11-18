@@ -6,6 +6,7 @@ export interface PlaceSerialized{
   startDTTM?: number;  
   endDTTM?: number;
   latLng: google.maps.LatLngLiteral;
+  type: string; //https://developers.google.com/maps/documentation/places/web-service/supported_types?hl=ko
 }
 
 export interface Place extends Omit<PlaceSerialized, 'startDTTM' | 'endDTTM'>{

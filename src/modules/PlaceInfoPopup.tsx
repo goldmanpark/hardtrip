@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { useAppSelector, useAppDispatch } from '../redux/store';
-import { Card, Carousel, Navbar, Nav, Container, Row, Col, Button } from 'react-bootstrap';
+import { Card, Carousel, Navbar, Nav, Container, Row, Col, Button, Dropdown } from 'react-bootstrap';
 import { TravelSerialized } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
 import { createPlace } from '../redux/travelListSlice';
@@ -47,7 +47,7 @@ const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
           <span>{`(${props.placeInfo.user_ratings_total})`}</span>
         </span>
 
-        {/* <span>{`${props.placeInfo.types.join(', ')}`}</span> */}
+        <span>{`${props.placeInfo.types.join(', ')}`}</span>
 
         {
           props.placeInfo.photos && props.placeInfo.photos.length > 0 &&
@@ -148,18 +148,18 @@ const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
     return(
       <Container>
         <Row>{ props.placeInfo.opening_hours.isOpen ? '영업 중' : '영업 종료' }</Row>
-      {
-        results.map(r => (
-          <Row className='items-align-center' style={{fontWeight : today.getDay() === r.day ? 'bold' : 'normal'}}>
-            <Col className='p-1'>
-              { days[r.day] }
-            </Col>
-            <Col xs={10} sm={10} className='d-flex justify-content-start' style={{fontSize : '14px'}}>
-              { r.res }
-            </Col>
-          </Row>
-        ))
-      }
+        {
+          results.map(r => (
+            <Row className='items-align-center' style={{fontWeight : today.getDay() === r.day ? 'bold' : 'normal'}}>
+              <Col className='p-1'>
+                { days[r.day] }
+              </Col>
+              <Col xs={10} sm={10} className='d-flex justify-content-start' style={{fontSize : '14px'}}>
+                { r.res }
+              </Col>
+            </Row>
+          ))
+        }
       </Container>
     )
   }
@@ -181,9 +181,18 @@ const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
               <td>{t.startDate ? drawDate(t.startDate) : ''}</td>
               <td>{t.endDate ? drawDate(t.endDate) : ''}</td>
               <td>
-                <Button variant="secondary" onClick={() => {saveCurrentPlace(t)}}>
-                  register
-                </Button>
+                <Dropdown>
+                  <Dropdown.Toggle variant="success" id="dropdown-basic">
+                    register
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                  {
+                    props.placeInfo.types.map(type => (
+                      <Dropdown.Item onClick={() => {saveCurrentPlace(t, type)}}>{type}</Dropdown.Item>
+                    ))
+                  }
+                  </Dropdown.Menu>
+                </Dropdown>
               </td>
             </tr>
           ))
@@ -202,7 +211,7 @@ const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
   }
   //#endregion
 
-  const saveCurrentPlace = (travel: TravelSerialized) => {
+  const saveCurrentPlace = (travel: TravelSerialized, type: string) => {
     let place = {
       place_id : props.placeInfo.place_id,
       name : props.placeInfo.name,
@@ -210,7 +219,8 @@ const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
       latLng : {
         lat: props.placeInfo.geometry.location.lat(),
         lng: props.placeInfo.geometry.location.lng()
-      }      
+      },
+      type: type
     } as Place;
     dispatch(createPlace({ travelId: travel.id, place: place }));
   }
