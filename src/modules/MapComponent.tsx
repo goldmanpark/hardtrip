@@ -67,29 +67,49 @@ const MapComponent = (props: MapProps) => {
   useEffect(() => {
     if(selectedTravel){      
       const list = selectedTravel.places;
-      if(list instanceof Array && list.length > 0){
-        if(prevTravelId !== selectedTravel.id){
-          //1. 화면이동
-          const lat = list.reduce((acc, cur) => acc + cur.latLng.lat, 0) / list.length;
-          const lng = list.reduce((acc, cur) => acc + cur.latLng.lng, 0) / list.length;
-          setCurrentPosition(new google.maps.LatLng(lat, lng));
-          setZoom(10);
-          setShowCurrentMarker(false);
-          setPrevTravelId(selectedTravel.id);
-        }
-
-        //2. 마커 그리기
-        list.sort((x, y) => CompareDate(x.startDTTM, y.startDTTM));
-        const markers = list.map((x, i) => ({
-          lat: x.latLng.lat,
-          lng: x.latLng.lng,
-          order: i + 1
-        } as MarkerInfo))
-        
-        setMarkers(markers);        
+      if(!(list instanceof Array) || list.length === 0){
+        setPrevTravelId(selectedTravel.id);
+        return;
       }
+
+      setShowCurrentMarker(false);
+      if(prevTravelId !== selectedTravel.id){
+        //새로운 travel선택시 화면이동
+        let maxLat = 0, minLat = 0, avgLat = 0;
+        let maxLng = 0, minLng = 0, avgLng = 0;
+        list.forEach(x => {
+          const ll = x.latLng;
+          avgLat += ll.lat;
+          avgLng += ll.lng;
+          if(ll.lat > maxLat)
+          maxLat = ll.lat > maxLat ? ll.lat : maxLat;
+          minLat = ll.lat < minLat ? ll.lat : minLat;
+          maxLng = ll.lng > maxLng ? ll.lng : maxLng;
+          minLng = ll.lng < minLng ? ll.lng : minLng;
+        });
+        avgLat /= list.length;
+        avgLng /= list.length;
+        setCurrentPosition(new google.maps.LatLng(avgLat, avgLng));
+        
+        const lat = maxLat - minLat;
+        const lng = maxLng - minLng;
+        const z = Math.round((lat > lng ? lat : lng) / 15)
+        setZoom(z);
+        setPrevTravelId(selectedTravel.id);
+      }
+
+      //2. 마커 그리기
+      list.sort((x, y) => CompareDate(x.startDTTM, y.startDTTM));
+      const markers = list.map((x, i) => ({
+        lat: x.latLng.lat,
+        lng: x.latLng.lng,
+        order: i + 1
+      } as MarkerInfo))
+      
+      setMarkers(markers);
     } else {
       setMarkers([]);
+      setPrevTravelId('');
     }
   }, [selectedTravel])
 
