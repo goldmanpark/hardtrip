@@ -43,6 +43,14 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   const [orderedPlaceMatrix, setOrderedPlaceMatrix] = useState<PlaceEdit[][]>([[]]);
 
   useEffect(() => {
+    return () => {
+      //props해제
+      props.setDirections([]);
+      props.setPlaceId('')
+    }
+  }, []);
+
+  useEffect(() => {
     if(travelListRedux.length > 0 && selectedIdxRedux >= 0){
       setSelectedTravel(deSerializeTravel(travelListRedux[selectedIdxRedux]));      
     } else {
@@ -112,23 +120,43 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     }    
   }
 
-  const createRoute = async () => {
-    for(let i = 0 ; i < orderedPlaceArray.length - 1 ; i++){
+  const createRoute = async (day: number) => {
+    const target = orderedPlaceArray.filter(x => x.day === day);
+    const routeList = [];
+    for(let i = 0 ; i < target.length - 1 ; i++){
       let req = {
-        origin: { placeId: orderedPlaceArray[i].place_id } as google.maps.Place,
-        destination: { placeId: orderedPlaceArray[i + 1].place_id } as google.maps.Place,
+        origin: { placeId: target[i].place_id } as google.maps.Place,
+        destination: { placeId: target[i + 1].place_id } as google.maps.Place,
         travelMode: google.maps.TravelMode.TRANSIT
       } as google.maps.DirectionsRequest;
-
-      directionsService.route(req, (result, status) => {
-        if(status === google.maps.DirectionsStatus.OK){
-          console.log(result);
-          props.setDirections(prev => [...prev, result]);
-        } else {
-          console.error(result);
-        }
-      });
+      const route = await findRoute(req);
+      if(route){
+        routeList.push(route);
+      }
     }
+    props.setDirections(routeList);
+  }
+
+  const findRoute = async (req: google.maps.DirectionsRequest) => {
+    let routeResult: google.maps.DirectionsResult | null;
+    await directionsService.route(req, async (result, status) => {
+      if(status === google.maps.DirectionsStatus.OK){
+        //console.log(result);
+        const distance = result.routes[0].legs[0].distance.value;
+
+        if(distance <= 1.5 && req.travelMode === google.maps.TravelMode.TRANSIT){
+          //거리가 1.5km이하라면 걸어간다
+          req.travelMode = google.maps.TravelMode.WALKING;
+          routeResult = await findRoute(req);
+        } else {
+          routeResult =  result;
+        }          
+      } else {
+        console.error(result);
+        routeResult = null;
+      }
+    });
+    return routeResult;
   }
 
   const removePlace = (place: PlaceEdit) => {
@@ -216,17 +244,20 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
         (p) => 
         <div ref={p.innerRef} {...p.droppableProps} style={{background: 'lightgrey'}}>
           { p.placeholder }
-          {
-            t.day
-            ? <div className='text-align-left'>{`DAY-${t.day} ${(t.date as Date).toLocaleDateString()}`}</div>
-            : <div className='text-align-left'>N/A</div>
-          }
+          <div className='d-flex flex-row justify-content-between'>
+            {
+              t.day
+              ? <div className='text-align-left'>{`DAY-${t.day} ${(t.date as Date).toLocaleDateString()}`}</div>
+              : <div className='text-align-left'>N/A</div>
+            }
+            <RouteIcon onClick={() => createRoute(i)}/>
+          </div>          
           <Table>
             <colgroup>
               <col width='5%'/>
               <col width='40%'/>
-              <col width='25%'/>
-              <col width='25%'/>
+              <col width='10%'/>
+              <col width='10%'/>
               <col width='5%'/>
             </colgroup>
             <tbody>
@@ -239,37 +270,45 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     )
   }
 
+  const HideCalendar = ({ className, children }) => {
+    return (
+      <div/>
+    )
+  }
+
   const drawDraggable = (i: number, place: PlaceEdit, day: number) => {
     const travelDate: Date | undefined = typeof(travelDays[day].date) !== 'string' ? travelDays[day].date as Date : undefined;
     return (
       <Draggable key={place.id} draggableId={place.id} index={i}>
       {(p2: any) => (
         <tr ref={p2.innerRef} {...p2.draggableProps} {...p2.dragHandleProps}>
-          <td className='text-align-left' style={{textDecoration: place.isDel ? 'line-through' : ''}}>
+          <td className='p-1' style={{textDecoration: place.isDel ? 'line-through' : ''}}>
             {GetPlaceIcon(place)}
           </td>
-          <td className='text-align-left' style={{textDecoration: place.isDel ? 'line-through' : ''}}
+          <td className='text-align-left p-1' style={{textDecoration: place.isDel ? 'line-through' : ''}}
               onClick={() => {props.setPlaceId(place.place_id)}}>
             {place.name}
             {p2.placeholder}
           </td>
-          <td>
+          <td className='p-1'>
             <DatePicker className='w-100 text-align-center'
                         showTimeSelect
-                        dateFormat="MM-dd HH:mm"
+                        dateFormat="HH:mm"
                         timeFormat="HH:mm"
+                        calendarContainer={HideCalendar}
                         selected={place.startDTTM ? place.startDTTM : travelDate}
                         onChange={(date) => {updateStartDTTM(place.id, date, travelDate)}}/>
           </td>
-          <td>
+          <td className='p-1'>
             <DatePicker className='w-100 text-align-center'
                         showTimeSelect
-                        dateFormat="MM-dd HH:mm"
+                        dateFormat="HH:mm"
                         timeFormat="HH:mm"
+                        calendarContainer={HideCalendar}
                         selected={place.endDTTM ? place.endDTTM : travelDate}
                         onChange={(date) => {updateEndDTTM(place.id, date, travelDate)}}/>
           </td>
-          <td>
+          <td className='p-1'>
             {
               place.isDel
                 ? <DoDisturbIcon onClick={() => {cancelRemove(place)}}/>
@@ -289,7 +328,6 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
         <div className='d-flex flex-row justify-content-between'>
           <span>{ selectedTravel?.name }</span>
           <span>
-            <RouteIcon onClick={createRoute}/>
             {
               orderedPlaceArray.find(x => x.isDel || x.isEdit) && <CheckIcon onClick={confirmEdit}/>
             }

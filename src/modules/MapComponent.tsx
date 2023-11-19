@@ -57,11 +57,15 @@ const MapComponent = (props: MapProps) => {
   }, [selectedLatLng]);
 
   useEffect(() => {
-    setPlaceInfo(props.placeInfo);
+    if(props.placeInfo){
+      setPlaceInfo(props.placeInfo)
+    }
   }, [props.placeInfo]);
 
   useEffect(() => {
-    getPlaceResult(props.placeId);
+    if(props.placeId !== ''){
+      getPlaceResult(props.placeId);
+    }
   }, [props.placeId]);
 
   useEffect(() => {
@@ -76,7 +80,6 @@ const MapComponent = (props: MapProps) => {
     if(selectedTravel){      
       const list = selectedTravel.places;
       if(!(list instanceof Array) || list.length === 0){
-        setPrevTravelId(selectedTravel.id);
         return;
       }
 
@@ -97,7 +100,7 @@ const MapComponent = (props: MapProps) => {
         });
         avgLat /= list.length;
         avgLng /= list.length;
-        setCurrentPosition(new google.maps.LatLng(avgLat, avgLng));
+        setCurrentPosition(new google.maps.LatLng(avgLat, avgLng));        
         
         const lat = maxLat - minLat;
         const lng = maxLng - minLng;
@@ -122,7 +125,6 @@ const MapComponent = (props: MapProps) => {
   }, [selectedTravel]);
 
   const getPlaceResult = (placeId: string) => {
-    console.log(placeId)
     if(map instanceof google.maps.Map && placeId && placesService){
       let request = {
         placeId: placeId,
@@ -147,7 +149,10 @@ const MapComponent = (props: MapProps) => {
       placesService.getDetails(request, (place: google.maps.places.PlaceResult, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK) {
           setPlaceInfo(place);
-          setShowCurrentMarker(true);
+          //setShowCurrentMarker(true);
+          const pos = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
+          setCurrentPosition(pos);
+          setZoom(12);
         }
       });
     }    

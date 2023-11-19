@@ -154,6 +154,7 @@ export const updatePlaceList = createAsyncThunk(
           place_id: place.place_id,
           name: place.name,
           latLng: place.latLng,
+          type: place.type,
           ...(typeof(place.day) === 'number' && { day: place.day }),
           ...(place.startDTTM && { startDTTM: place.startDTTM }),
           ...(place.endDTTM && { endDTTM: place.endDTTM })

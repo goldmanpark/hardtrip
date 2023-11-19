@@ -56,7 +56,7 @@ const Main = () => {
                   onLoad={() => {dispatch(setCurrentLatLng())}}>
         <div className={`Header ${showPanel !== null ? 'active' : ''} d-flex gap-2 justify-content-between align-items-center`}>
           <Button variant="primary" onClick={() => {setShowPanel('travelList')}}>Travels</Button>
-          <LocationSearcher/>
+          <LocationSearcher setPlaceInfo={setSelectedPlace}/>
           <Login/>
         </div> 
 
