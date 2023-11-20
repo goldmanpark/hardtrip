@@ -19,6 +19,7 @@ import LocationSearcher from './LocationSearcher';
 import PlaceInfoPopup from './PlaceInfoPopup';
 import TravelInfoPanel from './TravelInfoPanel';
 import { Travel } from '../DataType/Travel';
+import { Place } from '../DataType/Place';
 
 const Main = () => {
   const dispatch = useAppDispatch();
@@ -27,9 +28,14 @@ const Main = () => {
   const { userData } = useAuth();
 
   const [showPanel, setShowPanel] = useState<null | 'travelList' | 'travelInfo' | 'placeInfo'>(null);
-  const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
+  
+  //LocationSearcher -> MapComponent
+  const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);  
+
+  //TravelInfoPanel -> MapComponent
   const [selectedPlaceId, setSelectedPlaceId] = useState('');
   const [directions, setDirections] = useState<google.maps.DirectionsResult[]>([]);
+  const [markerPlaces, setMarkerPlaces] = useState<Place[]>([]);
   
   useEffect(() => {
     if(userData){
@@ -61,10 +67,11 @@ const Main = () => {
         </div> 
 
         <MapComponent
-          placeInfo={selectedPlace}
-          placeId={selectedPlaceId}
+          placeInfo={selectedPlace}          
           setPlaceInfo={setSelectedPlace}
+          placeId={selectedPlaceId}
           directions={directions}
+          markerPlaces={markerPlaces}
         />
 
       {
@@ -74,8 +81,9 @@ const Main = () => {
       {
         showPanel === 'travelInfo' &&
         <TravelInfoPanel
-          setDirections={setDirections}
           setPlaceId={setSelectedPlaceId}
+          setMarkerPlaces={setMarkerPlaces}
+          setDirections={setDirections}          
           exit={() => {setShowPanel(null)}}/>
       }
       </LoadScript>

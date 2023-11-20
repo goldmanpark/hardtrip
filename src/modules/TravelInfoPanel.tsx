@@ -14,11 +14,14 @@ import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import CheckIcon from '@mui/icons-material/Check';
 import RouteIcon from '@mui/icons-material/Route';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import PlaceIcon from '@mui/icons-material/Place';
 
 interface TravelInfoProps{
   exit: () => void;
-  setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;
+  //to MapComponent
   setPlaceId: React.Dispatch<React.SetStateAction<string>>;
+  setMarkerPlaces: React.Dispatch<React.SetStateAction<Place[]>>
+  setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;  
 }
 
 interface TravelDay{
@@ -226,7 +229,15 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     }
     if(orderedPlaceArray.find(x => x.isEdit)){
       dispatch(updatePlaceList({travelId: selectedTravel.id, placeList: orderedPlaceArray.filter(x => x.isEdit)}));
-    }    
+    }
+  }
+
+  const showPlaceMarkers = (day?: number) => {
+    if(day){
+      props.setMarkerPlaces(orderedPlaceMatrix[day]);
+    } else {
+      props.setMarkerPlaces(orderedPlaceArray);
+    }
   }
 
   const closeTravel = () => {
@@ -250,7 +261,10 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
               ? <div className='text-align-left'>{`DAY-${t.day} ${(t.date as Date).toLocaleDateString()}`}</div>
               : <div className='text-align-left'>N/A</div>
             }
-            <RouteIcon onClick={() => createRoute(i)}/>
+            <span>
+              <PlaceIcon onClick={() => showPlaceMarkers(i)}/>
+              <RouteIcon onClick={() => createRoute(i)}/>
+            </span>
           </div>          
           <Table>
             <colgroup>
@@ -331,6 +345,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
             {
               orderedPlaceArray.find(x => x.isDel || x.isEdit) && <CheckIcon onClick={confirmEdit}/>
             }
+            <PlaceIcon onClick={() => showPlaceMarkers()}/>
             <CloseRoundedIcon onClick={closeTravel}/>
           </span>
         </div>

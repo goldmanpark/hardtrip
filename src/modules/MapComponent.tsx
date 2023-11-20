@@ -10,16 +10,13 @@ import { Place } from '../DataType/Place';
 import PlaceInfoPopup from './PlaceInfoPopup';
 
 interface MapProps{
-  placeInfo: google.maps.places.PlaceResult | null;
-  placeId: string;
+  //from LocationSearcher
+  placeInfo: google.maps.places.PlaceResult | null;  
   setPlaceInfo: React.Dispatch<React.SetStateAction<google.maps.places.PlaceResult | null>>;
+  //from TravelInfoPanel
+  placeId: string;
   directions: google.maps.DirectionsResult[];
-}
-
-export interface MarkerInfo{
-  lat: number;
-  lng: number;
-  order: number;
+  markerPlaces: Place[];
 }
 
 const MapComponent = (props: MapProps) => {
@@ -36,9 +33,6 @@ const MapComponent = (props: MapProps) => {
   const [showTraffic, setShowTraffic] = useState<boolean>(false);
   const [showTransit, setShowTransit] = useState<boolean>(false);
   const [currentPosition, setCurrentPosition] = useState<google.maps.LatLng>(null);
-  //TravelInfoPanel에서 가져오는 데이터
-  const [markers, setMarkers] = useState<MarkerInfo[]>([]);
-
   const [placeInfo, setPlaceInfo] = useState<google.maps.places.PlaceResult | null>(null);
   
   const placesService = useMemo(() => {
@@ -108,18 +102,7 @@ const MapComponent = (props: MapProps) => {
         setZoom(z);
         setPrevTravelId(selectedTravel.id);
       }
-
-      //2. 마커 그리기
-      list.sort((x, y) => CompareDate(x.startDTTM, y.startDTTM));
-      const markers = list.map((x, i) => ({
-        lat: x.latLng.lat,
-        lng: x.latLng.lng,
-        order: i + 1
-      } as MarkerInfo))
-      
-      setMarkers(markers);
     } else {
-      setMarkers([]);
       setPrevTravelId('');
     }
   }, [selectedTravel]);
@@ -188,12 +171,12 @@ const MapComponent = (props: MapProps) => {
         { showTransit && <TransitLayer/> }
         { props.directions.map(d => (<DirectionsRenderer directions={d}/>)) }
         { showCurrentMarker && <MarkerF position={currentPosition}/> }
-        { markers.map(p => {
+        { props.markerPlaces.map((p, i) => {
           const label = {
-            text: p.order.toString(),
+            text: (i + 1).toString(),
             fontWeight: 'bold'
           } as google.maps.MarkerLabel;
-          return <MarkerF position={p} label={label}/>
+          return <MarkerF position={p.latLng} label={label}/>
         }) }
       </GoogleMap>
 
