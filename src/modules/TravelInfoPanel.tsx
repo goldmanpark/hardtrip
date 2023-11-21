@@ -49,6 +49,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   const [orderedPlaceArray, setOrderedPlaceArray] = useState<PlaceEdit[]>([]);
   const [orderedPlaceMatrix, setOrderedPlaceMatrix] = useState<PlaceEdit[][]>([[]]);
 
+  //#region [useEffect]
   useEffect(() => {
     return () => {
       //props해제
@@ -105,45 +106,9 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   useEffect(() => {
     setOrderedPlaceArray(orderedPlaceMatrix.reduce((acc, cur) => acc.concat(cur), []));
   }, [orderedPlaceMatrix]);
+  //#endregion
 
-  //#region [Event Handler]
-  const onDragEnd = (result: DropResult) => {
-    const { source, destination } = result;
-    if(!destination) return;
-
-    const reorderedData = [...orderedPlaceMatrix];
-    const [removed] = reorderedData[source.droppableId].splice(source.index, 1);
-    const sourceDropID = parseInt(source.droppableId);
-    const destDropID = parseInt(destination.droppableId);
-
-    if(sourceDropID === destDropID){
-      reorderedData[sourceDropID].splice(destination.index, 0, removed);
-      setOrderedPlaceMatrix(reorderedData);
-    } else {
-      removed.day = destDropID;
-      removed.isEdit = true;
-      reorderedData[destDropID].splice(destination.index, 0, removed);
-      setOrderedPlaceMatrix(reorderedData);
-    }
-  }
-
-  const createRoute = async (day: number) => {
-    const target = orderedPlaceArray.filter(x => x.day === day);
-    const routeList = [];
-    for(let i = 0 ; i < target.length - 1 ; i++){
-      let req = {
-        origin: { placeId: target[i].place_id } as google.maps.Place,
-        destination: { placeId: target[i + 1].place_id } as google.maps.Place,
-        travelMode: google.maps.TravelMode.TRANSIT
-      } as google.maps.DirectionsRequest;
-      const route = await findRoute(req);
-      if(route){
-        routeList.push(route);
-      }
-    }
-    props.setDirections(routeList);
-  }
-
+  //#region [Functions]
   const findRoute = async (req: google.maps.DirectionsRequest) => {
     let routeResult: google.maps.DirectionsResult | null;
     await directionsService.route(req, async (result, status) => {
@@ -165,7 +130,72 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     });
     return routeResult;
   }
+  //#endregion
 
+  //#region [Event Handler]
+  const confirmEdit = () => {
+    if(orderedPlaceArray.find(x => x.isDel)){
+      dispatch(deletePlaceList({travelId: selectedTravel.id, placeList: orderedPlaceArray.filter(x => x.isDel)}));
+    }
+    if(orderedPlaceArray.find(x => x.isEdit)){
+      dispatch(updatePlaceList({travelId: selectedTravel.id, placeList: orderedPlaceArray.filter(x => x.isEdit)}));
+    }
+  }
+
+  const closeTravel = () => {
+    dispatch(setSelectedIdx(-1));
+    props.exit();
+  }
+  //#endregion
+
+  //#region [Droppable Event Handler]
+  const onDragEnd = (result: DropResult) => {
+    const { source, destination } = result;
+    if(!destination) return;
+
+    const reorderedData = [...orderedPlaceMatrix];
+    const [removed] = reorderedData[source.droppableId].splice(source.index, 1);
+    const sourceDropID = parseInt(source.droppableId);
+    const destDropID = parseInt(destination.droppableId);
+
+    if(sourceDropID === destDropID){
+      reorderedData[sourceDropID].splice(destination.index, 0, removed);
+      setOrderedPlaceMatrix(reorderedData);
+    } else {
+      removed.day = destDropID;
+      removed.isEdit = true;
+      reorderedData[destDropID].splice(destination.index, 0, removed);
+      setOrderedPlaceMatrix(reorderedData);
+    }
+  }
+
+  const drawDailyMarkers = (day?: number) => {
+    if(day){
+      props.setMarkerPlaces(orderedPlaceMatrix[day]);
+    } else {
+      props.setMarkerPlaces(orderedPlaceArray);
+    }
+  }
+
+  const drawDailyRoute = async (day: number) => {
+    const target = orderedPlaceArray.filter(x => x.day === day);
+    const routeList = [];
+    for(let i = 0 ; i < target.length - 1 ; i++){
+      let req = {
+        origin: { placeId: target[i].place_id } as google.maps.Place,
+        destination: { placeId: target[i + 1].place_id } as google.maps.Place,
+        travelMode: google.maps.TravelMode.TRANSIT
+      } as google.maps.DirectionsRequest;
+      const route = await findRoute(req);
+      if(route){
+        routeList.push(route);
+      }
+    }
+    props.setDirections(routeList);
+  }
+  //#endregion
+
+  //#region [Draggable Event Handler]
   const removePlace = (place: PlaceEdit) => {
     const data = [...orderedPlaceMatrix];
     loop: for(let i = 0 ; i < data.length ; i++){
@@ -179,7 +209,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     setOrderedPlaceMatrix(data);
   }
 
-  const cancelRemove = (place: Place) => {
+  const cancelRemove = (place: PlaceEdit) => {
     const data = [...orderedPlaceMatrix];
     loop: for(let i = 0 ; i < data.length ; i++){
       for(let j = 0 ; j < data[i].length ; j++){
@@ -227,26 +257,23 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     setOrderedPlaceMatrix(data);
   }
 
-  const confirmEdit = () => {
-    if(orderedPlaceArray.find(x => x.isDel)){
-      dispatch(deletePlaceList({travelId: selectedTravel.id, placeList: orderedPlaceArray.filter(x => x.isDel)}));
+  const drawRoute = async (place: PlaceEdit) => {
+    let source: PlaceEdit;
+    loop: for(let i = 0 ; i < orderedPlaceMatrix.length ; i++){
+      for(let j = 0 ; j < orderedPlaceMatrix[i].length ; j++){
+        if(orderedPlaceMatrix[i][j].id === place.id){
+          source = orderedPlaceMatrix[i][j - 1];
+          break loop;
+        }
+      }
     }
-    if(orderedPlaceArray.find(x => x.isEdit)){
-      dispatch(updatePlaceList({travelId: selectedTravel.id, placeList: orderedPlaceArray.filter(x => x.isEdit)}));
-    }
-  }
-
-  const showPlaceMarkers = (day?: number) => {
-    if(day){
-      props.setMarkerPlaces(orderedPlaceMatrix[day]);
-    } else {
-      props.setMarkerPlaces(orderedPlaceArray);
-    }
-  }
-
-  const closeTravel = () => {
-    dispatch(setSelectedIdx(-1));
-    props.exit();
+    const req = {
+      origin: { placeId: source.place_id } as google.maps.Place,
+      destination: { placeId: place.place_id } as google.maps.Place,
+      travelMode: google.maps.TravelMode.TRANSIT
+    } as google.maps.DirectionsRequest;
+    const route = await findRoute(req);
+    props.setDirections([route]);
   }
   //#endregion
 
@@ -283,8 +310,8 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
               : <div className='text-align-left'>N/A</div>
             }
             <span>
-              <PlaceIcon onClick={e => { showPlaceMarkers(i); }}/>
-              <RouteIcon onClick={e => { createRoute(i); }}/>
+              <PlaceIcon onClick={e => { drawDailyMarkers(i); }}/>
+              <RouteIcon onClick={e => { drawDailyRoute(i); }}/>
               <AccordionButton eventKey={i.toString()}/>
             </span>
           </Card.Header>
@@ -295,6 +322,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
                 <col width='40%'/>
                 <col width='10%'/>
                 <col width='10%'/>
+                <col width='5%'/>
                 <col width='5%'/>
               </colgroup>
               <tbody>
@@ -346,12 +374,20 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
                         selected={place.endDTTM ? place.endDTTM : travelDate}
                         onChange={(date) => {updateEndDTTM(place.id, date, travelDate)}}/>
           </td>
+          <td className='position-relative'>
+          {
+            i > 0 &&            
+            <button className='RouteButton'>
+              <RouteIcon className='RouteIcon' onClick={e => { drawRoute(place); }}/>
+            </button>
+          }
+          </td>
           <td className='p-1'>
-            {
-              place.isDel
-                ? <DoDisturbIcon onClick={() => {cancelRemove(place)}}/>
-                : <DeleteIcon onClick={() => {removePlace(place)}}/>
-            }
+          {
+            place.isDel
+              ? <DoDisturbIcon onClick={() => {cancelRemove(place)}}/>
+              : <DeleteIcon onClick={() => {removePlace(place)}}/>
+          }
           </td>
         </tr>
       )}
@@ -369,7 +405,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
             {
               orderedPlaceArray.find(x => x.isDel || x.isEdit) && <CheckIcon onClick={confirmEdit}/>
             }
-            <PlaceIcon onClick={() => showPlaceMarkers()}/>
+            <PlaceIcon onClick={() => drawDailyMarkers()}/>
             <CloseRoundedIcon onClick={closeTravel}/>
           </span>
         </div>
