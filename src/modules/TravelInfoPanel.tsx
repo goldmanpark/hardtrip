@@ -1,9 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useAppSelector, useAppDispatch } from '../redux/store';
-import { Card, Table } from 'react-bootstrap';
+import { Card, Table, Accordion } from 'react-bootstrap';
+import AccordionContext from 'react-bootstrap/AccordionContext';
+import { useAccordionButton } from 'react-bootstrap/AccordionButton';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
-import { Travel, TravelSerialized, deSerializeTravel, serializeTravel } from '../DataType/Travel';
+import { Travel, TravelSerialized, deSerializeTravel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
 import { updatePlaceList, deletePlaceList, setSelectedIdx } from '../redux/travelListSlice';
 import { CompareDate, GetDaysDiff } from './CommonFunctions';
@@ -15,13 +17,15 @@ import CheckIcon from '@mui/icons-material/Check';
 import RouteIcon from '@mui/icons-material/Route';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import PlaceIcon from '@mui/icons-material/Place';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 interface TravelInfoProps{
   exit: () => void;
   //to MapComponent
   setPlaceId: React.Dispatch<React.SetStateAction<string>>;
   setMarkerPlaces: React.Dispatch<React.SetStateAction<Place[]>>
-  setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;  
+  setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;
 }
 
 interface TravelDay{
@@ -55,7 +59,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
 
   useEffect(() => {
     if(travelListRedux.length > 0 && selectedIdxRedux >= 0){
-      setSelectedTravel(deSerializeTravel(travelListRedux[selectedIdxRedux]));      
+      setSelectedTravel(deSerializeTravel(travelListRedux[selectedIdxRedux]));
     } else {
       setSelectedTravel(null);
     }
@@ -71,7 +75,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
 
       if(startDate instanceof Date && endDate instanceof Date){
         const days = GetDaysDiff(endDate, startDate) + 1;
-        
+
         for(let i = 0 ; i < days ; i++){
           const newDate = new Date(startDate);
           newDate.setDate(newDate.getDate() + (i * 1));
@@ -84,7 +88,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       }
       tempTravelDays.unshift({ date: 'N/A', day: 0 } as TravelDay);
       setTravelDays(tempTravelDays);
-      
+
       const temp = selectedTravel.places.map(x => ({...x, isDel: false, isEdit: false} as PlaceEdit))
       temp.sort((x, y) => CompareDate(x.startDTTM, y.startDTTM));
       temp.forEach(x => {
@@ -98,7 +102,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     }
   }, [selectedTravel]);
 
-  useEffect(() => {    
+  useEffect(() => {
     setOrderedPlaceArray(orderedPlaceMatrix.reduce((acc, cur) => acc.concat(cur), []));
   }, [orderedPlaceMatrix]);
 
@@ -112,7 +116,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
     const sourceDropID = parseInt(source.droppableId);
     const destDropID = parseInt(destination.droppableId);
 
-    if(sourceDropID === destDropID){      
+    if(sourceDropID === destDropID){
       reorderedData[sourceDropID].splice(destination.index, 0, removed);
       setOrderedPlaceMatrix(reorderedData);
     } else {
@@ -120,7 +124,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
       removed.isEdit = true;
       reorderedData[destDropID].splice(destination.index, 0, removed);
       setOrderedPlaceMatrix(reorderedData);
-    }    
+    }
   }
 
   const createRoute = async (day: number) => {
@@ -153,7 +157,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
           routeResult = await findRoute(req);
         } else {
           routeResult =  result;
-        }          
+        }
       } else {
         console.error(result);
         routeResult = null;
@@ -247,39 +251,59 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   //#endregion
 
   //#region [conditional render]
+  const AccordionButton = ({eventKey}) => {
+    const { activeEventKey } = useContext(AccordionContext);
+    const decoratedOnClick = useAccordionButton(eventKey);  
+    
+    if(activeEventKey){
+      return (
+        activeEventKey.includes(eventKey) 
+          ? <KeyboardArrowUpIcon onClick={decoratedOnClick}/> 
+          : <KeyboardArrowDownIcon onClick={decoratedOnClick}/>
+      )
+    } else {
+      return (
+        <KeyboardArrowDownIcon onClick={decoratedOnClick}/>
+      )
+    }    
+  }
+
   const drawDroppable = (i: number, places: PlaceEdit[]) => {
     const t = travelDays[i];
     return(
       <Droppable key={i} droppableId={i.toString()}>
       {
-        (p) => 
-        <div ref={p.innerRef} {...p.droppableProps} style={{background: 'lightgrey'}}>
+        (p) =>
+        <Card ref={p.innerRef} {...p.droppableProps}>
           { p.placeholder }
-          <div className='d-flex flex-row justify-content-between'>
+          <Card.Header className='p-1 w-100 d-flex flex-row justify-content-between'>
             {
               t.day
               ? <div className='text-align-left'>{`DAY-${t.day} ${(t.date as Date).toLocaleDateString()}`}</div>
               : <div className='text-align-left'>N/A</div>
             }
             <span>
-              <PlaceIcon onClick={() => showPlaceMarkers(i)}/>
-              <RouteIcon onClick={() => createRoute(i)}/>
+              <PlaceIcon onClick={e => { showPlaceMarkers(i); }}/>
+              <RouteIcon onClick={e => { createRoute(i); }}/>
+              <AccordionButton eventKey={i.toString()}/>
             </span>
-          </div>          
-          <Table>
-            <colgroup>
-              <col width='5%'/>
-              <col width='40%'/>
-              <col width='10%'/>
-              <col width='10%'/>
-              <col width='5%'/>
-            </colgroup>
-            <tbody>
-            { places.map((x, j) => drawDraggable(j, x, i)) }
-            </tbody>
-          </Table>
-        </div>
-      }      
+          </Card.Header>
+          <Accordion.Collapse eventKey={i.toString()} className='p-0'>
+            <Table>
+              <colgroup>
+                <col width='5%'/>
+                <col width='40%'/>
+                <col width='10%'/>
+                <col width='10%'/>
+                <col width='5%'/>
+              </colgroup>
+              <tbody>
+              { places.map((x, j) => drawDraggable(j, x, i)) }
+              </tbody>
+            </Table>
+          </Accordion.Collapse>
+        </Card>
+      }
       </Droppable>
     )
   }
@@ -301,8 +325,8 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
           </td>
           <td className='text-align-left p-1' style={{textDecoration: place.isDel ? 'line-through' : ''}}
               onClick={() => {props.setPlaceId(place.place_id)}}>
-            {place.name}
-            {p2.placeholder}
+            { place.name }
+            { p2.placeholder }
           </td>
           <td className='p-1'>
             <DatePicker className='w-100 text-align-center'
@@ -350,12 +374,14 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
           </span>
         </div>
       </Card.Header>
-      <Card.Body className='overflow-auto'>
+      <Card.Body className='overflow-auto p-1'>
         <DragDropContext onDragEnd={onDragEnd}>
-        {
-          orderedPlaceMatrix.length === travelDays.length && //안전장치
-          orderedPlaceMatrix.map((x, i) => drawDroppable(i, x))
-        }
+          <Accordion alwaysOpen>
+          {
+            orderedPlaceMatrix.length === travelDays.length && //안전장치
+            orderedPlaceMatrix.map((x, i) => drawDroppable(i, x))
+          }
+          </Accordion>
         </DragDropContext>
       </Card.Body>
     </Card>
