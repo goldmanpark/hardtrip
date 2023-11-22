@@ -7,8 +7,9 @@ import { useAccordionButton } from 'react-bootstrap/AccordionButton';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
 import { Travel, TravelSerialized, deSerializeTravel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
-import { updatePlaceList, deletePlaceList, setSelectedIdx } from '../redux/travelListSlice';
+import { updatePlaceList, deletePlaceList } from '../redux/travelListSlice';
 import { CompareDate, GetDaysDiff } from './CommonFunctions';
+
 import GetPlaceIcon from '../DataType/GetPlaceIcon';
 import DatePicker from 'react-datepicker';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -21,11 +22,12 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 interface TravelInfoProps{
-  exit: () => void;
   //to MapComponent
   setPlaceId: React.Dispatch<React.SetStateAction<string>>;
   setMarkerPlaces: React.Dispatch<React.SetStateAction<Place[]>>
   setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;
+  //panel전환
+  setEditTravel: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 interface TravelDay{
@@ -38,7 +40,7 @@ interface PlaceEdit extends Place{
   isEdit: boolean;
 }
 
-const TravelInfoPanel = (props : TravelInfoProps) => {
+const TravelInfoEditPanel = (props : TravelInfoProps) => {
   const dispatch = useAppDispatch();
   const travelListRedux: TravelSerialized[] = useAppSelector(state => state.travelList.list);
   const selectedIdxRedux = useAppSelector(state => state.travelList.selectedIdx);
@@ -143,8 +145,7 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   }
 
   const closeTravel = () => {
-    dispatch(setSelectedIdx(-1));
-    props.exit();
+    props.setEditTravel(false);  
   }
   //#endregion
 
@@ -374,14 +375,6 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
                         selected={place.endDTTM ? place.endDTTM : travelDate}
                         onChange={(date) => {updateEndDTTM(place.id, date, travelDate)}}/>
           </td>
-          <td className='position-relative'>
-          {
-            i > 0 &&            
-            <button className='RouteButton'>
-              <RouteIcon className='RouteIcon' onClick={e => { drawRoute(place); }}/>
-            </button>
-          }
-          </td>
           <td className='p-1'>
           {
             place.isDel
@@ -425,4 +418,4 @@ const TravelInfoPanel = (props : TravelInfoProps) => {
   )
 }
 
-export default TravelInfoPanel;
+export default TravelInfoEditPanel;

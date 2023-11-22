@@ -14,3 +14,15 @@ export const GetDaysDiff = (d1?: Date, d2?: Date): number => {
     return 0;
   }
 }
+
+export const GetHHmm = (d?: Date): string => {
+  if(d instanceof Date){
+    let HH = d.getHours().toString();
+    let mm = d.getMinutes().toString();
+    HH = HH.length > 1 ? HH : '0' + HH;
+    mm = mm.length > 1 ? mm : '0' + mm;
+    return HH + ':' + mm;
+  } else {
+    return '';
+  }
+}

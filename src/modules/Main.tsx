@@ -17,7 +17,8 @@ import MapComponent from './MapComponent';
 import TravelListPanel from './TravelListPanel';
 import LocationSearcher from './LocationSearcher';
 import PlaceInfoPanel from './PlaceInfoPanel';
-import TravelInfoPanel from './TravelInfoPanel';
+import TravelInfoEditPanel from './TravelInfoEditPanel';
+import TravelInfoViewPanel from './TravelInfoViewPanel';
 import { Travel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
 
@@ -28,20 +29,23 @@ const Main = () => {
   const { userData } = useAuth();
 
   const [showPanel, setShowPanel] = useState<null | 'travelList' | 'travelInfo'>(null);
-  
+
   //LocationSearcher -> MapComponent/PlaceInfoPanel
   //MapComponent -> PlaceInfoPanel
-  const [placeResult, setPlaceResult] = useState<google.maps.places.PlaceResult | null>(null);  
+  const [placeResult, setPlaceResult] = useState<google.maps.places.PlaceResult | null>(null);
 
   //TravelInfoPanel -> MapComponent
   const [selectedPlaceId, setSelectedPlaceId] = useState('');
   const [directions, setDirections] = useState<google.maps.DirectionsResult[]>([]);
   const [markerPlaces, setMarkerPlaces] = useState<Place[]>([]);
-  
+
+  //TravelInfoEditPanel <-> TravelInfoViewPanel
+  const [editTravel, setEditTravel] = useState(false);
+
   useEffect(() => {
     if(userData){
-      dispatch(readTravelList(userData.uid)); 
-    }    
+      dispatch(readTravelList(userData.uid));
+    }
   }, [userData]);
 
   useEffect(() => {
@@ -62,28 +66,39 @@ const Main = () => {
           }
           {
             showPanel === 'travelInfo' &&
-            <TravelInfoPanel
+            editTravel === false &&
+            <TravelInfoViewPanel
               setPlaceId={setSelectedPlaceId}
               setMarkerPlaces={setMarkerPlaces}
-              setDirections={setDirections}          
+              setDirections={setDirections}
+              setEditTravel={setEditTravel}
               exit={() => {setShowPanel(null)}}/>
+          }
+          {
+            showPanel === 'travelInfo' &&
+            editTravel === true &&
+            <TravelInfoEditPanel
+              setPlaceId={setSelectedPlaceId}
+              setMarkerPlaces={setMarkerPlaces}
+              setDirections={setDirections}
+              setEditTravel={setEditTravel}/>
           }
           <div className='p-1 flex-grow-1 d-flex gap-2 justify-content-between align-items-center'
                style={{pointerEvents: 'auto', top: 0}}>
             <Button variant="primary" onClick={() => {setShowPanel('travelList')}}>Travels</Button>
             <LocationSearcher setPlaceInfo={setPlaceResult}/>
             <Login/>
-          </div> 
+          </div>
           {
             placeResult &&
-            <PlaceInfoPanel 
+            <PlaceInfoPanel
               placeResult={placeResult}
               onClose={() => setPlaceResult(null)}/>
           }
         </div>
 
         <MapComponent
-          placeInfo={placeResult}          
+          placeInfo={placeResult}
           setPlaceResult={setPlaceResult}
           placeId={selectedPlaceId}
           directions={directions}
