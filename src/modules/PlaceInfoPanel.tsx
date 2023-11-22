@@ -15,12 +15,12 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import LanguageRoundedIcon from '@mui/icons-material/LanguageRounded';
 
 interface PlaceInfoPanelProps{
-  placeInfo: google.maps.places.PlaceResult
+  placeResult: google.maps.places.PlaceResult
   onClose?: () => void;
 }
 
 //https://developers.google.com/maps/documentation/javascript/reference/places-service?hl=ko#PlaceResult
-const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
+const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
   const dispatch = useAppDispatch();
   const { userData } = useAuth();
   const travelListRedux: TravelSerialized[] = useAppSelector((state) => state.travelList.list);
@@ -42,18 +42,18 @@ const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
     return (
       <div className='d-flex flex-column gap-2'>
         <span className='d-flex flex-row gap-2'>
-          <span>{props.placeInfo.rating}</span>
-          <span>{drawStarRating(props.placeInfo.rating)}</span>
-          <span>{`(${props.placeInfo.user_ratings_total})`}</span>
+          <span>{props.placeResult.rating}</span>
+          <span>{drawStarRating(props.placeResult.rating)}</span>
+          <span>{`(${props.placeResult.user_ratings_total})`}</span>
         </span>
 
-        <span>{`${props.placeInfo.types.join(', ')}`}</span>
+        <span>{`${props.placeResult.types.join(', ')}`}</span>
 
         {
-          props.placeInfo.photos && props.placeInfo.photos.length > 0 &&
+          props.placeResult.photos && props.placeResult.photos.length > 0 &&
           <Carousel>
             {
-              props.placeInfo.photos.map((p, i) => (
+              props.placeResult.photos.map((p, i) => (
               <Carousel.Item key={'carousel' + i.toString()}>
                 <div className='d-flex justify-content-center align-items-center' style={{'maxHeight' : '300px'}}>
                   <img src={p.getUrl()} alt='' className='img-fluid'/>
@@ -69,7 +69,7 @@ const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
               <LocationOnOutlinedIcon/>
             </Col>
             <Col xs={10} sm={10} className='d-flex justify-content-start'>
-              { props.placeInfo.vicinity }
+              { props.placeResult.vicinity }
             </Col>
           </Row>
           <Row>
@@ -86,8 +86,8 @@ const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
             </Col>
             <Col xs={10} sm={10} className='d-flex flex-column'>
               {
-                props.placeInfo.website
-                  ? <a href={props.placeInfo.website}>{props.placeInfo.website}</a>
+                props.placeResult.website
+                  ? <a href={props.placeResult.website}>{props.placeResult.website}</a>
                   : 'N/A'
               }
             </Col>
@@ -114,26 +114,26 @@ const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
   }
 
   const drawOpening = () => {
-    if(!props.placeInfo.opening_hours || !(props.placeInfo.opening_hours.periods instanceof Array))
+    if(!props.placeResult.opening_hours || !(props.placeResult.opening_hours.periods instanceof Array))
       return <span>N/A</span>;
 
     const days = ['일', '월', '화', '수', '목', '금', '토'];
     let today = new Date();
     let results = [];
 
-    if(props.placeInfo.opening_hours.periods.length === 7){
+    if(props.placeResult.opening_hours.periods.length === 7){
       for (let i = 0; i < 7; i++) {
-        let t1 = props.placeInfo.opening_hours.periods[i];
+        let t1 = props.placeResult.opening_hours.periods[i];
         results.push({
           day : t1.open.day,
           res : t1.open.time.slice(0, 2) + ':' + t1.open.time.slice(2) + ' ~ ' + t1.close.time.slice(0, 2) + ':' + t1.close.time.slice(2)
         });
       }
     }
-    else if(props.placeInfo.opening_hours.periods.length === 14){
+    else if(props.placeResult.opening_hours.periods.length === 14){
       for (let i = 0; i < 14; i += 2) {
-        let t1 = props.placeInfo.opening_hours.periods[i];
-        let t2 = props.placeInfo.opening_hours.periods[i + 1];
+        let t1 = props.placeResult.opening_hours.periods[i];
+        let t2 = props.placeResult.opening_hours.periods[i + 1];
 
         let res = t1.open.time.slice(0, 2) + ':' + t1.open.time.slice(2) + ' ~ ' + t1.close.time.slice(0, 2) + ':' + t1.close.time.slice(2);
         res += ' / ';
@@ -147,7 +147,7 @@ const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
 
     return(
       <Container>
-        <Row>{ props.placeInfo.opening_hours.isOpen ? '영업 중' : '영업 종료' }</Row>
+        <Row>{ props.placeResult.opening_hours.isOpen ? '영업 중' : '영업 종료' }</Row>
         {
           results.map(r => (
             <Row className='items-align-center' style={{fontWeight : today.getDay() === r.day ? 'bold' : 'normal'}}>
@@ -187,7 +187,7 @@ const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
                   {
-                    props.placeInfo.types.map(type => (
+                    props.placeResult.types.map(type => (
                       <Dropdown.Item onClick={() => {saveCurrentPlace(t, type)}}>{type}</Dropdown.Item>
                     ))
                   }
@@ -213,12 +213,12 @@ const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
 
   const saveCurrentPlace = (travel: TravelSerialized, type: string) => {
     let place = {
-      place_id : props.placeInfo.place_id,
-      name : props.placeInfo.name,
+      place_id : props.placeResult.place_id,
+      name : props.placeResult.name,
       day: 0,
       latLng : {
-        lat: props.placeInfo.geometry.location.lat(),
-        lng: props.placeInfo.geometry.location.lng()
+        lat: props.placeResult.geometry.location.lat(),
+        lng: props.placeResult.geometry.location.lng()
       },
       type: type
     } as Place;
@@ -226,9 +226,9 @@ const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
   }
 
   return (
-    <Card className='custom-modal'>
+    <Card className='custom-card'>
       <Card.Header className='d-flex flex-row justify-content-between align-items-center'>
-        <h4 className='m-0'>{ props.placeInfo.name }</h4>
+        <h4 className='m-0'>{ props.placeResult.name }</h4>
         <CloseRoundedIcon onClick={() => {props.onClose()}}/>
       </Card.Header>
 
@@ -258,4 +258,4 @@ const PlaceInfoPopup = (props: PlaceInfoPanelProps) => {
   );
 }
 
-export default PlaceInfoPopup;
+export default PlaceInfoPanel;

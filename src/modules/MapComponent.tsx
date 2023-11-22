@@ -7,12 +7,11 @@ import Compass from './subModules/Compass';
 import { CompareDate } from './CommonFunctions';
 import { Travel, TravelSerialized, deSerializeTravel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
-import PlaceInfoPopup from './PlaceInfoPopup';
 
 interface MapProps{
   //from LocationSearcher
   placeInfo: google.maps.places.PlaceResult | null;  
-  setPlaceInfo: React.Dispatch<React.SetStateAction<google.maps.places.PlaceResult | null>>;
+  setPlaceResult: React.Dispatch<React.SetStateAction<google.maps.places.PlaceResult | null>>;
   //from TravelInfoPanel
   placeId: string;
   directions: google.maps.DirectionsResult[];
@@ -46,7 +45,7 @@ const MapComponent = (props: MapProps) => {
       let pos = new google.maps.LatLng(selectedLatLng.lat, selectedLatLng.lng);
       setCurrentPosition(pos);
       setShowCurrentMarker(true);
-      props.setPlaceInfo(null);
+      props.setPlaceResult(null);
     }
   }, [selectedLatLng]);
 
@@ -132,6 +131,7 @@ const MapComponent = (props: MapProps) => {
       placesService.getDetails(request, (place: google.maps.places.PlaceResult, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK) {
           setPlaceInfo(place);
+          props.setPlaceResult(place);
           //setShowCurrentMarker(true);
           const pos = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
           setCurrentPosition(pos);
@@ -206,12 +206,6 @@ const MapComponent = (props: MapProps) => {
         </Dropdown>
         <Compass/>
       </div>
-
-      {
-        placeInfo && 
-        <PlaceInfoPopup placeInfo={placeInfo} 
-                        onClose={() => {setPlaceInfo(null)}}/>
-      }      
     </React.Fragment>
   );
 };

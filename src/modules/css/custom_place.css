@@ -15,6 +15,20 @@
     transition: transform 300ms ease-in-out;
   }
 
+  .Panel{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 5px;
+    pointer-events: none;
+  }
+
   .custom-card {
     position: fixed;
     top: auto;
@@ -22,18 +36,8 @@
     right: 0;
     bottom: 0;
     background-color: white;
-    z-index: 2;
-    height: 40%; /* 모바일에서 카드의 높이는 화면 높이의 20% */
-  }
-
-  .custom-modal{
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    max-height: 30%;
-    max-width: 85%;
-    z-index: 3;
-    transform: translate(-50%, -50%);
+    height: 40%;
+    pointer-events: auto;
   }
 }
 
@@ -54,34 +58,29 @@
     transition: transform 300ms ease-in-out;
   }
 
-  .custom-card {
+  .Panel{
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: white;
     z-index: 2;
-    width: 25%; /* 데스크톱에서 카드의 너비는 화면 너비의 25% */
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 5px;
+    padding: 10px;
+    pointer-events: none;
   }
 
-  /* PlaceInfoPanel을 표시할 때, Header 컨테이너의 너비를 축소시킴 */
-  .Header.active {
-    width: 75%;    
-  }
-
-  .custom-modal{
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    max-height: 50%;
-    max-width: 25%;
-    z-index: 3;
-    transform: translate(-50%, -50%);
+  .custom-card {
+    height: 100%;
+    width: 25%;
+    pointer-events: auto;
   }
 }
 
-/*데스크톱 환경*/
+/*wide 데스크톱 환경*/
 @media (min-width: 1921px) {
   .custom-card-enter {
     transform: translateX(-100%);
@@ -98,28 +97,22 @@
     transition: transform 300ms ease-in-out;
   }
 
-  .custom-card {
+  .Panel{
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: white;
     z-index: 2;
-    width: 20%; /* 데스크톱에서 카드의 너비는 화면 너비의 15% */
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 5px;
+    padding: 10px;
+    pointer-events: none;
   }
 
-  .custom-modal{
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 30%;
-    z-index: 3;
-    transform: translate(-50%, -50%);
-  }
-
-  /* PlaceInfoPanel을 표시할 때, Header 컨테이너의 너비를 축소시킴 */
-  .Header.active {
-    width: 80%;    
+  .custom-card {
+    width: 20%;
   }
 }
