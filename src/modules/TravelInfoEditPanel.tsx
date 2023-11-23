@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useContext } from 'react';
 import { useAppSelector, useAppDispatch } from '../redux/store';
-import { Card, Table, Accordion } from 'react-bootstrap';
+import { Card, Table, Accordion, Dropdown } from 'react-bootstrap';
 import AccordionContext from 'react-bootstrap/AccordionContext';
 import { useAccordionButton } from 'react-bootstrap/AccordionButton';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
@@ -20,6 +20,10 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import PlaceIcon from '@mui/icons-material/Place';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import DirectionsWalkIcon from '@mui/icons-material/DirectionsWalk';
+import DirectionsTransitIcon from '@mui/icons-material/DirectionsTransit';
+import PedalBikeIcon from '@mui/icons-material/PedalBike';
+import DriveEtaIcon from '@mui/icons-material/DriveEta';
 
 interface TravelInfoProps{
   //to MapComponent
@@ -111,27 +115,6 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
   //#endregion
 
   //#region [Functions]
-  const findRoute = async (req: google.maps.DirectionsRequest) => {
-    let routeResult: google.maps.DirectionsResult | null;
-    await directionsService.route(req, async (result, status) => {
-      if(status === google.maps.DirectionsStatus.OK){
-        //console.log(result);
-        const distance = result.routes[0].legs[0].distance.value;
-
-        if(distance <= 1.5 && req.travelMode === google.maps.TravelMode.TRANSIT){
-          //거리가 1.5km이하라면 걸어간다
-          req.travelMode = google.maps.TravelMode.WALKING;
-          routeResult = await findRoute(req);
-        } else {
-          routeResult =  result;
-        }
-      } else {
-        console.error(result);
-        routeResult = null;
-      }
-    });
-    return routeResult;
-  }
   //#endregion
 
   //#region [Event Handler]
@@ -187,7 +170,15 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
         destination: { placeId: target[i + 1].place_id } as google.maps.Place,
         travelMode: google.maps.TravelMode.TRANSIT
       } as google.maps.DirectionsRequest;
-      const route = await findRoute(req);
+
+      const route = await directionsService.route(req, async (result, status) => {
+        if(status === google.maps.DirectionsStatus.OK){
+          return result;
+        } else {
+          console.error(result);
+          return null;
+        }
+      });
       if(route){
         routeList.push(route);
       }
@@ -258,7 +249,7 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
     setOrderedPlaceMatrix(data);
   }
 
-  const drawRoute = async (place: PlaceEdit) => {
+  const searchRoute = async (place: PlaceEdit, mode: google.maps.TravelMode) => {
     let source: PlaceEdit;
     loop: for(let i = 0 ; i < orderedPlaceMatrix.length ; i++){
       for(let j = 0 ; j < orderedPlaceMatrix[i].length ; j++){
@@ -268,13 +259,20 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
         }
       }
     }
+
     const req = {
       origin: { placeId: source.place_id } as google.maps.Place,
       destination: { placeId: place.place_id } as google.maps.Place,
-      travelMode: google.maps.TravelMode.TRANSIT
+      travelMode: mode
     } as google.maps.DirectionsRequest;
-    const route = await findRoute(req);
-    props.setDirections([route]);
+
+    await directionsService.route(req, async (result, status) => {
+      if(status === google.maps.DirectionsStatus.OK){
+        props.setDirections([result]);
+      } else {
+        console.error(result);
+      }
+    });
   }
   //#endregion
 
@@ -323,7 +321,7 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
                 <col width='40%'/>
                 <col width='10%'/>
                 <col width='10%'/>
-                <col width='5%'/>
+                <col width='15%'/>
                 <col width='5%'/>
               </colgroup>
               <tbody>
@@ -374,6 +372,31 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
                         calendarContainer={HideCalendar}
                         selected={place.endDTTM ? place.endDTTM : travelDate}
                         onChange={(date) => {updateEndDTTM(place.id, date, travelDate)}}/>
+          </td>
+          <td className='position-relative'>
+          {
+            i > 0 &&
+            <Dropdown>
+              <Dropdown.Toggle className='BetweenTr'>
+                <RouteIcon className=''/>
+              </Dropdown.Toggle>
+
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.WALKING); }}>
+                  <DirectionsWalkIcon />
+                </Dropdown.Item>
+                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.TRANSIT); }}>
+                  <DirectionsTransitIcon/>
+                </Dropdown.Item>
+                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.BICYCLING); }}>
+                  <PedalBikeIcon/>
+                </Dropdown.Item>
+                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.DRIVING); }}>
+                  <DriveEtaIcon/>
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          }
           </td>
           <td className='p-1'>
           {
