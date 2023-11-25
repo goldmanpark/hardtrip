@@ -235,7 +235,6 @@ const TravelInfoViewPanel = (props : TravelInfoProps) => {
   }
 
   const drawPlace = (i: number, place: Place, day: number) => {
-    const travelDate: Date | undefined = typeof(travelDays[day].date) !== 'string' ? travelDays[day].date as Date : undefined;
     return (
       <tr>
         <td className='p-1'>

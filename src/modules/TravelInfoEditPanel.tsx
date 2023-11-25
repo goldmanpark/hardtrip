@@ -321,7 +321,7 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
                 <col width='40%'/>
                 <col width='10%'/>
                 <col width='10%'/>
-                <col width='15%'/>
+                <col width='10%'/>
                 <col width='5%'/>
               </colgroup>
               <tbody>
@@ -377,8 +377,8 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
           {
             i > 0 &&
             <Dropdown>
-              <Dropdown.Toggle className='BetweenTr'>
-                <RouteIcon className=''/>
+              <Dropdown.Toggle variant="secondary" className='RouteButton' style={{transform: 'translate(-40%, -80%)'}}>
+                <RouteIcon style={{transform: 'translate(-40%, -25%)'}}/>
               </Dropdown.Toggle>
 
               <Dropdown.Menu>
