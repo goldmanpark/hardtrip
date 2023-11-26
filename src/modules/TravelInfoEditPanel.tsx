@@ -7,6 +7,7 @@ import { useAccordionButton } from 'react-bootstrap/AccordionButton';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
 import { Travel, TravelSerialized, deSerializeTravel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
+import { Route } from '../DataType/Route';
 import { updatePlaceList, deletePlaceList } from '../redux/travelListSlice';
 import { CompareDate, GetDaysDiff } from './CommonFunctions';
 
@@ -54,6 +55,7 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
   const [travelDays, setTravelDays] = useState<TravelDay[]>([]);
   const [orderedPlaceArray, setOrderedPlaceArray] = useState<PlaceEdit[]>([]);
   const [orderedPlaceMatrix, setOrderedPlaceMatrix] = useState<PlaceEdit[][]>([[]]);
+  const [routeList, setRouteList] = useState<Route[]>([]);
 
   //#region [useEffect]
   useEffect(() => {
@@ -115,6 +117,26 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
   //#endregion
 
   //#region [Functions]
+  const setRoute = (source: PlaceEdit, destination: PlaceEdit, result: google.maps.DirectionsResult, mode: google.maps.TravelMode) => {
+    const route = routeList.find(x => x.sourceId === source.id && x.destinationId === destination.id);
+    const resultRoute = result.routes[0];
+    const newRoute = {
+      sourceId: source.id,
+      destinationId: destination.id,
+      sourcePlaceId: source.place_id,
+      destinationPlaceId: destination.place_id,
+      travelMode: mode,
+      distance: resultRoute.legs[0].distance.value,
+      duration: resultRoute.legs[0].duration.value,
+      fare: resultRoute.fare?.value,
+      currency: resultRoute.fare?.currency
+    } as Route;
+    if(route){
+      setRouteList(routeList.map(x => x.sourceId === route.sourceId && x.destinationId === route.destinationId ? newRoute : x));
+    } else {
+      setRouteList([...routeList, newRoute]);
+    }
+  }
   //#endregion
 
   //#region [Event Handler]
@@ -268,6 +290,7 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
 
     await directionsService.route(req, async (result, status) => {
       if(status === google.maps.DirectionsStatus.OK){
+        setRoute(source, place, result, mode);
         props.setDirections([result]);
       } else {
         console.error(result);
@@ -319,9 +342,9 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
               <colgroup>
                 <col width='5%'/>
                 <col width='40%'/>
-                <col width='10%'/>
-                <col width='10%'/>
-                <col width='10%'/>
+                <col width='15%'/>
+                <col width='15%'/>
+                <col width='30%'/>
                 <col width='5%'/>
               </colgroup>
               <tbody>
@@ -373,29 +396,32 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
                         selected={place.endDTTM ? place.endDTTM : travelDate}
                         onChange={(date) => {updateEndDTTM(place.id, date, travelDate)}}/>
           </td>
-          <td className='position-relative'>
+          <td>
           {
             i > 0 &&
-            <Dropdown>
-              <Dropdown.Toggle variant="secondary" className='RouteButton' style={{transform: 'translate(-40%, -80%)'}}>
-                <RouteIcon style={{transform: 'translate(-40%, -25%)'}}/>
-              </Dropdown.Toggle>
+            <span className='w-100 d-flex flex-row justify-content-start'>
+              <Dropdown>
+                <Dropdown.Toggle variant="secondary" className='RouteButton'>
+                  { drawRouteIcon(place) }
+                </Dropdown.Toggle>
 
-              <Dropdown.Menu>
-                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.WALKING); }}>
-                  <DirectionsWalkIcon />
-                </Dropdown.Item>
-                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.TRANSIT); }}>
-                  <DirectionsTransitIcon/>
-                </Dropdown.Item>
-                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.BICYCLING); }}>
-                  <PedalBikeIcon/>
-                </Dropdown.Item>
-                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.DRIVING); }}>
-                  <DriveEtaIcon/>
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
+                <Dropdown.Menu>
+                  <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.WALKING); }}>
+                    <DirectionsWalkIcon />
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.TRANSIT); }}>
+                    <DirectionsTransitIcon/>
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.BICYCLING); }}>
+                    <PedalBikeIcon/>
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.DRIVING); }}>
+                    <DriveEtaIcon/>
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+              { drawRouteInfo(place) }
+            </span>
           }
           </td>
           <td className='p-1'>
@@ -410,11 +436,48 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
       </Draggable>
     )
   }
+
+  const drawRouteInfo = (destPlace: PlaceEdit): JSX.Element => {
+    const route = routeList.find(x => x.destinationId === destPlace.id);
+    if(route){
+      return (
+        <div className='d-flex flex-column'>
+          <span>{`${(route.distance / 1000).toFixed(1)}km`}</span>
+          <span>{`${(route.duration / 60).toFixed(1)}min`}</span>
+          {
+            route.fare &&
+            <span>{`${route.fare}${route.currency}`}</span>
+          }
+        </div>
+      )
+    } else {
+      return <React.Fragment/>
+    }
+  }
+
+  const drawRouteIcon = (destPlace: PlaceEdit) => {
+    const route = routeList.find(x => x.destinationId === destPlace.id);
+    if(route){
+      if(route.travelMode === google.maps.TravelMode.WALKING){
+        return <DirectionsWalkIcon style={{transform: 'translate(-40%, -25%)'}}/>
+      }
+      if(route.travelMode === google.maps.TravelMode.BICYCLING){
+        return <PedalBikeIcon style={{transform: 'translate(-40%, -25%)'}}/>
+      }
+      if(route.travelMode === google.maps.TravelMode.TRANSIT){
+        return <DirectionsTransitIcon style={{transform: 'translate(-40%, -25%)'}}/>
+      }
+      if(route.travelMode === google.maps.TravelMode.DRIVING){
+        return <DriveEtaIcon style={{transform: 'translate(-40%, -25%)'}}/>
+      }
+    } else {
+      return <RouteIcon style={{transform: 'translate(-40%, -25%)'}}/>
+    }
+  }
   //#endregion
 
   return(
-    //알수없는 이유로 translate발생
-    <Card className="custom-card card-left" style={{transform: 'translateY(-5px)'}}>
+    <Card className="custom-card card-left">
       <Card.Header>
         <div className='d-flex flex-row justify-content-between'>
           <span>{ selectedTravel?.name }</span>

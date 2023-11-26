@@ -3,6 +3,7 @@
   top: 0;
   z-index: 2;
   transition: flex 0.3s ease-in-out;
+  width: 100%;
 }
 
 .Footer {
@@ -10,6 +11,7 @@
   bottom: 0px;
   z-index: 2;
   transition: flex 0.3s ease-in-out;
+  width: 100%;
 }
 
 
