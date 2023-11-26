@@ -117,6 +117,25 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
   //#endregion
 
   //#region [Functions]
+  const findRoute = async (req: google.maps.DirectionsRequest): Promise<google.maps.DirectionsResult | null> => {
+    return await directionsService.route(req, async (result, status) => {
+      if(status === google.maps.DirectionsStatus.OK){
+        const distance = result.routes[0].legs[0].distance.value;
+
+        if(distance <= 1500 && req.travelMode !== google.maps.TravelMode.WALKING){
+          //거리가 1.5km이하라면 걸어간다
+          req.travelMode = google.maps.TravelMode.WALKING;
+          return await findRoute(req);
+        } else {
+          return result;
+        }
+      } else {
+        console.error(result);
+        return null;
+      }
+    });
+  }
+
   const setRoute = (source: PlaceEdit, destination: PlaceEdit, result: google.maps.DirectionsResult, mode: google.maps.TravelMode) => {
     const route = routeList.find(x => x.sourceId === source.id && x.destinationId === destination.id);
     const resultRoute = result.routes[0];
@@ -132,9 +151,9 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
       currency: resultRoute.fare?.currency
     } as Route;
     if(route){
-      setRouteList(routeList.map(x => x.sourceId === route.sourceId && x.destinationId === route.destinationId ? newRoute : x));
+      setRouteList(prev => prev.map(x => x.sourceId === route.sourceId && x.destinationId === route.destinationId ? newRoute : x));
     } else {
-      setRouteList([...routeList, newRoute]);
+      setRouteList(prev => [...prev, newRoute]);
     }
   }
   //#endregion
@@ -183,9 +202,9 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
     }
   }
 
-  const drawDailyRoute = async (day: number) => {
+  const searchDailyRoute = async (day: number) => {
     const target = orderedPlaceArray.filter(x => x.day === day);
-    const routeList = [];
+    const directionList = [];
     for(let i = 0 ; i < target.length - 1 ; i++){
       let req = {
         origin: { placeId: target[i].place_id } as google.maps.Place,
@@ -193,19 +212,13 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
         travelMode: google.maps.TravelMode.TRANSIT
       } as google.maps.DirectionsRequest;
 
-      const route = await directionsService.route(req, async (result, status) => {
-        if(status === google.maps.DirectionsStatus.OK){
-          return result;
-        } else {
-          console.error(result);
-          return null;
-        }
-      });
-      if(route){
-        routeList.push(route);
+      const routeResult = await findRoute(req);
+      if(routeResult){
+        setRoute(target[i], target[i + 1], routeResult, routeResult.routes[0].legs[0].distance.value <= 1500 ? google.maps.TravelMode.WALKING : google.maps.TravelMode.TRANSIT);
+        directionList.push(routeResult);
       }
     }
-    props.setDirections(routeList);
+    props.setDirections(directionList);
   }
   //#endregion
 
@@ -333,7 +346,7 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
             }
             <span>
               <PlaceIcon onClick={e => { drawDailyMarkers(i); }}/>
-              <RouteIcon onClick={e => { drawDailyRoute(i); }}/>
+              <RouteIcon onClick={e => { searchDailyRoute(i); }}/>
               <AccordionButton eventKey={i.toString()}/>
             </span>
           </Card.Header>
@@ -344,7 +357,7 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
                 <col width='40%'/>
                 <col width='15%'/>
                 <col width='15%'/>
-                <col width='30%'/>
+                <col width='5%'/>
                 <col width='5%'/>
               </colgroup>
               <tbody>
@@ -399,7 +412,7 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
           <td>
           {
             i > 0 &&
-            <span className='w-100 d-flex flex-row justify-content-start'>
+            <span>
               <Dropdown>
                 <Dropdown.Toggle variant="secondary" className='RouteButton'>
                   { drawRouteIcon(place) }
@@ -420,7 +433,6 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
                   </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
-              { drawRouteInfo(place) }
             </span>
           }
           </td>
@@ -435,24 +447,6 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
       )}
       </Draggable>
     )
-  }
-
-  const drawRouteInfo = (destPlace: PlaceEdit): JSX.Element => {
-    const route = routeList.find(x => x.destinationId === destPlace.id);
-    if(route){
-      return (
-        <div className='d-flex flex-column'>
-          <span>{`${(route.distance / 1000).toFixed(1)}km`}</span>
-          <span>{`${(route.duration / 60).toFixed(1)}min`}</span>
-          {
-            route.fare &&
-            <span>{`${route.fare}${route.currency}`}</span>
-          }
-        </div>
-      )
-    } else {
-      return <React.Fragment/>
-    }
   }
 
   const drawRouteIcon = (destPlace: PlaceEdit) => {

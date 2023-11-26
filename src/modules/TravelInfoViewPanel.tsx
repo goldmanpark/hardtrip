@@ -252,7 +252,7 @@ const TravelInfoViewPanel = (props : TravelInfoProps) => {
         </td>
         <td className='position-relative'>
         {
-          i > 0 &&            
+          i > 0 &&          
           <button className='RouteButton'>
             <RouteIcon className='RouteIcon' onClick={e => { drawRoute(place); }}/>
           </button>
