@@ -1,23 +1,5 @@
-.Header {
-    position: absolute;
-    top: 0px;
-    right: 0px;
-    padding: 10px;
-    z-index: 9999;
-    width: 100%;
-    transition: flex 0.3s ease-in-out;
-}
-
 /* 모바일 환경 */
 @media (max-width: 768px){
-    .Footer {
-        position: absolute;
-        bottom: 0px;
-        right: 0px;
-        padding: 10px;
-        z-index: 2;
-    }
-
     .CompassButton {
         width: 45px; /* 버튼의 너비와 높이를 동일하게 설정합니다 */
         height: 45px;
@@ -35,14 +17,6 @@
 
 /* 데스크톱 환경 */
 @media (min-width: 769px){
-    .Footer {
-        position: absolute;
-        bottom: 0px;
-        right: 0px;
-        padding: 20px;
-        z-index: 2;
-    }
-
     .CompassButton {
         width: 60px; /* 버튼의 너비와 높이를 동일하게 설정합니다 */
         height: 60px;

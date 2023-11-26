@@ -1,3 +1,18 @@
+.Header {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  transition: flex 0.3s ease-in-out;
+}
+
+.Footer {
+  position: absolute;
+  bottom: 0px;
+  z-index: 2;
+  transition: flex 0.3s ease-in-out;
+}
+
+
 /* 모바일 환경 */
 @media (max-width: 767px) {
   .custom-card-enter {
@@ -15,29 +30,14 @@
     transition: transform 300ms ease-in-out;
   }
 
-  .Panel{
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 2;
-    display: flex;
-    flex-direction: row;
-    align-items: baseline;
-    gap: 5px;
-    pointer-events: none;
-  }
-
   .custom-card {
     position: fixed;
     top: auto;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: white;
     height: 40%;
-    pointer-events: auto;
+    z-index: 2;
   }
 }
 
@@ -58,25 +58,40 @@
     transition: transform 300ms ease-in-out;
   }
 
-  .Panel{
-    position: fixed;
-    top: 0;
+  .Menu-active-none {
+    width: 100%;
+  }
+
+  .Menu-active-left {
+    left: 25%;
+    width: 75%;
+  }
+
+  .Menu-active-right {
     left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 2;
-    display: flex;
-    flex-direction: row;
-    align-items: baseline;
-    gap: 5px;
-    padding: 10px;
-    pointer-events: none;
+    width: 75%;
+  }
+
+  .Menu-active-both {
+    left: 25%;
+    width: 50%;
   }
 
   .custom-card {
+    position: fixed;
+    top: 0;
+    bottom: 0;
     height: 100%;
     width: 25%;
-    pointer-events: auto;
+    z-index: 2;
+  }
+
+  .card-left {
+    left: 0;
+  }
+
+  .card-right {
+    right: 0;
   }
 }
 
@@ -97,22 +112,39 @@
     transition: transform 300ms ease-in-out;
   }
 
-  .Panel{
-    position: fixed;
-    top: 0;
+  .Menu-active-none {
+    width: 100%;
+  }
+
+  .Menu-active-left {
+    left: 20%;
+    width: 80%;
+  }
+
+  .Menu-active-right {
     left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 2;
-    display: flex;
-    flex-direction: row;
-    align-items: baseline;
-    gap: 5px;
-    padding: 10px;
-    pointer-events: none;
+    width: 80%;
+  }
+
+  .Menu-active-both {
+    left: 20%;
+    width: 60%;
   }
 
   .custom-card {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    height: 100%;
     width: 20%;
+    z-index: 2;
+  }
+
+  .card-left {
+    left: 0;
+  }
+
+  .card-right {
+    right: 0;
   }
 }

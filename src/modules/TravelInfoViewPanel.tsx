@@ -265,7 +265,7 @@ const TravelInfoViewPanel = (props : TravelInfoProps) => {
 
   return(
     //알수없는 이유로 translate발생
-    <Card className="custom-card" style={{transform: 'translateY(-5px)'}}>
+    <Card className="custom-card card-left" style={{transform: 'translateY(-5px)'}}>
       <Card.Header>
         <div className='d-flex flex-row justify-content-between'>
           <span>{ selectedTravel?.name }</span>

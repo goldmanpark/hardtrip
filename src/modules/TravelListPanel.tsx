@@ -125,7 +125,7 @@ const TravelListPanel = (props: PanelProps) => {
   }
 
   return(
-    <Card className="custom-card">
+    <Card className="custom-card card-left">
       <Card.Header>
         <div className='d-flex flex-row justify-content-end'>
           <CloseRoundedIcon onClick={props.exit}/>
