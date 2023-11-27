@@ -46,6 +46,7 @@
 }
 
 .RouteButton{
+    transform: translateY(-80%);
     border-radius: 50%;
     width: 30px;
     height: 30px;

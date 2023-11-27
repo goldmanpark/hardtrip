@@ -9,7 +9,7 @@ import { Travel, TravelSerialized, deSerializeTravel } from '../DataType/Travel'
 import { Place } from '../DataType/Place';
 import { Route } from '../DataType/Route';
 import { updatePlaceList, deletePlaceList } from '../redux/travelListSlice';
-import { CompareDate, GetDaysDiff } from './CommonFunctions';
+import { CompareDate, GetDaysDiff, isSameDate } from './CommonFunctions';
 
 import GetPlaceIcon from '../DataType/GetPlaceIcon';
 import DatePicker from 'react-datepicker';
@@ -117,23 +117,16 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
   //#endregion
 
   //#region [Functions]
-  const findRoute = async (req: google.maps.DirectionsRequest): Promise<google.maps.DirectionsResult | null> => {
-    return await directionsService.route(req, async (result, status) => {
-      if(status === google.maps.DirectionsStatus.OK){
-        const distance = result.routes[0].legs[0].distance.value;
+  const haversineDistance = (from: google.maps.LatLngLiteral, to: google.maps.LatLngLiteral): number => {
+    const R = 6371; //km
+    const dLat = (to.lat - from.lat) * (Math.PI / 180);
+    const dLng = (to.lng - from.lng) * (Math.PI / 180);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(from.lat * Math.PI / 180) * Math.cos(to.lat * Math.PI / 180) *
+              Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-        if(distance <= 1500 && req.travelMode !== google.maps.TravelMode.WALKING){
-          //거리가 1.5km이하라면 걸어간다
-          req.travelMode = google.maps.TravelMode.WALKING;
-          return await findRoute(req);
-        } else {
-          return result;
-        }
-      } else {
-        console.error(result);
-        return null;
-      }
-    });
+    return R * c; //km
   }
 
   const setRoute = (source: PlaceEdit, destination: PlaceEdit, result: google.maps.DirectionsResult, mode: google.maps.TravelMode) => {
@@ -206,17 +199,23 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
     const target = orderedPlaceArray.filter(x => x.day === day);
     const directionList = [];
     for(let i = 0 ; i < target.length - 1 ; i++){
-      let req = {
+      const mode = haversineDistance(target[i].latLng, target[i + 1].latLng) >= 1.5
+        ? google.maps.TravelMode.TRANSIT
+        : google.maps.TravelMode.WALKING;
+      const req = {
         origin: { placeId: target[i].place_id } as google.maps.Place,
         destination: { placeId: target[i + 1].place_id } as google.maps.Place,
-        travelMode: google.maps.TravelMode.TRANSIT
+        travelMode: mode
       } as google.maps.DirectionsRequest;
 
-      const routeResult = await findRoute(req);
-      if(routeResult){
-        setRoute(target[i], target[i + 1], routeResult, routeResult.routes[0].legs[0].distance.value <= 1500 ? google.maps.TravelMode.WALKING : google.maps.TravelMode.TRANSIT);
-        directionList.push(routeResult);
-      }
+      await directionsService.route(req, async (result, status) => {
+        if(status === google.maps.DirectionsStatus.OK){
+          setRoute(target[i], target[i + 1], result, mode);
+          directionList.push(result);
+        } else {
+          console.error(result);
+        }
+      });
     }
     props.setDirections(directionList);
   }
@@ -249,22 +248,35 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
     setOrderedPlaceMatrix(data);
   }
 
-  const updateStartDTTM = (placeId: string, newDate: Date, travelDay?: Date) => {
-    if(!travelDay) return;
-
+  const updateStartDTTM = (placeId: string, newDate: Date) => {
     const data = [...orderedPlaceMatrix];
-    let rowIdx = 0;
+    let day = 0;
+    let order = 0;
     loop: for(let i = 0 ; i < data.length ; i++){
       for(let j = 0 ; j < data[i].length ; j++){
         if(data[i][j].id === placeId){
-          data[i][j].isEdit = true;
-          data[i][j].startDTTM = new Date(travelDay.getFullYear(), travelDay.getMonth(), travelDay.getDate(), newDate.getHours(), newDate.getMinutes())
-          rowIdx = i;
+          day = i;
+          order = j;
           break loop;
         }
       }
     }
-    data[rowIdx] = data[rowIdx].sort((x, y) => CompareDate(x.startDTTM, y.startDTTM));
+    
+    if(isSameDate(data[day][order].startDTTM, newDate)){
+      //동일날짜 -> day유지
+      data[day][order].isEdit = true;
+      data[day][order].startDTTM = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate(), newDate.getHours(), newDate.getMinutes())
+      data[day] = data[day].sort((x, y) => CompareDate(x.startDTTM, y.startDTTM));
+    } else {
+      //다른날짜 -> day변경
+      const temp = {...data[day][order]};
+      temp.isEdit = true;
+      temp.startDTTM = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate(), newDate.getHours(), newDate.getMinutes())
+      temp.day = GetDaysDiff(newDate, selectedTravel.startDate);
+      data[day] = data[day].filter(x => x.id !== temp.id);
+      data[temp.day].push(temp);
+      data[temp.day] = data[temp.day].sort((x, y) => CompareDate(x.startDTTM, y.startDTTM));
+    }
     setOrderedPlaceMatrix(data);
   }
 
@@ -371,12 +383,6 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
     )
   }
 
-  const HideCalendar = ({ className, children }) => {
-    return (
-      <div/>
-    )
-  }
-
   const drawDraggable = (i: number, place: PlaceEdit, day: number) => {
     const travelDate: Date | undefined = typeof(travelDays[day].date) !== 'string' ? travelDays[day].date as Date : undefined;
     return (
@@ -396,44 +402,44 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
                         showTimeSelect
                         dateFormat="HH:mm"
                         timeFormat="HH:mm"
-                        calendarContainer={HideCalendar}
+                        minDate={selectedTravel.startDate}
+                        maxDate={selectedTravel.endDate}
                         selected={place.startDTTM ? place.startDTTM : travelDate}
-                        onChange={(date) => {updateStartDTTM(place.id, date, travelDate)}}/>
+                        onChange={(date) => {updateStartDTTM(place.id, date)}}/>
           </td>
           <td className='p-1'>
             <DatePicker className='w-100 text-align-center'
                         showTimeSelect
                         dateFormat="HH:mm"
                         timeFormat="HH:mm"
-                        calendarContainer={HideCalendar}
+                        minDate={travelDate}
+                        maxDate={travelDate}
                         selected={place.endDTTM ? place.endDTTM : travelDate}
                         onChange={(date) => {updateEndDTTM(place.id, date, travelDate)}}/>
           </td>
-          <td>
+          <td className='position-relative'>
           {
             i > 0 &&
-            <span>
-              <Dropdown>
-                <Dropdown.Toggle variant="secondary" className='RouteButton'>
-                  { drawRouteIcon(place) }
-                </Dropdown.Toggle>
+            <Dropdown>
+              <Dropdown.Toggle variant="secondary" className='RouteButton'>
+                { drawRouteIcon(place) }
+              </Dropdown.Toggle>
 
-                <Dropdown.Menu>
-                  <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.WALKING); }}>
-                    <DirectionsWalkIcon />
-                  </Dropdown.Item>
-                  <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.TRANSIT); }}>
-                    <DirectionsTransitIcon/>
-                  </Dropdown.Item>
-                  <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.BICYCLING); }}>
-                    <PedalBikeIcon/>
-                  </Dropdown.Item>
-                  <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.DRIVING); }}>
-                    <DriveEtaIcon/>
-                  </Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown>
-            </span>
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.WALKING); }}>
+                  <DirectionsWalkIcon />
+                </Dropdown.Item>
+                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.TRANSIT); }}>
+                  <DirectionsTransitIcon/>
+                </Dropdown.Item>
+                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.BICYCLING); }}>
+                  <PedalBikeIcon/>
+                </Dropdown.Item>
+                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.DRIVING); }}>
+                  <DriveEtaIcon/>
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
           }
           </td>
           <td className='p-1'>

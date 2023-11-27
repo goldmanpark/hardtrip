@@ -133,16 +133,14 @@ const Main = () => {
           showPanel === 'travelList' &&
           <TravelListPanel exit={() => {setShowPanel(null)}}/>
         }
-        {
-          showPanel === 'travelInfo' &&
-          editTravel === false &&
-          <TravelInfoViewPanel
+        <div style={{ display: showPanel === 'travelInfo' && editTravel === false ? 'block' : 'none'}}>
+          <TravelInfoViewPanel            
             setPlaceId={setSelectedPlaceId}
             setMarkerPlaces={setMarkerPlaces}
             setDirections={setDirections}
             setEditTravel={setEditTravel}
             exit={() => {setShowPanel(null)}}/>
-        }
+        </div>
         {
           showPanel === 'travelInfo' &&
           editTravel === true &&
