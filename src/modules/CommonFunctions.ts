@@ -27,6 +27,14 @@ export const GetHHmm = (d?: Date): string => {
   }
 }
 
+export const GetyyyyMMdd = (d: number) => {
+  const date = new Date(d);
+  const yyyy = date.getFullYear();
+  const MM = date.getMonth();
+  const dd = date.getDate();
+  return `${yyyy}-${MM}-${dd}`;
+}
+
 export const isSameDate = (d1?: Date, d2?: Date) => {
   if(d1 instanceof Date && d2 instanceof Date){
     if(d1.getFullYear() !== d2.getFullYear()) return false;

@@ -13,6 +13,7 @@ import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import StarHalfRoundedIcon from '@mui/icons-material/StarHalfRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import LanguageRoundedIcon from '@mui/icons-material/LanguageRounded';
+import { GetyyyyMMdd } from './CommonFunctions';
 
 interface PlaceInfoPanelProps{
   placeResult: google.maps.places.PlaceResult
@@ -24,9 +25,8 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
   const dispatch = useAppDispatch();
   const { userData } = useAuth();
   const travelListRedux: TravelSerialized[] = useAppSelector((state) => state.travelList.list);
-  const [selectedTab, setSelectedTab] = useState<'summary' | 'review' | 'register'>('summary');
-
-  //#region [conditional rendering]
+  const [selectedTab, setSelectedTab] = useState<'summary' | 'review' | 'register' | 'route'>('summary');
+  
   const renderContent = () => {
     switch (selectedTab) {
       case 'summary':
@@ -37,7 +37,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
         break;
     }
   }
-
+  //#region [conditional rendering: summary]
   const renderSummary = () => {
     return (
       <div className='d-flex flex-column gap-2'>
@@ -163,7 +163,9 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
       </Container>
     )
   }
+  //#endregion
 
+  //#region [conditional rendering: register]
   const renderRegister = () => {
     return (
       <table className='w-100'>
@@ -178,8 +180,8 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
           travelListRedux.map((t, i) => (
             <tr key={'travel' + i.toString()}>
               <td className='text-align-left'>{t.name}</td>
-              <td>{t.startDate ? drawDate(t.startDate) : ''}</td>
-              <td>{t.endDate ? drawDate(t.endDate) : ''}</td>
+              <td>{t.startDate ? GetyyyyMMdd(t.startDate) : ''}</td>
+              <td>{t.endDate ? GetyyyyMMdd(t.endDate) : ''}</td>
               <td>
                 <Dropdown>
                   <Dropdown.Toggle variant="success" id="dropdown-basic">
@@ -201,14 +203,9 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
       </table>
     )
   }
+  //#endregion
 
-  const drawDate = (d: number) => {
-    const date = new Date(d);
-    const yyyy = date.getFullYear();
-    const MM = date.getMonth();
-    const dd = date.getDate();
-    return `${yyyy}-${MM}-${dd}`;
-  }
+  //#region [conditional rendering: expected route]
   //#endregion
 
   const saveCurrentPlace = (travel: TravelSerialized, type: string) => {
@@ -236,7 +233,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
         <Navbar className='p-0'>
           <Container className="p-0">
             <Nav className="justify-content-around" activeKey="/summary" variant="underline"
-                onSelect={(key: 'summary' | 'review' | 'register') => {setSelectedTab(key)}}>
+                onSelect={(key: 'summary' | 'review' | 'register' | 'route') => {setSelectedTab(key)}}>
               <Nav.Item>
                 <Nav.Link eventKey="summary" onSelect={() => setSelectedTab('summary')}>Summary</Nav.Link>
               </Nav.Item>
@@ -245,9 +242,14 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
               </Nav.Item>
               {
                 userData &&
-                <Nav.Item>
-                  <Nav.Link eventKey="register" onSelect={() => setSelectedTab('register')}>Register</Nav.Link>
-                </Nav.Item>
+                <React.Fragment>
+                  <Nav.Item>
+                    <Nav.Link eventKey="register" onSelect={() => setSelectedTab('register')}>Register</Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="route" onSelect={() => setSelectedTab('route')}>Exp. Route</Nav.Link>
+                  </Nav.Item>
+                </React.Fragment>
               }
             </Nav>
           </Container>
