@@ -112,7 +112,22 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
   }, [selectedTravel]);
 
   useEffect(() => {
+    //1. 1차원 배열 재설정
     setOrderedPlaceArray(orderedPlaceMatrix.reduce((acc, cur) => acc.concat(cur), []));
+
+    //2. routeList 재설정
+    const data = [];
+    for(let i = 0 ; i < orderedPlaceMatrix.length ; i++){
+      for(let j = 1 ; j < orderedPlaceMatrix[i].length ; j++){
+        const from = orderedPlaceMatrix[i][j - 1];
+        const to = orderedPlaceMatrix[i][j];
+        const route = routeList.find(x => x.sourceId === from.id && x.destinationId === to.id);
+        if(route){
+          data.push(route);
+        }
+      }
+    }
+    setRouteList(data);
   }, [orderedPlaceMatrix]);
   //#endregion
 
