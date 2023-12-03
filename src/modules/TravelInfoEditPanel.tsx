@@ -330,6 +330,7 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
 
     await directionsService.route(req, async (result, status) => {
       if(status === google.maps.DirectionsStatus.OK){
+        console.log(result)
         setRoute(source, place, result, mode);
         props.setDirections([result]);
       } else {
