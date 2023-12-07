@@ -19,6 +19,7 @@ import LocationSearcher from './LocationSearcher';
 import PlaceInfoPanel from './PlaceInfoPanel';
 import TravelInfoEditPanel from './TravelInfoEditPanel';
 import TravelInfoViewPanel from './TravelInfoViewPanel';
+import RouteEditPanel from './RouteEditPanel';
 import Compass from './subModules/Compass';
 import { Place } from '../DataType/Place';
 
@@ -47,6 +48,10 @@ const Main = () => {
 
   //TravelInfoEditPanel <-> TravelInfoViewPanel
   const [editTravel, setEditTravel] = useState(false);
+
+  //TravelInfoEditPanel -> RouteEditPanel
+  const [from, setFrom] = useState<Place>(null);
+  const [to, setTo] = useState<Place>(null);
 
   useEffect(() => {
     if(userData){
@@ -148,13 +153,24 @@ const Main = () => {
             setPlaceId={setSelectedPlaceId}
             setMarkerPlaces={setMarkerPlaces}
             setDirections={setDirections}
-            setEditTravel={setEditTravel}/>
+            setEditTravel={setEditTravel}
+            setFrom={setFrom}
+            setTo={setTo}/>
         }
         {
           placeResult &&
           <PlaceInfoPanel
             placeResult={placeResult}
             onClose={() => setPlaceResult(null)}/>
+        }
+        {
+          from && to &&
+          <RouteEditPanel 
+            from={from} to={to} 
+            onClose={() => {
+              setFrom(null);
+              setTo(null);
+            }}/>
         }
       </LoadScript>
     </div>

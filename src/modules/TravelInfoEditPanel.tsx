@@ -33,6 +33,9 @@ interface TravelInfoProps{
   setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;
   //panel전환
   setEditTravel: React.Dispatch<React.SetStateAction<boolean>>;
+  //to RouteEditPanel
+  setFrom: React.Dispatch<React.SetStateAction<Place>>;
+  setTo: React.Dispatch<React.SetStateAction<Place>>;
 }
 
 interface TravelDay{
@@ -311,7 +314,7 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
     setOrderedPlaceMatrix(data);
   }
 
-  const searchRoute = async (place: PlaceEdit, mode: google.maps.TravelMode) => {
+  const setFromTo = (place: PlaceEdit) => {
     let source: PlaceEdit;
     loop: for(let i = 0 ; i < orderedPlaceMatrix.length ; i++){
       for(let j = 0 ; j < orderedPlaceMatrix[i].length ; j++){
@@ -321,22 +324,8 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
         }
       }
     }
-
-    const req = {
-      origin: { placeId: source.place_id } as google.maps.Place,
-      destination: { placeId: place.place_id } as google.maps.Place,
-      travelMode: mode
-    } as google.maps.DirectionsRequest;
-
-    await directionsService.route(req, async (result, status) => {
-      if(status === google.maps.DirectionsStatus.OK){
-        console.log(result)
-        setRoute(source, place, result, mode);
-        props.setDirections([result]);
-      } else {
-        console.error(result);
-      }
-    });
+    props.setFrom(source);
+    props.setTo(place);
   }
   //#endregion
 
@@ -434,28 +423,9 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
                         onChange={(date) => {updateEndDTTM(place.id, date, travelDate)}}/>
           </td>
           <td className='position-relative'>
-          {
-            i > 0 &&
-            <Dropdown>
-              <Dropdown.Toggle variant="secondary" className='RouteButton'>
-                { drawRouteIcon(place) }
-              </Dropdown.Toggle>
-
-              <Dropdown.Menu>
-                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.WALKING); }}>
-                  <DirectionsWalkIcon />
-                </Dropdown.Item>
-                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.TRANSIT); }}>
-                  <DirectionsTransitIcon/>
-                </Dropdown.Item>
-                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.BICYCLING); }}>
-                  <PedalBikeIcon/>
-                </Dropdown.Item>
-                <Dropdown.Item onClick={e => { searchRoute(place, google.maps.TravelMode.DRIVING); }}>
-                  <DriveEtaIcon/>
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
+          { 
+            i > 0 && 
+            <button className='RouteButton' onClick={() => {setFromTo(place)}}>{drawRouteIcon(place)}</button> 
           }
           </td>
           <td className='p-1'>
@@ -475,19 +445,19 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
     const route = routeList.find(x => x.destinationId === destPlace.id);
     if(route){
       if(route.travelMode === google.maps.TravelMode.WALKING){
-        return <DirectionsWalkIcon style={{transform: 'translate(-40%, -25%)'}}/>
+        return <DirectionsWalkIcon className='RouteIcon'/>
       }
       if(route.travelMode === google.maps.TravelMode.BICYCLING){
-        return <PedalBikeIcon style={{transform: 'translate(-40%, -25%)'}}/>
+        return <PedalBikeIcon className='RouteIcon'/>
       }
       if(route.travelMode === google.maps.TravelMode.TRANSIT){
-        return <DirectionsTransitIcon style={{transform: 'translate(-40%, -25%)'}}/>
+        return <DirectionsTransitIcon className='RouteIcon'/>
       }
       if(route.travelMode === google.maps.TravelMode.DRIVING){
-        return <DriveEtaIcon style={{transform: 'translate(-40%, -25%)'}}/>
+        return <DriveEtaIcon className='RouteIcon'/>
       }
     } else {
-      return <RouteIcon style={{transform: 'translate(-40%, -25%)'}}/>
+      return <RouteIcon className='RouteIcon'/>
     }
   }
   //#endregion
