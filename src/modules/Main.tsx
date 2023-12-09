@@ -53,6 +53,8 @@ const Main = () => {
   const [from, setFrom] = useState<Place>(null);
   const [to, setTo] = useState<Place>(null);
 
+  //RouteEditPanel -> MapComponent
+
   useEffect(() => {
     if(userData){
       dispatch(readTravelList(userData.uid));
@@ -167,6 +169,7 @@ const Main = () => {
           from && to &&
           <RouteEditPanel 
             from={from} to={to} 
+            setDirections={setDirections}
             onClose={() => {
               setFrom(null);
               setTo(null);

@@ -11,14 +11,27 @@ import PedalBikeIcon from '@mui/icons-material/PedalBike';
 import DriveEtaIcon from '@mui/icons-material/DriveEta';
 
 interface RouteEditPanelProps{
+  //from TravelInfoEditPanel
   from: Place;
   to: Place;
+  //to MapComponent
+  setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;
   onClose?: () => void;
 }
 
 const RouteEditPanel = (props: RouteEditPanelProps) => {
   const directionsService = new google.maps.DirectionsService();
+  const [currentMode, setCurrentMode] = useState<google.maps.TravelMode>(null);
+  const [direction, setDirection] = useState<google.maps.DirectionsResult>(null);
   const [routes, setRoutes] = useState<google.maps.DirectionsRoute[]>([]);
+
+  useEffect(() => {
+    setRoutes([]);
+  }, [props.from, props.to]);
+
+  useEffect(() => {
+    props.setDirections([direction]);
+  }, [direction]);
 
   //#region [functions]
   const searchRoute = async (mode: google.maps.TravelMode) => {
@@ -32,15 +45,68 @@ const RouteEditPanel = (props: RouteEditPanelProps) => {
     await directionsService.route(req, async (result, status) => {
       if(status === google.maps.DirectionsStatus.OK){
         console.log(result)
+        setDirection(result);
         setRoutes(result.routes);
+        setCurrentMode(mode);
       } else {
         console.error(result);
       }
     });
   }
+
+  const setCurrentRoute = (route: google.maps.DirectionsRoute) => {
+    setDirection(prev => ({...prev, routes: [route]}))
+  }
   //#endregion
 
   //#region [conditional rendering]
+  const renderRouteCard = (route: google.maps.DirectionsRoute, idx: number): JSX.Element => {
+    const leg = route.legs[0];
+    return (
+      <Card key={`route_${idx}`}>
+        <Card.Header className='p-1 d-flex justify-content-between'>
+        {`${leg.distance.text} ${leg.duration.text}`}
+        <RouteIcon onClick={() => setCurrentRoute(route)}/>
+        </Card.Header>
+        {
+          currentMode === google.maps.TravelMode.TRANSIT &&
+          <Card.Body className='p-1 d-flex flex-column'>
+          {
+            leg.steps.map(step => (
+              <Card>
+                <Card.Header className='p-1 text-align-left'>
+                { travelModeIcon(step.travel_mode) }
+                {`${step.distance.text} ${step.duration.text}`}
+                </Card.Header>
+                {
+                  step.transit && step.transit.line &&
+                  <Card.Body className='p-1 text-align-left'>
+                    {`${step.transit.line.vehicle.type} / ${step.transit.line.name} / ${step.transit.line.short_name}`}
+                  </Card.Body>
+                }
+              </Card>
+            ))
+          }
+          </Card.Body>
+        }        
+      </Card>
+    )
+  }
+
+  const travelModeIcon = (mode: google.maps.TravelMode) => {
+    switch (mode) {
+      case google.maps.TravelMode.WALKING:
+        return <DirectionsWalkIcon/>;
+      case google.maps.TravelMode.BICYCLING:
+        return <PedalBikeIcon/>;
+      case google.maps.TravelMode.TRANSIT:
+        return <DirectionsTransitIcon/>;
+      case google.maps.TravelMode.DRIVING:
+        return <DriveEtaIcon/>;
+      default:
+        return <React.Fragment/>
+    }
+  }
   //#endregion
 
   return(
@@ -60,34 +126,24 @@ const RouteEditPanel = (props: RouteEditPanelProps) => {
           </Form.Group>
         </Form>
 
-        <div className='d-flex flex-row justify-content-between'>
-          <Dropdown>
-            <Dropdown.Toggle variant="secondary">
-              <RouteIcon/>
-            </Dropdown.Toggle>
-
-            <Dropdown.Menu>
-              <Dropdown.Item onClick={e => { searchRoute(google.maps.TravelMode.WALKING); }}>
-                <DirectionsWalkIcon/>
-                Walk
-              </Dropdown.Item>
-              <Dropdown.Item onClick={e => { searchRoute(google.maps.TravelMode.TRANSIT); }}>
-                <DirectionsTransitIcon/>
-                Transit
-              </Dropdown.Item>
-              <Dropdown.Item onClick={e => { searchRoute(google.maps.TravelMode.BICYCLING); }}>
-                <PedalBikeIcon/>
-                Bicycle
-              </Dropdown.Item>
-              <Dropdown.Item onClick={e => { searchRoute(google.maps.TravelMode.DRIVING); }}>
-                <DriveEtaIcon/>
-                Driving
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
+        <div className='d-flex flex-row justify-content-around mb-3'>
+          <button className='RouteButton' onClick={e => { searchRoute(google.maps.TravelMode.WALKING); }}>
+           <DirectionsWalkIcon className='RouteIcon'/>
+          </button>
+          <button className='RouteButton' onClick={e => { searchRoute(google.maps.TravelMode.TRANSIT); }}>
+            <DirectionsTransitIcon className='RouteIcon'/>
+          </button>
+          <button className='RouteButton' onClick={e => { searchRoute(google.maps.TravelMode.BICYCLING); }}>
+            <PedalBikeIcon className='RouteIcon'/>
+          </button>
+          <button className='RouteButton' onClick={e => { searchRoute(google.maps.TravelMode.DRIVING); }}>
+            <DriveEtaIcon className='RouteIcon'/>
+          </button>
         </div>
 
-        
+        <div className='d-flex flex-column gap-3'>
+        { routes.map((x, i) => { return renderRouteCard(x, i)})}
+        </div>
       </Card.Body>
     </Card>
   )

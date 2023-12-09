@@ -253,7 +253,7 @@ const TravelInfoViewPanel = (props : TravelInfoProps) => {
         <td className='position-relative'>
         {
           i > 0 &&          
-          <button className='RouteButton'>
+          <button className='RouteButton BetweenTr'>
             <RouteIcon className='RouteIcon' onClick={e => { drawRoute(place); }}/>
           </button>
         }

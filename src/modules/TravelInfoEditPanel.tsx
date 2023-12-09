@@ -425,7 +425,7 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
           <td className='position-relative'>
           { 
             i > 0 && 
-            <button className='RouteButton' onClick={() => {setFromTo(place)}}>{drawRouteIcon(place)}</button> 
+            <button className='RouteButton BetweenTr' onClick={() => {setFromTo(place)}}>{drawRouteIcon(place)}</button> 
           }
           </td>
           <td className='p-1'>
