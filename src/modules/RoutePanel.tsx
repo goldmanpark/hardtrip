@@ -65,9 +65,9 @@ const RoutePanel = (props: RoutePanelProps) => {
     return (
       <Card key={`route_${idx}`}>
         <Card.Header className='p-1 d-flex justify-content-between'>
-        {`${leg.distance.text} ${leg.duration.text} `}
-        { route.fare && `${route.fare.currency} ${route.fare.value}`}
-        <RouteIcon onClick={() => setCurrentRoute(route)}/>
+          {`${leg.distance.text} ${leg.duration.text} `}
+          { route.fare && `${route.fare.currency} ${route.fare.value}`}
+          <RouteIcon onClick={() => setCurrentRoute(route)}/>
         </Card.Header>
         {
           currentMode === google.maps.TravelMode.TRANSIT &&
