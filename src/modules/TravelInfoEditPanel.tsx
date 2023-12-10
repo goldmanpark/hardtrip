@@ -288,9 +288,19 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
     } else {
       //다른날짜 -> day변경
       const temp = {...data[day][order]};
+      const newDay = travelDays.find(d => { //새 날짜 검색
+        const dt = d.date;
+        if(typeof(dt) !== 'string' && 
+          dt.getFullYear() === newDate.getFullYear() &&
+          dt.getMonth() === newDate.getMonth() &&
+          dt.getDate() === newDate.getDate()){
+          return true;
+        }
+        return false;
+      });
+      temp.day = newDay ? newDay.day : 0;
       temp.isEdit = true;
       temp.startDTTM = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate(), newDate.getHours(), newDate.getMinutes())
-      temp.day = GetDaysDiff(newDate, selectedTravel.startDate);
       data[day] = data[day].filter(x => x.id !== temp.id);
       data[temp.day].push(temp);
       data[temp.day] = data[temp.day].sort((x, y) => CompareDate(x.startDTTM, y.startDTTM));
