@@ -8,7 +8,7 @@ import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautif
 import { Travel, TravelSerialized, deSerializeTravel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
 import { Route } from '../DataType/Route';
-import { updatePlaceList, deletePlaceList } from '../redux/travelListSlice';
+import { updatePlaceList, deletePlaceList, setSelectedIdx } from '../redux/travelListSlice';
 import { CompareDate, GetDaysDiff, isSameDate } from './CommonFunctions';
 
 import GetPlaceIcon from '../DataType/GetPlaceIcon';
@@ -31,11 +31,10 @@ interface TravelInfoProps{
   setPlaceId: React.Dispatch<React.SetStateAction<string>>;
   setMarkerPlaces: React.Dispatch<React.SetStateAction<Place[]>>
   setDirections: React.Dispatch<React.SetStateAction<google.maps.DirectionsResult[]>>;
-  //panel전환
-  setEditTravel: React.Dispatch<React.SetStateAction<boolean>>;
   //to RouteEditPanel
   setFrom: React.Dispatch<React.SetStateAction<Place>>;
   setTo: React.Dispatch<React.SetStateAction<Place>>;
+  onClose: () => void;
 }
 
 interface TravelDay{
@@ -180,7 +179,8 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
   }
 
   const closeTravel = () => {
-    props.setEditTravel(false);  
+    dispatch(setSelectedIdx(-1));
+    props.onClose();
   }
   //#endregion
 

@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect, useContext } from 'react';
-import { Card, Form, Dropdown } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Card, Form } from 'react-bootstrap';
 import { Place } from '../DataType/Place';
 
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
@@ -10,7 +10,7 @@ import DirectionsTransitIcon from '@mui/icons-material/DirectionsTransit';
 import PedalBikeIcon from '@mui/icons-material/PedalBike';
 import DriveEtaIcon from '@mui/icons-material/DriveEta';
 
-interface RouteEditPanelProps{
+interface RoutePanelProps{
   //from TravelInfoEditPanel
   from: Place;
   to: Place;
@@ -19,7 +19,7 @@ interface RouteEditPanelProps{
   onClose?: () => void;
 }
 
-const RouteEditPanel = (props: RouteEditPanelProps) => {
+const RoutePanel = (props: RoutePanelProps) => {
   const directionsService = new google.maps.DirectionsService();
   const [currentMode, setCurrentMode] = useState<google.maps.TravelMode>(null);
   const [direction, setDirection] = useState<google.maps.DirectionsResult>(null);
@@ -65,7 +65,8 @@ const RouteEditPanel = (props: RouteEditPanelProps) => {
     return (
       <Card key={`route_${idx}`}>
         <Card.Header className='p-1 d-flex justify-content-between'>
-        {`${leg.distance.text} ${leg.duration.text}`}
+        {`${leg.distance.text} ${leg.duration.text} `}
+        { route.fare && `${route.fare.currency} ${route.fare.value}`}
         <RouteIcon onClick={() => setCurrentRoute(route)}/>
         </Card.Header>
         {
@@ -81,7 +82,8 @@ const RouteEditPanel = (props: RouteEditPanelProps) => {
                 {
                   step.transit && step.transit.line &&
                   <Card.Body className='p-1 text-align-left'>
-                    {`${step.transit.line.vehicle.type} / ${step.transit.line.name} / ${step.transit.line.short_name}`}
+                    {`${step.transit.line.vehicle.type} / ${step.transit.line.name} `}
+                    {step.transit.line.short_name && `/${ step.transit.line.short_name}`}
                   </Card.Body>
                 }
               </Card>
@@ -112,7 +114,7 @@ const RouteEditPanel = (props: RouteEditPanelProps) => {
   return(
     <Card className='custom-card card-right'>
        <Card.Header className='d-flex flex-row justify-content-between align-items-center'>
-        <h4 className='m-0'>Edit Route</h4>
+        <h4 className='m-0'>Find Route</h4>
         <CloseRoundedIcon onClick={() => {props.onClose()}}/>
       </Card.Header>
 
@@ -149,4 +151,4 @@ const RouteEditPanel = (props: RouteEditPanelProps) => {
   )
 }
 
-export default RouteEditPanel;
+export default RoutePanel;

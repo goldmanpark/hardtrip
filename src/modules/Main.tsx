@@ -18,8 +18,7 @@ import TravelListPanel from './TravelListPanel';
 import LocationSearcher from './LocationSearcher';
 import PlaceInfoPanel from './PlaceInfoPanel';
 import TravelInfoEditPanel from './TravelInfoEditPanel';
-import TravelInfoViewPanel from './TravelInfoViewPanel';
-import RouteEditPanel from './RouteEditPanel';
+import RoutePanel from './RoutePanel';
 import Compass from './subModules/Compass';
 import { Place } from '../DataType/Place';
 
@@ -46,14 +45,9 @@ const Main = () => {
   const [directions, setDirections] = useState<google.maps.DirectionsResult[]>([]);
   const [markerPlaces, setMarkerPlaces] = useState<Place[]>([]);
 
-  //TravelInfoEditPanel <-> TravelInfoViewPanel
-  const [editTravel, setEditTravel] = useState(false);
-
   //TravelInfoEditPanel -> RouteEditPanel
   const [from, setFrom] = useState<Place>(null);
   const [to, setTo] = useState<Place>(null);
-
-  //RouteEditPanel -> MapComponent
 
   useEffect(() => {
     if(userData){
@@ -140,24 +134,15 @@ const Main = () => {
           showPanel === 'travelList' &&
           <TravelListPanel exit={() => {setShowPanel(null)}}/>
         }
-        <div style={{ display: showPanel === 'travelInfo' && editTravel === false ? 'block' : 'none'}}>
-          <TravelInfoViewPanel            
-            setPlaceId={setSelectedPlaceId}
-            setMarkerPlaces={setMarkerPlaces}
-            setDirections={setDirections}
-            setEditTravel={setEditTravel}
-            exit={() => {setShowPanel(null)}}/>
-        </div>
         {
           showPanel === 'travelInfo' &&
-          editTravel === true &&
           <TravelInfoEditPanel
             setPlaceId={setSelectedPlaceId}
             setMarkerPlaces={setMarkerPlaces}
             setDirections={setDirections}
-            setEditTravel={setEditTravel}
             setFrom={setFrom}
-            setTo={setTo}/>
+            setTo={setTo}
+            onClose={() => {setShowPanel(null)}}/>
         }
         {
           placeResult &&
@@ -167,7 +152,7 @@ const Main = () => {
         }
         {
           from && to &&
-          <RouteEditPanel 
+          <RoutePanel 
             from={from} to={to} 
             setDirections={setDirections}
             onClose={() => {
