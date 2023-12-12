@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
-import { auth } from '../config/firebase'
+import { firebaseAuth } from '../config/firebase'
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 const Login = () => {
@@ -8,7 +8,7 @@ const Login = () => {
 
   const googleLogin = () => {
     const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider)
+    signInWithPopup(firebaseAuth, provider)
       .then((data) => {
         login(data.user);
       })

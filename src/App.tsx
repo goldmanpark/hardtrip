@@ -2,7 +2,7 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
-import { SignIn } from './modules/Sign';
+import { SignForm } from './modules/SignForm';
 import Main from './modules/Main';
 
 function App() {
@@ -21,8 +21,9 @@ function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={userData ? <Navigate to='/main'/> : <SignIn/>}/>
-        <Route path="/main" element={<Main/>} />
+        <Route path="/" element={userData ? <Navigate to='/main'/> : <Navigate to='/login'/>}/>
+        <Route path="/login" element={<SignForm/>}/>
+        <Route path="/main" element={userData ? <Main/> : <Navigate to='/login'/>} />
       </Routes>
     </BrowserRouter>
   )

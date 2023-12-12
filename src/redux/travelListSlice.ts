@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { db } from '../config/firebase';
+import { fireStoreDB } from '../config/firebase';
 import { doc, setDoc, collection, getDocs, addDoc, QuerySnapshot, deleteDoc, getDoc, updateDoc } from 'firebase/firestore'
 import { query, where } from 'firebase/firestore'
 import { Travel, TravelSerialized, serializeTravel, deSerializeTravel } from '../DataType/Travel';
@@ -26,7 +26,7 @@ const initialState: State = {
 }
 
 //#region [Travel CRUD]
-const travelCollectionRef = collection(db, "travel");
+const travelCollectionRef = collection(fireStoreDB, "travel");
 
 export const readTravelList = createAsyncThunk(
   'travelList/readTravelList',
@@ -76,7 +76,7 @@ export const updateTravel = createAsyncThunk(
   'travelList/updateTravel',
   async (param: Travel) => {
     try {
-      await updateDoc(doc(db, 'travel', param.id), {
+      await updateDoc(doc(fireStoreDB, 'travel', param.id), {
         name: param.name,
         startDate: param.startDate,
         endDate: param.endDate
@@ -93,7 +93,7 @@ export const deleteTravel = createAsyncThunk(
   'travelList/deleteTravel',
   async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'travel', id));
+      await deleteDoc(doc(fireStoreDB, 'travel', id));
       return id;
     } catch (error) {
       console.error(error);
@@ -107,7 +107,7 @@ export const readPlaceList = createAsyncThunk(
   'travelList/readPlaceList',
   async (travelId: string) => {
     try{
-      const querySnap = await getDocs(collection(db, "travel", travelId, 'places'));
+      const querySnap = await getDocs(collection(fireStoreDB, "travel", travelId, 'places'));
       const fsList = querySnap.docs.map(x => ({id: x.id, ...x.data()}));
       return {
         id: travelId,
