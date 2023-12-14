@@ -9,6 +9,7 @@ import HotelIcon from '@mui/icons-material/Hotel';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import TrainIcon from '@mui/icons-material/Train';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import LandscapeIcon from '@mui/icons-material/Landscape';
 
 const GetPlaceIcon = (place: Place) => {
   switch(place.type){
@@ -22,6 +23,7 @@ const GetPlaceIcon = (place: Place) => {
     case 'subway_station':
       return <SubwayIcon/>
     case 'train_station':
+    case 'transit_station':
       return <TrainIcon/>
     case 'park':
       return <ParkIcon/>    
@@ -32,7 +34,10 @@ const GetPlaceIcon = (place: Place) => {
     case 'restaurant':
       return <RestaurantIcon/>
     case 'shopping_mall':
+    case 'department_store':
       return <ShoppingCartIcon/>
+    case 'natural_feature':
+      return <LandscapeIcon/>
     default:
       return <PlaceIcon/>
   }

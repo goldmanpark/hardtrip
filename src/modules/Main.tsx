@@ -12,7 +12,6 @@ import { readTravelList } from '../redux/travelListSlice';
 import { setCurrentLatLng } from '../redux/selectedLatLngSlice';
 import { Button, Dropdown } from 'react-bootstrap';
 
-import Login from './Login';
 import MapComponent from './MapComponent';
 import TravelListPanel from './TravelListPanel';
 import LocationSearcher from './LocationSearcher';
@@ -29,7 +28,8 @@ const Main = () => {
   const { userData } = useAuth();
 
   //Main only
-  const [showPanel, setShowPanel] = useState<null | 'travelList' | 'travelInfo'>(null);
+  const [showLeftPanel, setShowLeftPanel] = useState<null | 'travelList' | 'travelInfo'>(null);
+  const [showRightPanel, setShowRightPanel] = useState<null | 'placeResult' | 'route'>(null);
   const [menuClassName, setMenuClassName] = useState<'Menu-active-none' | 'Menu-active-left' | 'Menu-active-right' | 'Menu-active-both'>('Menu-active-none')
   
   //Main -> MapComponent
@@ -57,23 +57,38 @@ const Main = () => {
 
   useEffect(() => {
     if(selectedIdxRedux >= 0){
-      setShowPanel('travelInfo');
+      setShowLeftPanel('travelInfo');
     }
   }, [selectedIdxRedux]);
 
   useEffect(() => {
-    if(showPanel && placeResult){
+    if(showLeftPanel && showRightPanel){
       setMenuClassName('Menu-active-both')
     } else {
-      if(showPanel){
+      if(showLeftPanel){
         setMenuClassName('Menu-active-left');
-      } else if(placeResult){
+      } else if(showRightPanel){
         setMenuClassName('Menu-active-right')
       } else {
         setMenuClassName('Menu-active-none');
       }
     }
-  }, [showPanel, placeResult]);
+  }, [showLeftPanel, showRightPanel]);
+
+  useEffect(() => {
+    if(placeResult){
+      setFrom(null);
+      setTo(null);
+      setShowRightPanel('placeResult');
+    }
+  }, [placeResult]);
+
+  useEffect(() => {
+    if(from && to){
+      setPlaceResult(null);
+      setShowRightPanel('route');
+    }
+  }, [from, to])
 
   const onClickTraffic = () => {
     setShowTraffic(prev => !prev);
@@ -89,9 +104,8 @@ const Main = () => {
                   libraries={libraries}
                   onLoad={() => {dispatch(setCurrentLatLng())}}>
         <div className={`Header p-2 flex-grow-1 d-flex gap-2 justify-content-between align-items-center ${menuClassName}`}>
-          <Button variant="primary" onClick={() => {setShowPanel('travelList')}}>Travels</Button>
+          <Button variant="primary" onClick={() => {setShowLeftPanel('travelList')}}>Travels</Button>
           <LocationSearcher setPlaceInfo={setPlaceResult}/>
-          <Login/>
         </div>
 
         <MapComponent
@@ -131,27 +145,27 @@ const Main = () => {
           <Compass/>
         </div>
         {
-          showPanel === 'travelList' &&
-          <TravelListPanel exit={() => {setShowPanel(null)}}/>
+          showLeftPanel === 'travelList' &&
+          <TravelListPanel exit={() => {setShowLeftPanel(null)}}/>
         }
         {
-          showPanel === 'travelInfo' &&
+          showLeftPanel === 'travelInfo' &&
           <TravelInfoEditPanel
             setPlaceId={setSelectedPlaceId}
             setMarkerPlaces={setMarkerPlaces}
             setDirections={setDirections}
             setFrom={setFrom}
             setTo={setTo}
-            onClose={() => {setShowPanel(null)}}/>
+            onClose={() => {setShowLeftPanel(null)}}/>
         }
         {
-          placeResult &&
+          showRightPanel === 'placeResult' &&
           <PlaceInfoPanel
             placeResult={placeResult}
             onClose={() => setPlaceResult(null)}/>
         }
         {
-          from && to &&
+          showRightPanel === 'route' &&
           <RoutePanel 
             from={from} to={to} 
             setDirections={setDirections}

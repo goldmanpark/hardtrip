@@ -279,7 +279,7 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
         }
       }
     }
-    
+
     if(isSameDate(data[day][order].startDTTM, newDate)){
       //동일날짜 -> day유지
       data[day][order].isEdit = true;
@@ -290,7 +290,7 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
       const temp = {...data[day][order]};
       const newDay = travelDays.find(d => { //새 날짜 검색
         const dt = d.date;
-        if(typeof(dt) !== 'string' && 
+        if(typeof(dt) !== 'string' &&
           dt.getFullYear() === newDate.getFullYear() &&
           dt.getMonth() === newDate.getMonth() &&
           dt.getDate() === newDate.getDate()){
@@ -342,19 +342,19 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
   //#region [conditional render]
   const AccordionButton = ({eventKey}) => {
     const { activeEventKey } = useContext(AccordionContext);
-    const decoratedOnClick = useAccordionButton(eventKey);  
-    
+    const decoratedOnClick = useAccordionButton(eventKey);
+
     if(activeEventKey){
       return (
-        activeEventKey.includes(eventKey) 
-          ? <KeyboardArrowUpIcon onClick={decoratedOnClick}/> 
+        activeEventKey.includes(eventKey)
+          ? <KeyboardArrowUpIcon onClick={decoratedOnClick}/>
           : <KeyboardArrowDownIcon onClick={decoratedOnClick}/>
       )
     } else {
       return (
         <KeyboardArrowDownIcon onClick={decoratedOnClick}/>
       )
-    }    
+    }
   }
 
   const drawDroppable = (i: number, places: PlaceEdit[]) => {
@@ -415,6 +415,7 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
           <td className='p-1'>
             <DatePicker className='w-100 text-align-center'
                         showTimeSelect
+                        timeIntervals={10}
                         dateFormat="HH:mm"
                         timeFormat="HH:mm"
                         minDate={selectedTravel.startDate}
@@ -425,6 +426,7 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
           <td className='p-1'>
             <DatePicker className='w-100 text-align-center'
                         showTimeSelect
+                        timeIntervals={10}
                         dateFormat="HH:mm"
                         timeFormat="HH:mm"
                         minDate={travelDate}
@@ -433,9 +435,9 @@ const TravelInfoEditPanel = (props : TravelInfoProps) => {
                         onChange={(date) => {updateEndDTTM(place.id, date, travelDate)}}/>
           </td>
           <td className='position-relative'>
-          { 
-            i > 0 && 
-            <button className='RouteButton BetweenTr' onClick={() => {setFromTo(place)}}>{drawRouteIcon(place)}</button> 
+          {
+            i > 0 &&
+            <button className='RouteButton BetweenTr' onClick={() => {setFromTo(place)}}>{drawRouteIcon(place)}</button>
           }
           </td>
           <td className='p-1'>

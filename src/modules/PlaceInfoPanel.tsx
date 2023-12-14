@@ -25,7 +25,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
   const dispatch = useAppDispatch();
   const { userData } = useAuth();
   const travelListRedux: TravelSerialized[] = useAppSelector((state) => state.travelList.list);
-  const [selectedTab, setSelectedTab] = useState<'summary' | 'review' | 'register' | 'route'>('summary');
+  const [selectedTab, setSelectedTab] = useState<'summary' | 'review' | 'register'>('summary');
   
   const renderContent = () => {
     switch (selectedTab) {
@@ -118,15 +118,18 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
       return <span>N/A</span>;
 
     const days = ['일', '월', '화', '수', '목', '금', '토'];
-    let today = new Date();
-    let results = [];
+    const offset = props.placeResult.utc_offset_minutes / 60;
+    const sign = offset >= 0 ? '+' : '-';
+    const utcStr = `UTC ${sign}${Math.abs(offset).toString().padStart(2, '0')}:00`;
+    const results = [];
 
     if(props.placeResult.opening_hours.periods.length === 7){
       for (let i = 0; i < 7; i++) {
         let t1 = props.placeResult.opening_hours.periods[i];
+        
         results.push({
           day : t1.open.day,
-          res : t1.open.time.slice(0, 2) + ':' + t1.open.time.slice(2) + ' ~ ' + t1.close.time.slice(0, 2) + ':' + t1.close.time.slice(2)
+          res : `${t1.open.time.slice(0, 2)}:${t1.open.time.slice(2)} ~ ${t1.close.time.slice(0, 2)}:${t1.close.time.slice(2)} (${utcStr})`          
         });
       }
     }
@@ -135,9 +138,9 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
         let t1 = props.placeResult.opening_hours.periods[i];
         let t2 = props.placeResult.opening_hours.periods[i + 1];
 
-        let res = t1.open.time.slice(0, 2) + ':' + t1.open.time.slice(2) + ' ~ ' + t1.close.time.slice(0, 2) + ':' + t1.close.time.slice(2);
+        let res = `${t1.open.time.slice(0, 2)}:${t1.open.time.slice(2)} ~ ${t1.close.time.slice(0, 2)}:${t1.close.time.slice(2)}`
         res += ' / ';
-        res += t2.open.time.slice(0, 2) + ':' + t2.open.time.slice(2) + ' ~ ' + t2.close.time.slice(0, 2) + ':' + t2.close.time.slice(2);
+        res += `${t2.open.time.slice(0, 2)}:${t2.open.time.slice(2)} ~ ${t2.close.time.slice(0, 2)}:${t2.close.time.slice(2)} (${utcStr})`;
         results.push({
           day : t1.open.day,
           res : res
@@ -150,7 +153,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
         <Row>{ props.placeResult.opening_hours.isOpen ? '영업 중' : '영업 종료' }</Row>
         {
           results.map(r => (
-            <Row className='items-align-center' style={{fontWeight : today.getDay() === r.day ? 'bold' : 'normal'}}>
+            <Row className='items-align-center'>
               <Col className='p-1'>
                 { days[r.day] }
               </Col>
@@ -203,10 +206,6 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
       </table>
     )
   }
-  //#endregion
-
-  //#region [conditional rendering: expected route]
-  //#endregion
 
   const saveCurrentPlace = (travel: TravelSerialized, type: string) => {
     let place = {
@@ -217,11 +216,13 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
         lat: props.placeResult.geometry.location.lat(),
         lng: props.placeResult.geometry.location.lng()
       },
-      type: type
+      type: type,
+      utc_offset_minutes: props.placeResult.utc_offset_minutes
     } as Place;
     dispatch(createPlace({ travelId: travel.id, place: place }));
   }
-
+  //#endregion
+  
   return (
     <Card className='custom-card card-right'>
       <Card.Header className='d-flex flex-row justify-content-between align-items-center'>
@@ -233,7 +234,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
         <Navbar className='p-0'>
           <Container className="p-0">
             <Nav className="justify-content-around" activeKey="/summary" variant="underline"
-                onSelect={(key: 'summary' | 'review' | 'register' | 'route') => {setSelectedTab(key)}}>
+                onSelect={(key: 'summary' | 'review' | 'register') => {setSelectedTab(key)}}>
               <Nav.Item>
                 <Nav.Link eventKey="summary" onSelect={() => setSelectedTab('summary')}>Summary</Nav.Link>
               </Nav.Item>
@@ -241,15 +242,10 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
                 <Nav.Link eventKey="review" onSelect={() => setSelectedTab('review')}>Review</Nav.Link>
               </Nav.Item>
               {
-                userData &&
-                <React.Fragment>
-                  <Nav.Item>
-                    <Nav.Link eventKey="register" onSelect={() => setSelectedTab('register')}>Register</Nav.Link>
-                  </Nav.Item>
-                  <Nav.Item>
-                    <Nav.Link eventKey="route" onSelect={() => setSelectedTab('route')}>Exp. Route</Nav.Link>
-                  </Nav.Item>
-                </React.Fragment>
+                userData &&                
+                <Nav.Item>
+                  <Nav.Link eventKey="register" onSelect={() => setSelectedTab('register')}>Register</Nav.Link>
+                </Nav.Item>                
               }
             </Nav>
           </Container>

@@ -109,7 +109,8 @@ const MapComponent = (props: MapProps) => {
           'reviews',
           'types',
           'website',
-          'geometry'
+          'geometry',
+          'utc_offset_minutes'
         ]
       } as google.maps.places.PlaceDetailsRequest;
 
