@@ -13,13 +13,15 @@ import { setCurrentLatLng } from '../redux/selectedLatLngSlice';
 import { Button, Dropdown } from 'react-bootstrap';
 
 import MapComponent from './MapComponent';
-import TravelListPanel from './TravelListPanel';
 import LocationSearcher from './LocationSearcher';
-import PlaceInfoPanel from './PlaceInfoPanel';
+import TravelListPanel from './TravelListPanel';
 import TravelInfoEditPanel from './TravelInfoEditPanel';
+import PlaceInfoPanel from './PlaceInfoPanel';
 import RoutePanel from './RoutePanel';
+import UserInfo from './UserInfo';
 import Compass from './subModules/Compass';
 import { Place } from '../DataType/Place';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 const Main = () => {
   const dispatch = useAppDispatch();
@@ -29,7 +31,7 @@ const Main = () => {
 
   //Main only
   const [showLeftPanel, setShowLeftPanel] = useState<null | 'travelList' | 'travelInfo'>(null);
-  const [showRightPanel, setShowRightPanel] = useState<null | 'placeResult' | 'route'>(null);
+  const [showRightPanel, setShowRightPanel] = useState<null | 'placeResult' | 'route' | 'userInfo'>(null);
   const [menuClassName, setMenuClassName] = useState<'Menu-active-none' | 'Menu-active-left' | 'Menu-active-right' | 'Menu-active-both'>('Menu-active-none')
   
   //Main -> MapComponent
@@ -106,6 +108,8 @@ const Main = () => {
         <div className={`Header p-2 flex-grow-1 d-flex gap-2 justify-content-between align-items-center ${menuClassName}`}>
           <Button variant="primary" onClick={() => {setShowLeftPanel('travelList')}}>Travels</Button>
           <LocationSearcher setPlaceInfo={setPlaceResult}/>
+          <AccountCircleIcon style={{width: '40px', height: '40px'}}
+            onClick={() => setShowRightPanel('userInfo')}/>
         </div>
 
         <MapComponent
@@ -173,6 +177,10 @@ const Main = () => {
               setFrom(null);
               setTo(null);
             }}/>
+        }
+        {
+          showRightPanel === 'userInfo' &&
+          <UserInfo onClose={() => setShowRightPanel(null)}/>
         }
       </LoadScript>
     </div>

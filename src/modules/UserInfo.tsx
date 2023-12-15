@@ -1,0 +1,43 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useState, useEffect, useMemo } from 'react';
+import { Card, Form } from 'react-bootstrap';
+import { useAuth } from '../AuthContext';
+
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+
+interface UserInfoProps{
+  onClose: () => void;
+}
+
+const UserInfo = (props: UserInfoProps) => {
+  const { userData } = useAuth();
+  const [displayName, setDisplayName] = useState('');
+
+  useEffect(() => {
+    setDisplayName(userData.displayName);
+  }, [userData])
+
+  return (
+    <Card className='custom-card card-right'>
+      <Card.Header className='d-flex flex-row justify-content-between align-items-center'>
+        <h4 className='m-0'>UserInfo</h4>
+        <CloseRoundedIcon onClick={() => {props.onClose()}}/>
+      </Card.Header>
+      <Card.Body>
+        <Form>
+          <Form.Group className='text-align-left'>
+            <Form.Label>nickname</Form.Label>
+            <Form.Control className='mb-2'
+              type="email"
+              placeholder="닉네임을 입력하세요"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+            />
+          </Form.Group>
+        </Form>
+      </Card.Body>
+    </Card>
+  )
+}
+
+export default UserInfo;
