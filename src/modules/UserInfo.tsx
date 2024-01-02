@@ -43,7 +43,6 @@ const UserInfo = (props: UserInfoProps) => {
             <Form.Label>e-mail</Form.Label>
             <Form.Control className='mb-2'
               type="email"
-              placeholder="닉네임을 입력하세요"
               value={userData.email}
               disabled
             />

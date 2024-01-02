@@ -37,6 +37,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
         break;
     }
   }
+
   //#region [conditional rendering: summary]
   const renderSummary = () => {
     return (
@@ -226,7 +227,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
   return (
     <Card className='custom-card card-right'>
       <Card.Header className='d-flex flex-row justify-content-between align-items-center'>
-        <h4 className='m-0'>{ props.placeResult.name }</h4>
+        <h4 className='m-0'>{ props.placeResult?.name }</h4>
         <CloseRoundedIcon onClick={() => {props.onClose()}}/>
       </Card.Header>
 

@@ -5,7 +5,7 @@ import { setSelectedLatLng } from '../redux/selectedLatLngSlice';
 import { Autocomplete } from '@react-google-maps/api';
 
 interface LocationSearcherProps{
-  setPlaceInfo: React.Dispatch<React.SetStateAction<google.maps.places.PlaceResult | null>>;
+  setPlaceResult: React.Dispatch<React.SetStateAction<google.maps.places.PlaceResult | null>>;
 }
 
 const LocationSearcher = (props: LocationSearcherProps) => {
@@ -16,10 +16,11 @@ const LocationSearcher = (props: LocationSearcherProps) => {
     if(!autocomplete) return;
 
     const place: google.maps.places.PlaceResult = autocomplete.getPlace();
+    props.setPlaceResult(place);
+
     let lat = place.geometry.location.lat();
     let lng = place.geometry.location.lng();
-    dispatch(setSelectedLatLng({lat, lng}));
-    props.setPlaceInfo(place);
+    dispatch(setSelectedLatLng({lat, lng})); 
   }
 
   return (

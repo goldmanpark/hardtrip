@@ -107,7 +107,7 @@ const Main = () => {
                   onLoad={() => {dispatch(setCurrentLatLng())}}>
         <div className={`Header p-2 flex-grow-1 d-flex gap-2 justify-content-between align-items-center ${menuClassName}`}>
           <Button variant="primary" onClick={() => {setShowLeftPanel('travelList')}}>Travels</Button>
-          <LocationSearcher setPlaceInfo={setPlaceResult}/>
+          <LocationSearcher setPlaceResult={setPlaceResult}/>
           <AccountCircleIcon style={{width: '40px', height: '40px'}}
             onClick={() => setShowRightPanel('userInfo')}/>
         </div>
@@ -115,7 +115,7 @@ const Main = () => {
         <MapComponent
           showTraffic={showTraffic}
           showTransit={showTransit}
-          placeInfo={placeResult}
+          placeResult={placeResult}
           setPlaceResult={setPlaceResult}
           placeId={selectedPlaceId}
           directions={directions}
@@ -163,19 +163,23 @@ const Main = () => {
             onClose={() => {setShowLeftPanel(null)}}/>
         }
         {
-          showRightPanel === 'placeResult' &&
+          showRightPanel === 'placeResult' && placeResult &&
           <PlaceInfoPanel
             placeResult={placeResult}
-            onClose={() => setPlaceResult(null)}/>
+            onClose={() => {
+              setPlaceResult(null);
+              setShowRightPanel(null);
+            }}/>
         }
         {
-          showRightPanel === 'route' &&
+          showRightPanel === 'route' && from && to &&
           <RoutePanel 
             from={from} to={to} 
             setDirections={setDirections}
             onClose={() => {
               setFrom(null);
               setTo(null);
+              setShowRightPanel(null);
             }}/>
         }
         {

@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useMemo } from 'react';
 import { GoogleMap, TrafficLayer, TransitLayer, MarkerF, DirectionsRenderer } from '@react-google-maps/api';
-import { useAppSelector, useAppDispatch } from '../redux/store';
+import { useAppSelector } from '../redux/store';
 import { Travel, TravelSerialized, deSerializeTravel } from '../DataType/Travel';
 import { Place } from '../DataType/Place';
 
@@ -10,7 +10,7 @@ interface MapProps{
   showTraffic: boolean;
   showTransit: boolean;
   //from LocationSearcher
-  placeInfo: google.maps.places.PlaceResult | null;
+  placeResult: google.maps.places.PlaceResult | null;
   setPlaceResult: React.Dispatch<React.SetStateAction<google.maps.places.PlaceResult | null>>;
   //from TravelInfoPanel
   placeId: string;
@@ -19,7 +19,6 @@ interface MapProps{
 }
 
 const MapComponent = (props: MapProps) => {
-  const dispatch = useAppDispatch();
   const travelListRedux: TravelSerialized[] = useAppSelector(state => state.travelList.list);
   const selectedIdxRedux = useAppSelector(state => state.travelList.selectedIdx);
   const selectedLatLng = useAppSelector((state) => state.selectedLatLng);
@@ -30,7 +29,6 @@ const MapComponent = (props: MapProps) => {
   const [zoom, setZoom] = useState(12);
   const [showCurrentMarker, setShowCurrentMarker] = useState(true);
   const [currentPosition, setCurrentPosition] = useState<google.maps.LatLng>(null);
-  const [placeInfo, setPlaceInfo] = useState<google.maps.places.PlaceResult | null>(null);
 
   const placesService = useMemo(() => {
     if(map) return new google.maps.places.PlacesService(map)
@@ -43,15 +41,8 @@ const MapComponent = (props: MapProps) => {
       let pos = new google.maps.LatLng(selectedLatLng.lat, selectedLatLng.lng);
       setCurrentPosition(pos);
       setShowCurrentMarker(true);
-      props.setPlaceResult(null);
     }
   }, [selectedLatLng]);
-
-  useEffect(() => {
-    if(props.placeInfo){
-      setPlaceInfo(props.placeInfo)
-    }
-  }, [props.placeInfo]);
 
   useEffect(() => {
     if(props.placeId !== ''){
@@ -116,7 +107,6 @@ const MapComponent = (props: MapProps) => {
 
       placesService.getDetails(request, (place: google.maps.places.PlaceResult, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK) {
-          setPlaceInfo(place);
           props.setPlaceResult(place);
           setShowCurrentMarker(true);
           const pos = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
