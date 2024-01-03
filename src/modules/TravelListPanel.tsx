@@ -8,11 +8,15 @@ import { useAppSelector, useAppDispatch } from '../redux/store';
 import { readTravelList, createTravel, updateTravel, deleteTravel } from '../redux/travelListSlice';
 import { readPlaceList, setSelectedIdx } from '../redux/travelListSlice';
 import { Travel, TravelSerialized, deSerializeTravel } from '../DataType/Travel';
+import { fireStoreDB } from '../config/firebase';
+import { doc, collection, getDocs, QuerySnapshot } from 'firebase/firestore';
+import { query, where } from 'firebase/firestore';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
 import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import { GetyyyyMMdd } from './CommonFunctions';
 
 interface PanelProps{
   exit: () => void;
@@ -22,11 +26,14 @@ const TravelListPanel = (props: PanelProps) => {
   const dispatch = useAppDispatch();
   const travelListRedux: TravelSerialized[] = useAppSelector((state) => state.travelList.list);
   const { userData } = useAuth();
+  const travelCollectionRef = collection(fireStoreDB, "travel");
 
   const [travelList, setTravelList] = useState<Travel[]>([]);
   const [newTravel, setNewTravel] = useState<Travel>({} as Travel);
   const [editIdx, setEditIdx] = useState(-1);
   const [tempTravel, setTempTravel] = useState<Travel>({} as Travel);
+
+  const [openedTravelList, setOpenedTravelList] = useState<Travel[]>([]);
 
   useEffect(() => {
     setTravelList(travelListRedux.map(x => { return deSerializeTravel(x)}));
@@ -38,6 +45,28 @@ const TravelListPanel = (props: PanelProps) => {
     }    
   }, [editIdx]);
 
+  useEffect(() => {
+    if(userData){
+      getOpenedTravelList();
+    }
+  }, [userData]);
+
+  const getOpenedTravelList = async () => {
+    const qr = query(travelCollectionRef, where('uid', '!=', userData.uid), where('opened', '==', true));
+    const docSnap = await getDocs(qr);
+    setOpenedTravelList(docSnap.docs.map(x => {
+      const doc = x.data();
+      return {
+        ...doc,
+        startDate: doc.startDate?.toDate(),
+        endDate: doc.endDate?.toDate()
+      } as Travel;
+    }));
+  }
+
+  useEffect(() => {
+    console.log(openedTravelList)
+  }, [openedTravelList])
 
   //#region [Event Handler]
   /** 유저접속정보 기반 travel전체목록 조회 */
@@ -92,8 +121,8 @@ const TravelListPanel = (props: PanelProps) => {
     return (
       <tr key={idx}>
         <td onClick={() => {onSelectTravel(idx, travel)}} className='text-align-left'>{travel.name}</td>
-        <td onClick={() => {onSelectTravel(idx, travel)}}>{travel.startDate?.toLocaleDateString()}</td>
-        <td onClick={() => {onSelectTravel(idx, travel)}}>{travel.endDate?.toLocaleDateString()}</td>
+        <td onClick={() => {onSelectTravel(idx, travel)}}>{GetyyyyMMdd(travel.startDate)}</td>
+        <td onClick={() => {onSelectTravel(idx, travel)}}>{GetyyyyMMdd(travel.endDate)}</td>
         <td><input type='checkbox' checked={travel.opened} disabled/></td>
         <td><EditIcon onClick={() => {editTravel(idx)}}/></td>
         <td><DeleteIcon onClick={() => {removeTravel(travel)}}/></td>
@@ -207,7 +236,33 @@ const TravelListPanel = (props: PanelProps) => {
             Opened Travels
           </Card.Header>
           <Card.Body className='p-0'>
-            
+            <Table className='w-100' size="sm" striped>
+              <colgroup>
+                <col style={{width: '35%'}}/>
+                <col style={{width: '25%'}}/>
+                <col style={{width: '25%'}}/>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style={{width: '20%'}}>travel</th>
+                  <th>start</th>
+                  <th>end</th>
+                </tr>
+              </thead>
+              <tbody>
+              {
+                openedTravelList.map((t, i) => {
+                  return (
+                    <tr key={i}>
+                      <td className='text-align-left'>{t.name}</td>
+                      <td>{GetyyyyMMdd(t.startDate)}</td>
+                      <td>{GetyyyyMMdd(t.endDate)}</td>
+                    </tr>
+                  )
+                })
+              }
+              </tbody>
+            </Table>
           </Card.Body>
         </Card>
       </Card.Body>

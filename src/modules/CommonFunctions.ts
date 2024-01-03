@@ -27,11 +27,15 @@ export const GetHHmm = (d?: Date): string => {
   }
 }
 
-export const GetyyyyMMdd = (d: number) => {
+export const GetyyyyMMdd = (d?: number | Date) => {
+  if(!d) return '';
+  
   const date = new Date(d);
-  const yyyy = date.getFullYear();
-  const MM = date.getMonth();
-  const dd = date.getDate();
+  const yyyy = date.getFullYear().toString();
+  let MM = date.getMonth().toString();
+  let dd = date.getDate().toString();
+  MM = MM.length > 1 ? MM : '0' + MM;
+  dd = dd.length > 1 ? dd : '0' + dd;
   return `${yyyy}-${MM}-${dd}`;
 }
 
