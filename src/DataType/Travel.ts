@@ -4,6 +4,7 @@ export interface TravelSerialized{
   id: string;
   uid: string;
   name: string;
+  opened: boolean;
   startDate?: number;
   endDate?: number;
   places?: PlaceSerialized[];

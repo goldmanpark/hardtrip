@@ -59,6 +59,7 @@ export const createTravel = createAsyncThunk(
       const docRef = await addDoc(travelCollectionRef, {
         uid: param.uid,
         name: param.name,
+        opened: param.opened,
         ...(param.startDate && { startDate: param.startDate }),
         ...(param.endDate && { endDate: param.endDate })
       }); //doc_id자동생성
@@ -78,6 +79,7 @@ export const updateTravel = createAsyncThunk(
     try {
       await updateDoc(doc(fireStoreDB, 'travel', param.id), {
         name: param.name,
+        opened: param.opened,
         startDate: param.startDate,
         endDate: param.endDate
       });

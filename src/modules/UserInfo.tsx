@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card, Form } from 'react-bootstrap';
+import { Card, Form, Button } from 'react-bootstrap';
 import { getAuth, updateProfile } from "firebase/auth";
 import { useAuth } from '../AuthContext';
 
@@ -13,6 +13,7 @@ interface UserInfoProps{
 const UserInfo = (props: UserInfoProps) => {
   const { userData } = useAuth();
   const [displayName, setDisplayName] = useState('');
+  const [findUserNick, setFindUserNick] = useState('');
 
   useEffect(() => {
     setDisplayName(userData.displayName);
@@ -55,6 +56,28 @@ const UserInfo = (props: UserInfoProps) => {
             />
           </Form.Group>
         </Form>
+
+        <Card>
+          <Card.Header className='text-align-left'>
+            friends
+          </Card.Header>
+          <Card.Body>
+            <Form>
+              <Form.Group className='text-align-left'>
+                <Form.Label>find user</Form.Label>
+                <Form.Control className='mb-2'
+                  type="text"
+                  placeholder="닉네임을 입력하세요"
+                  value={findUserNick}
+                  onChange={(e) => setFindUserNick(e.target.value)}
+                />
+                <Button variant="primary" type="submit">
+                  find
+                </Button>
+              </Form.Group>
+            </Form>
+          </Card.Body>
+        </Card>
       </Card.Body>
     </Card>
   )

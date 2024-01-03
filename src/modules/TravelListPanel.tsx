@@ -55,6 +55,7 @@ const TravelListPanel = (props: PanelProps) => {
   /** 신규 travel등록 */
   const addTravel = () => {
     if(!userData) return;
+    if(!newTravel.startDate || !newTravel.endDate || !newTravel.name) return;
     newTravel.uid = userData.uid;
     dispatch(createTravel(newTravel));
   }
@@ -86,12 +87,14 @@ const TravelListPanel = (props: PanelProps) => {
   }
   //#endregion
 
+  //#region [Conditional Render]
   const NormalRow = (idx: number, travel : Travel): JSX.Element => {
     return (
       <tr key={idx}>
         <td onClick={() => {onSelectTravel(idx, travel)}} className='text-align-left'>{travel.name}</td>
         <td onClick={() => {onSelectTravel(idx, travel)}}>{travel.startDate?.toLocaleDateString()}</td>
         <td onClick={() => {onSelectTravel(idx, travel)}}>{travel.endDate?.toLocaleDateString()}</td>
+        <td><input type='checkbox' checked={travel.opened} disabled/></td>
         <td><EditIcon onClick={() => {editTravel(idx)}}/></td>
         <td><DeleteIcon onClick={() => {removeTravel(travel)}}/></td>
       </tr>
@@ -118,68 +121,95 @@ const TravelListPanel = (props: PanelProps) => {
                       selected={tempTravel.endDate}
                       onChange={(date) => {setTempTravel(prev => ({...prev, endDate: date}))}}/>
         </td>
+        <td>
+          <input type='checkbox' checked={tempTravel.opened}
+                  onChange={() => setTempTravel(prev => ({...prev, opened: !prev.opened}))}/>
+        </td>
         <td><CheckIcon onClick={() => {confirmEdit()}}/></td>
         <td><DoDisturbIcon onClick={() => {cancelEdit()}}/></td>
       </tr>
     )
   }
+  //#endregion
 
   return(
     <Card className="custom-card card-left">
       <Card.Header>
-        <div className='d-flex flex-row justify-content-end'>
+        <div className='d-flex flex-row justify-content-between'>
+          Travels
           <CloseRoundedIcon onClick={props.exit}/>
         </div>
       </Card.Header>
-      <Card.Body style={{overflowX: 'hidden', overflowY: 'auto'}}>
-        <Table className='w-100' size="sm" striped>
-          <colgroup>
-            <col style={{width: '30%'}}/>
-            <col style={{width: '30%'}}/>
-            <col style={{width: '30%'}}/>
-            <col style={{width: '5%'}}/>
-            <col style={{width: '5%'}}/>
-          </colgroup>
-          <thead>
-            <tr>
-              <th style={{width: '20%'}}>travel</th>
-              <th>start</th>
-              <th>end</th>
-              <th>edit</th>
-              <th>del</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* new Travel 용 */}
-            <tr>
-              <td>
-                <input className='w-100' type='text'
-                       placeholder='new Travel'
-                       value={newTravel.name}
-                       onChange={(e) => {setNewTravel(prev => ({...prev, name: e.target.value}))}}/>
-              </td>
-              <td>
-                <DatePicker className='w-100 text-align-center'
-                            dateFormat="yy.MM.dd"
-                            selected={newTravel.startDate}
-                            onChange={(date) => {setNewTravel(prev => ({...prev, startDate: date}))}}/>
-              </td>
-              <td>
-                <DatePicker className='w-100 text-align-center'
-                            dateFormat="yy.MM.dd"
-                            selected={newTravel.endDate}
-                            onChange={(date) => {setNewTravel(prev => ({...prev, endDate: date}))}}/>
-              </td>
-              <td><CheckIcon onClick={addTravel}/></td>
-              <td><DoDisturbIcon onClick={cancelAdd}/></td>
-            </tr>
-          {
-            travelList.map((t, i) => {
-              return i === editIdx ? EditRow(i, t) : NormalRow(i, t)
-            })
-          }
-          </tbody>
-        </Table>
+      <Card.Body style={{overflowX: 'hidden', overflowY: 'auto'}} className='p-1'>
+        <Card className='mb-2'>
+          <Card.Header className='text-align-left'>
+            User Travels
+          </Card.Header>
+          <Card.Body className='p-0'>
+            <Table className='w-100' size="sm" striped>
+              <colgroup>
+                <col style={{width: '35%'}}/>
+                <col style={{width: '25%'}}/>
+                <col style={{width: '25%'}}/>
+                <col style={{width: '5%'}}/>
+                <col style={{width: '5%'}}/>
+                <col style={{width: '5%'}}/>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style={{width: '20%'}}>travel</th>
+                  <th>start</th>
+                  <th>end</th>
+                  <th>opened</th>
+                  <th>edit</th>
+                  <th>del</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* new Travel 용 */}
+                <tr>
+                  <td>
+                    <input className='w-100' type='text'
+                          placeholder='new Travel'
+                          value={newTravel.name}
+                          onChange={(e) => {setNewTravel(prev => ({...prev, name: e.target.value}))}}/>
+                  </td>
+                  <td>
+                    <DatePicker className='w-100 text-align-center'
+                                dateFormat="yy.MM.dd"
+                                selected={newTravel.startDate}
+                                onChange={(date) => {setNewTravel(prev => ({...prev, startDate: date}))}}/>
+                  </td>
+                  <td>
+                    <DatePicker className='w-100 text-align-center'
+                                dateFormat="yy.MM.dd"
+                                selected={newTravel.endDate}
+                                onChange={(date) => {setNewTravel(prev => ({...prev, endDate: date}))}}/>
+                  </td>
+                  <td>
+                    <input type='checkbox' checked={newTravel.opened}
+                          onChange={() => setNewTravel(prev => ({...prev, opened: !prev.opened}))}/>
+                  </td>
+                  <td><CheckIcon onClick={addTravel}/></td>
+                  <td><DoDisturbIcon onClick={cancelAdd}/></td>
+                </tr>
+              {
+                travelList.map((t, i) => {
+                  return i === editIdx ? EditRow(i, t) : NormalRow(i, t)
+                })
+              }
+              </tbody>
+            </Table>
+          </Card.Body>
+        </Card>
+        <Card>
+          <Card.Header className='text-align-left'>
+            Opened Travels
+          </Card.Header>
+          <Card.Body className='p-0'>
+            
+          </Card.Body>
+        </Card>
       </Card.Body>
     </Card>
   )
