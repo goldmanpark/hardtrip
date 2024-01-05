@@ -2,11 +2,13 @@ import { configureStore } from '@reduxjs/toolkit'
 import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
 import selectedLatLngSlice from './selectedLatLngSlice';
 import travelListSlice from './travelListSlice';
+import openedTravelListSlice from './openedTravelListSlice';
 
 export const store = configureStore({
   reducer: {
     selectedLatLng: selectedLatLngSlice,
-    travelList: travelListSlice
+    travelList: travelListSlice,
+    openedTravelList: openedTravelListSlice
   },
 });
 

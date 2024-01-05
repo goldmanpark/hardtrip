@@ -16,6 +16,7 @@ import MapComponent from './MapComponent';
 import LocationSearcher from './LocationSearcher';
 import TravelListPanel from './TravelListPanel';
 import TravelInfoEditPanel from './TravelInfoEditPanel';
+import TravelInfoViewPanel from './TravelInfoViewPanel';
 import PlaceInfoPanel from './PlaceInfoPanel';
 import RoutePanel from './RoutePanel';
 import UserInfo from './UserInfo';
@@ -26,11 +27,12 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 const Main = () => {
   const dispatch = useAppDispatch();
   const selectedIdxRedux = useAppSelector(state => state.travelList.selectedIdx);
+  const selectedOpenedIdxRedux = useAppSelector(state => state.openedTravelList.selectedIdx);
   const libraries: Libraries = ['places'];
   const { userData } = useAuth();
 
   //Main only
-  const [showLeftPanel, setShowLeftPanel] = useState<null | 'travelList' | 'travelInfo'>(null);
+  const [showLeftPanel, setShowLeftPanel] = useState<null | 'travelList' | 'travelEdit' | 'travelView'>(null);
   const [showRightPanel, setShowRightPanel] = useState<null | 'placeResult' | 'route' | 'userInfo'>(null);
   const [menuClassName, setMenuClassName] = useState<'Menu-active-none' | 'Menu-active-left' | 'Menu-active-right' | 'Menu-active-both'>('Menu-active-none')
   
@@ -59,9 +61,15 @@ const Main = () => {
 
   useEffect(() => {
     if(selectedIdxRedux >= 0){
-      setShowLeftPanel('travelInfo');
+      setShowLeftPanel('travelEdit');
     }
   }, [selectedIdxRedux]);
+
+  useEffect(() => {
+    if(selectedOpenedIdxRedux >= 0){
+      setShowLeftPanel('travelView');
+    }
+  }, [selectedOpenedIdxRedux]);
 
   useEffect(() => {
     if(showLeftPanel && showRightPanel){
@@ -153,8 +161,18 @@ const Main = () => {
           <TravelListPanel exit={() => {setShowLeftPanel(null)}}/>
         }
         {
-          showLeftPanel === 'travelInfo' &&
+          showLeftPanel === 'travelEdit' &&
           <TravelInfoEditPanel
+            setPlaceId={setSelectedPlaceId}
+            setMarkerPlaces={setMarkerPlaces}
+            setDirections={setDirections}
+            setFrom={setFrom}
+            setTo={setTo}
+            onClose={() => {setShowLeftPanel(null)}}/>
+        }
+        {
+          showLeftPanel === 'travelView' &&
+          <TravelInfoViewPanel
             setPlaceId={setSelectedPlaceId}
             setMarkerPlaces={setMarkerPlaces}
             setDirections={setDirections}

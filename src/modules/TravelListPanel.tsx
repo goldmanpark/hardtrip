@@ -5,12 +5,10 @@ import { Card, Table } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 
 import { useAppSelector, useAppDispatch } from '../redux/store';
-import { readTravelList, createTravel, updateTravel, deleteTravel } from '../redux/travelListSlice';
+import { createTravel, updateTravel, deleteTravel } from '../redux/travelListSlice';
+import { readOpenedTravelList, readOpenedPlaceList, setSelectedOpenedIdx } from '../redux/openedTravelListSlice';
 import { readPlaceList, setSelectedIdx } from '../redux/travelListSlice';
 import { Travel, TravelSerialized, deSerializeTravel } from '../DataType/Travel';
-import { fireStoreDB } from '../config/firebase';
-import { doc, collection, getDocs, QuerySnapshot } from 'firebase/firestore';
-import { query, where } from 'firebase/firestore';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
@@ -25,19 +23,28 @@ interface PanelProps{
 const TravelListPanel = (props: PanelProps) => {
   const dispatch = useAppDispatch();
   const travelListRedux: TravelSerialized[] = useAppSelector((state) => state.travelList.list);
+  const openedTravelListRedux: TravelSerialized[] = useAppSelector((state) => state.openedTravelList.list);
   const { userData } = useAuth();
-  const travelCollectionRef = collection(fireStoreDB, "travel");
-
+  
   const [travelList, setTravelList] = useState<Travel[]>([]);
   const [newTravel, setNewTravel] = useState<Travel>({} as Travel);
   const [editIdx, setEditIdx] = useState(-1);
   const [tempTravel, setTempTravel] = useState<Travel>({} as Travel);
-
   const [openedTravelList, setOpenedTravelList] = useState<Travel[]>([]);
+
+  useEffect(() => {
+    if(userData){
+      dispatch(readOpenedTravelList(userData.uid));
+    }
+  }, [userData]);
 
   useEffect(() => {
     setTravelList(travelListRedux.map(x => { return deSerializeTravel(x)}));
   }, [travelListRedux]);
+
+  useEffect(() => {
+    setOpenedTravelList(openedTravelListRedux.map(x => { return deSerializeTravel(x)}));
+  }, [openedTravelListRedux]);
 
   useEffect(() => { //이거 useEffect로 안하면 render에러발생
     if(0 <= editIdx && editIdx < travelListRedux.length){
@@ -45,40 +52,16 @@ const TravelListPanel = (props: PanelProps) => {
     }    
   }, [editIdx]);
 
-  useEffect(() => {
-    if(userData){
-      getOpenedTravelList();
-    }
-  }, [userData]);
-
-  const getOpenedTravelList = async () => {
-    const qr = query(travelCollectionRef, where('uid', '!=', userData.uid), where('opened', '==', true));
-    const docSnap = await getDocs(qr);
-    setOpenedTravelList(docSnap.docs.map(x => {
-      const doc = x.data();
-      return {
-        ...doc,
-        startDate: doc.startDate?.toDate(),
-        endDate: doc.endDate?.toDate()
-      } as Travel;
-    }));
-  }
-
-  useEffect(() => {
-    console.log(openedTravelList)
-  }, [openedTravelList])
-
   //#region [Event Handler]
-  /** 유저접속정보 기반 travel전체목록 조회 */
-  const getTravelList = (uid: string) => {
-    dispatch(readTravelList(uid));
-    setNewTravel({} as Travel);
-  }
-
   /** travel이하 place등 상세정보 조회 위해 travel선택 */
   const onSelectTravel = (idx: number, travel: Travel) => {
     dispatch(readPlaceList(travel.id));
     dispatch(setSelectedIdx(idx));
+  }
+
+  const onSelectOpenedTravel = (idx: number, travel: Travel) => {
+    dispatch(readOpenedPlaceList(travel.id));
+    dispatch(setSelectedOpenedIdx(idx));
   }
 
   /** 신규 travel등록 */
@@ -253,7 +236,7 @@ const TravelListPanel = (props: PanelProps) => {
               {
                 openedTravelList.map((t, i) => {
                   return (
-                    <tr key={i}>
+                    <tr key={i} onClick={() => onSelectOpenedTravel(i, t)}>
                       <td className='text-align-left'>{t.name}</td>
                       <td>{GetyyyyMMdd(t.startDate)}</td>
                       <td>{GetyyyyMMdd(t.endDate)}</td>

@@ -88,7 +88,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
             <Col xs={10} sm={10} className='d-flex flex-column'>
               {
                 props.placeResult.website
-                  ? <a href={props.placeResult.website}>{props.placeResult.website}</a>
+                  ? <a href={props.placeResult.website} target="_blank" rel="noopener noreferrer">{props.placeResult.website}</a>
                   : 'N/A'
               }
             </Col>
