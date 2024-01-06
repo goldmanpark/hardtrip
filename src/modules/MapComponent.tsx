@@ -18,6 +18,11 @@ interface MapProps{
   markerPlaces: Place[];
 }
 
+interface AugRenderer{
+  direction: google.maps.DirectionsResult;
+  options: google.maps.DirectionsRendererOptions
+}
+
 const MapComponent = (props: MapProps) => {
   const travelListRedux: TravelSerialized[] = useAppSelector(state => state.travelList.list);
   const selectedIdxRedux = useAppSelector(state => state.travelList.selectedIdx);
@@ -25,10 +30,22 @@ const MapComponent = (props: MapProps) => {
   const [selectedTravel, setSelectedTravel] = useState<Travel>(null);
   const [prevTravelId, setPrevTravelId] = useState('');
 
+  const highContrastColors = [
+    '#E11845', //빨강
+    '#FF5733', //주황
+    '#FFDD33', //노랑
+    '#043927', //초록
+    '#0057E9', //파랑
+    '#000080', //남색
+    '#8931EF', //보라
+    '#FF00BD', //핑크
+  ];
+
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [zoom, setZoom] = useState(12);
   const [showCurrentMarker, setShowCurrentMarker] = useState(true);
   const [currentPosition, setCurrentPosition] = useState<google.maps.LatLng>(null);
+  const [augDirections, setAugDirections] = useState<AugRenderer[]>([]);
 
   const placesService = useMemo(() => {
     if(map) return new google.maps.places.PlacesService(map)
@@ -81,6 +98,20 @@ const MapComponent = (props: MapProps) => {
       drawPlacesAndZoom(props.markerPlaces);
     }
   }, [props.markerPlaces]);
+
+  useEffect(() => {
+    setAugDirections(props.directions.map((x, i) => {
+      const polyOpt = {
+        strokeColor: highContrastColors[i % highContrastColors.length],
+        strokeWeight: 10,
+        strokeOpacity: 0.45
+      } as google.maps.PolylineOptions;
+      return {
+        direction: x,
+        options: { polylineOptions: polyOpt } as google.maps.DirectionsRendererOptions 
+      } as AugRenderer;     
+    }));
+  }, [props.directions]);
 
   const getPlaceResult = (placeId: string) => {
     if(map instanceof google.maps.Map && placeId && placesService){
@@ -146,7 +177,7 @@ const MapComponent = (props: MapProps) => {
                 onUnmount={() => {setMap(null)}}>
         { props.showTraffic && <TrafficLayer/> }
         { props.showTransit && <TransitLayer/> }
-        { props.directions.map(d => (<DirectionsRenderer directions={d}/>)) }
+        { augDirections.map((d, i) => (<DirectionsRenderer directions={d.direction} options={d.options}/>)) }
         { showCurrentMarker && <MarkerF position={currentPosition}/> }
         { props.markerPlaces.map((p, i) => {
           const label = {
