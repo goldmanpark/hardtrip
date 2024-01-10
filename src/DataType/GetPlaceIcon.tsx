@@ -32,9 +32,11 @@ const GetPlaceIcon = (place: Place) => {
     case 'lodging':
       return <HotelIcon/>
     case 'restaurant':
+    case 'food':
       return <RestaurantIcon/>
     case 'shopping_mall':
     case 'department_store':
+    case 'store':
       return <ShoppingCartIcon/>
     case 'natural_feature':
       return <LandscapeIcon/>

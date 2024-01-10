@@ -142,7 +142,9 @@ const MapComponent = (props: MapProps) => {
           setShowCurrentMarker(true);
           const pos = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
           setCurrentPosition(pos);
-          setZoom(12);
+
+          setZoom(map.getZoom());
+          setTimeout(() => setZoom(18), 50);          
         }
       });
     }
