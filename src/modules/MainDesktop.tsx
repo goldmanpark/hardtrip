@@ -1,8 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
-import './css/custom_button.css'
-import './css/custom_place.css'
-import './css/custom_etc.css';
 import "react-datepicker/dist/react-datepicker.css";
 import { LoadScript, Libraries } from '@react-google-maps/api';
 
@@ -24,7 +21,7 @@ import Compass from './subModules/Compass';
 import { Place } from '../DataType/Place';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
-const Main = () => {
+const MainDesktop = () => {
   const dispatch = useAppDispatch();
   const selectedIdxRedux = useAppSelector(state => state.travelList.selectedIdx);
   const selectedOpenedIdxRedux = useAppSelector(state => state.openedTravelList.selectedIdx);
@@ -209,4 +206,4 @@ const Main = () => {
   )
 }
 
-export default Main;
+export default MainDesktop;
