@@ -1,5 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
+import { functions } from '../config/firebase';
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { useAuth } from '../AuthContext';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Card, Carousel, Navbar, Nav, Container, Row, Col, Button, Dropdown } from 'react-bootstrap';
@@ -40,6 +42,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
 
   //#region [conditional rendering: summary]
   const renderSummary = () => {
+    getTripAdvisorInfo();
     return (
       <div className='d-flex flex-column gap-2'>
         <span className='d-flex flex-row gap-2'>
@@ -166,6 +169,17 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
         }
       </Container>
     )
+  }
+
+  const getTripAdvisorInfo = () => {
+    const getInfo = httpsCallable(functions, 'get_trip_advisor_info');
+    getInfo({
+      searchQuery: props.placeResult.name,
+      lat: props.placeResult.geometry.location.lat(),
+      lng: props.placeResult.geometry.location.lng()
+    })
+    .then(res => console.log(res))
+    .catch(err => console.error(err))
   }
   //#endregion
 
