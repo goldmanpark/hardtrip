@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
 import { functions } from '../config/firebase';
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { getFunctions, httpsCallable, httpsCallableFromURL } from "firebase/functions";
 import { useAuth } from '../AuthContext';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { Card, Carousel, Navbar, Nav, Container, Row, Col, Button, Dropdown } from 'react-bootstrap';
@@ -171,15 +171,18 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
     )
   }
 
-  const getTripAdvisorInfo = () => {
+  const getTripAdvisorInfo = async () => {
     const getInfo = httpsCallable(functions, 'get_trip_advisor_info');
-    getInfo({
+    const param = {
       searchQuery: props.placeResult.name,
-      lat: props.placeResult.geometry.location.lat(),
-      lng: props.placeResult.geometry.location.lng()
+      latLong: `${props.placeResult.geometry.location.lat()},${props.placeResult.geometry.location.lng()}`
+    } 
+    await getInfo(param)
+    .then(res => {
+      console.log(param);
+      console.log(res);
     })
-    .then(res => console.log(res))
-    .catch(err => console.error(err))
+    .catch(err => console.error(err));
   }
   //#endregion
 

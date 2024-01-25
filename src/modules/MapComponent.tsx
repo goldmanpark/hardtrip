@@ -117,6 +117,7 @@ const MapComponent = (props: MapProps) => {
     if(map instanceof google.maps.Map && placeId && placesService){
       let request = {
         placeId: placeId,
+        language: 'en',
         fields: [
           'place_id',
           'adr_address',
