@@ -139,15 +139,22 @@ const MainMobile = () => {
           </Dropdown>
           <Compass/>
         </div>
+
         {
-          showLeftPanel === 'travelList' &&
+          (showLeftPanel === 'travelList' ||
+          showLeftPanel === 'travelEdit' ||
+          showLeftPanel === 'travelView' ||
+          (showRightPanel === 'placeResult' && placeResult) ||
+          (showRightPanel === 'route' && from && to) ||
+          showRightPanel === 'userInfo')
+          &&
           <MobileDraggable>
-            <TravelListPanel exit={() => {setShowLeftPanel(null)}}/>
-          </MobileDraggable>
-        }
-        {
-          showLeftPanel === 'travelEdit' &&
-          <MobileDraggable>
+          {
+            showLeftPanel === 'travelList' &&
+            <TravelListPanel exit={() => {setShowLeftPanel(null)}}/>          
+          }
+          {
+            showLeftPanel === 'travelEdit' &&
             <TravelInfoEditPanel
               setPlaceId={setSelectedPlaceId}
               setMarkerPlaces={setMarkerPlaces}
@@ -155,34 +162,28 @@ const MainMobile = () => {
               setFrom={setFrom}
               setTo={setTo}
               onClose={() => {setShowLeftPanel(null)}}/>
-          </MobileDraggable>
-        }
-        {
-          showLeftPanel === 'travelView' &&
-          <MobileDraggable>
+          }
+          {
+            showLeftPanel === 'travelView' &&          
             <TravelInfoViewPanel
               setPlaceId={setSelectedPlaceId}
               setMarkerPlaces={setMarkerPlaces}
               setDirections={setDirections}
               setFrom={setFrom}
               setTo={setTo}
-              onClose={() => {setShowLeftPanel(null)}}/>
-          </MobileDraggable>
-        }
-        {
-          showRightPanel === 'placeResult' && placeResult &&
-          <MobileDraggable>
+              onClose={() => {setShowLeftPanel(null)}}/>          
+          }
+          {
+            showRightPanel === 'placeResult' && placeResult &&          
             <PlaceInfoPanel
               placeResult={placeResult}
               onClose={() => {
                 setPlaceResult(null);
                 setShowRightPanel(null);
               }}/>
-          </MobileDraggable>
-        }
-        {
-          showRightPanel === 'route' && from && to &&
-          <MobileDraggable>
+          }
+          {
+            showRightPanel === 'route' && from && to &&
             <RoutePanel 
               from={from} to={to} 
               setDirections={setDirections}
@@ -191,12 +192,11 @@ const MainMobile = () => {
                 setTo(null);
                 setShowRightPanel(null);
               }}/>
-          </MobileDraggable>
-        }
-        {
-          showRightPanel === 'userInfo' &&
-          <MobileDraggable>
+          }
+          {
+            showRightPanel === 'userInfo' &&
             <UserInfo onClose={() => setShowRightPanel(null)}/>
+          }
           </MobileDraggable>
         }
       </LoadScript>

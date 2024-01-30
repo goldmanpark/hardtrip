@@ -3,13 +3,26 @@ import { ReactNode, useRef, useState, useEffect } from "react";
 const MobileDraggable: React.FC<{children: ReactNode}> = ({children}) => {
   const maxHeight = window.innerHeight / 10 * 8; //80% 높이
   const minHeight = window.innerHeight / 10 * 2; //20% 높이
+  const touchSize = `${window.innerHeight / 30}px`;
+  
   const ref = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
       if (ref.current && e.touches.length === 1) {
-        setIsDragging(true);
+        const rect = headerRef.current.getBoundingClientRect();
+        const touchX = e.touches[0].clientX;
+        const touchY = e.touches[0].clientY;
+
+        if(touchX >= rect.left &&
+          touchX <= rect.right &&
+          touchY >= rect.top &&
+          touchY <= rect.bottom
+        ) {
+          setIsDragging(true);
+        }
       }
     };
 
@@ -47,6 +60,7 @@ const MobileDraggable: React.FC<{children: ReactNode}> = ({children}) => {
 
   return(
     <div ref={ref} className="MobileDraggable">
+      <div ref={headerRef} style={{height: touchSize, background: 'black', opacity: 0.3}}/>
       {children}
     </div>
   )

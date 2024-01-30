@@ -32,7 +32,6 @@
 }
 
 .MobileDraggable{
-  border-top: 4px solid black;
   position: fixed;
   top: auto;
   left: 0;

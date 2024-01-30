@@ -42,7 +42,7 @@ const PlaceInfoPanel = (props: PlaceInfoPanelProps) => {
 
   //#region [conditional rendering: summary]
   const renderSummary = () => {
-    getTripAdvisorInfo();
+    //getTripAdvisorInfo();
     return (
       <div className='d-flex flex-column gap-2'>
         <span className='d-flex flex-row gap-2'>
