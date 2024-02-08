@@ -32,7 +32,7 @@ export const GetyyyyMMdd = (d?: number | Date) => {
   
   const date = new Date(d);
   const yyyy = date.getFullYear().toString();
-  let MM = date.getMonth().toString();
+  let MM = (date.getMonth() + 1).toString();
   let dd = date.getDate().toString();
   MM = MM.length > 1 ? MM : '0' + MM;
   dd = dd.length > 1 ? dd : '0' + dd;

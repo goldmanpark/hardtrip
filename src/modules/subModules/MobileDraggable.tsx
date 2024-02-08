@@ -4,7 +4,7 @@ const MobileDraggable: React.FC<{children: ReactNode}> = ({children}) => {
   const maxHeight = window.innerHeight / 10 * 8; //80% 높이
   const minHeight = window.innerHeight / 10 * 2; //20% 높이
   const touchSize = `${window.innerHeight / 30}px`;
-  
+
   const ref = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -61,7 +61,9 @@ const MobileDraggable: React.FC<{children: ReactNode}> = ({children}) => {
   return(
     <div ref={ref} className="MobileDraggable">
       <div ref={headerRef} style={{height: touchSize, background: 'black', opacity: 0.3}}/>
-      {children}
+      <div className="position-relative h-100">
+        {children}
+      </div>
     </div>
   )
 }

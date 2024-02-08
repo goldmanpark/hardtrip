@@ -38,6 +38,7 @@
   right: 0;
   bottom: 0;  
   z-index: 2;
+  max-height: 80%;
 }
 
 td {
@@ -49,6 +50,12 @@ td {
 @media (max-width: 767px) {
   .custom-card {
     height: 100%;
+    width: 100%;
+  }
+
+  .card-right {
+    position: absolute;
+    top: 0;    
   }
 }
 
