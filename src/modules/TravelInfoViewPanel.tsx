@@ -42,6 +42,7 @@ const TravelInfoViewPanel = (props : TravelInfoProps) => {
   const openedTravelListRedux: TravelSerialized[] = useAppSelector((state) => state.openedTravelList.list);
   const selectedOpenedIdxRedux = useAppSelector(state => state.openedTravelList.selectedIdx);
   const directionsService = new google.maps.DirectionsService();
+  const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
 
   const [selectedTravel, setSelectedTravel] = useState<Travel>(null);
   const [travelDays, setTravelDays] = useState<TravelDay[]>([]);
@@ -241,7 +242,7 @@ const TravelInfoViewPanel = (props : TravelInfoProps) => {
         <Card.Header className='p-1 w-100 d-flex flex-row justify-content-between'>
           {
             t.day
-            ? <div className='text-align-left'>{`DAY-${t.day} ${(t.date as Date).toLocaleDateString()}`}</div>
+            ? <div className='text-align-left'>{`DAY-${t.day} ${(t.date as Date).toLocaleDateString()} ${daysOfWeek[(t.date as Date).getDay()]}`}</div>
             : <div className='text-align-left'>N/A</div>
           }
           <span>

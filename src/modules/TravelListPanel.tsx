@@ -27,7 +27,7 @@ const TravelListPanel = (props: PanelProps) => {
   const { userData } = useAuth();
   
   const [travelList, setTravelList] = useState<Travel[]>([]);
-  const [newTravel, setNewTravel] = useState<Travel>({} as Travel);
+  const [newTravel, setNewTravel] = useState<Travel>({opened: false} as Travel);
   const [editIdx, setEditIdx] = useState(-1);
   const [tempTravel, setTempTravel] = useState<Travel>({} as Travel);
   const [openedTravelList, setOpenedTravelList] = useState<Travel[]>([]);
@@ -67,7 +67,7 @@ const TravelListPanel = (props: PanelProps) => {
   /** 신규 travel등록 */
   const addTravel = () => {
     if(!userData) return;
-    if(!newTravel.startDate || !newTravel.endDate || !newTravel.name) return;
+    if(!newTravel.name) return;
     newTravel.uid = userData.uid;
     dispatch(createTravel(newTravel));
   }

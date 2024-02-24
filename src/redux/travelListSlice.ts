@@ -2,8 +2,8 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { fireStoreDB } from '../config/firebase';
 import { doc, setDoc, collection, getDocs, addDoc, QuerySnapshot, deleteDoc, getDoc, updateDoc } from 'firebase/firestore'
 import { query, where } from 'firebase/firestore'
-import { Travel, TravelSerialized, serializeTravel, deSerializeTravel } from '../DataType/Travel';
-import { Place, PlaceSerialized, serializePlace, deSerializePlace } from '../DataType/Place';
+import { Travel, TravelSerialized, serializeTravel } from '../DataType/Travel';
+import { Place, PlaceSerialized, serializePlace } from '../DataType/Place';
 
 interface PlaceParam{
   travelId: string;
